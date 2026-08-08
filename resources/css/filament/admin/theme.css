@@ -1,0 +1,50 @@
+@import '../../../../vendor/filament/filament/resources/css/theme.css';
+
+@source '../../../../app/Filament/**/*';
+@source '../../../../resources/views/filament/**/*';
+
+@theme {
+    --font-sans: 'Manrope', ui-sans-serif, system-ui, sans-serif;
+}
+
+/* Identidad visual Los Boomwalos (modo claro) */
+
+.fi-body {
+    background-color: #fff7fa;
+    color: #1d1b1e;
+}
+
+.fi-sidebar {
+    border-right: 1px solid #efe7ec;
+}
+
+.fi-topbar {
+    border-bottom: 1px solid #efe7ec;
+}
+
+/* Tarjetas: fondo blanco, borde suave, Elevation 1 (sombra muy sutil) */
+.bw-card {
+    background-color: #ffffff;
+    border: 1px solid #efe7ec;
+    border-radius: 8px;
+    box-shadow:
+        0 1px 2px rgba(29, 27, 30, 0.04),
+        0 2px 6px rgba(29, 27, 30, 0.04);
+}
+
+.bw-card-hover {
+    transition:
+        transform 150ms ease,
+        box-shadow 150ms ease;
+}
+
+.bw-card-hover:hover {
+    box-shadow:
+        0 4px 12px rgba(29, 27, 30, 0.08),
+        0 8px 20px rgba(29, 27, 30, 0.06);
+    transform: translateY(-2px);
+}
+
+.bw-btn:active {
+    transform: scale(0.98);
+}

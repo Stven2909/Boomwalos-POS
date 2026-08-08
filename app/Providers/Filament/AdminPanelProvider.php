@@ -2,16 +2,16 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Pages\Dashboard;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
-use Filament\Pages\Dashboard;
+use Filament\Navigation\NavigationItem;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
-use Filament\Widgets\AccountWidget;
-use Filament\Widgets\FilamentInfoWidget;
+use Filament\View\PanelsRenderHook;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
@@ -27,20 +27,58 @@ class AdminPanelProvider extends PanelProvider
             ->default()
             ->id('admin')
             ->path('admin')
+            ->viteTheme('resources/css/filament/admin/theme.css')
             ->login()
+            ->brandName('Los Boomwalos')
+            ->favicon(asset('images/favicon.png'))
             ->colors([
-                'primary' => Color::Amber,
+                'primary' => '#6B4E63',
+                'gray' => Color::Stone,
             ])
+            ->font('Manrope')
+            ->darkMode(false)
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
             ->pages([
                 Dashboard::class,
             ])
-            ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\Filament\Widgets')
-            ->widgets([
-                AccountWidget::class,
-                FilamentInfoWidget::class,
+            ->navigationItems([
+                NavigationItem::make('Punto de Venta')
+                    ->icon('heroicon-o-calculator')
+                    ->url('#')
+                    ->isActiveWhen(fn (): bool => true),
+                NavigationItem::make('Pedidos')
+                    ->icon('heroicon-o-clipboard-document-list')
+                    ->url('#'),
+                NavigationItem::make('Mesas')
+                    ->icon('heroicon-o-home-modern')
+                    ->url('#'),
+                NavigationItem::make('Cocina')
+                    ->icon('heroicon-o-fire')
+                    ->url('#'),
+                NavigationItem::make('Clientes')
+                    ->icon('heroicon-o-users')
+                    ->url('#'),
+                NavigationItem::make('Informes')
+                    ->icon('heroicon-o-chart-bar')
+                    ->url('#'),
             ])
+            ->renderHook(
+                PanelsRenderHook::SIDEBAR_FOOTER,
+                fn (): string => (string) view('filament.admin.components.sidebar-footer'),
+            )
+            ->renderHook(
+                PanelsRenderHook::TOPBAR_START,
+                fn (): string => (string) view('filament.admin.components.quick-links'),
+            )
+            ->renderHook(
+                PanelsRenderHook::GLOBAL_SEARCH_AFTER,
+                fn (): string => (string) view('filament.admin.components.topbar-actions'),
+            )
+            ->renderHook(
+                PanelsRenderHook::USER_MENU_BEFORE,
+                fn (): string => (string) view('filament.admin.components.session-info'),
+            )
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
