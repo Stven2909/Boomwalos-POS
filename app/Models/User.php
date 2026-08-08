@@ -3,13 +3,14 @@
 namespace App\Models;
 
 use Database\Factories\UserFactory;
+use Filament\Models\Contracts\HasName;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
 
-class User extends Authenticatable
+class User extends Authenticatable implements HasName
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, HasRoles, Notifiable;
@@ -39,6 +40,11 @@ class User extends Authenticatable
     public function pedidos(): HasMany
     {
         return $this->hasMany(Pedido::class, 'usuario_id');
+    }
+
+    public function getFilamentName(): string
+    {
+        return $this->nombre;
     }
 
     public function sesionesCajaApertura(): HasMany
