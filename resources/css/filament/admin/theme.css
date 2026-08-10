@@ -1510,6 +1510,40 @@ body:has(.bw-pos-page) .fi-page-content {
     margin-top: 10px;
 }
 
+.bw-cash-summary-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+    border: 1px solid #ded9e1;
+    border-radius: 10px;
+    background: #fbfafc;
+    padding: 14px 16px;
+    margin-top: 20px;
+}
+
+.bw-cash-summary-row span {
+    color: #6b4e63;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.bw-cash-summary-row strong {
+    color: #202027;
+    font-size: 22px;
+    font-weight: 800;
+}
+
+.bw-cash-summary-row--difference {
+    margin-top: 4px;
+}
+
+.bw-cash-summary-row--difference strong {
+    color: #6b4e63;
+}
+
 .bw-cash-opening-card > .bw-pos-secondary-button {
     margin-top: 16px;
 }

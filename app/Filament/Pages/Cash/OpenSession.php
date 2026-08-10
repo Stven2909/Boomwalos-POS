@@ -4,6 +4,7 @@ namespace App\Filament\Pages\Cash;
 
 use App\Filament\Pages\Pos\ServiceSelection;
 use App\Models\Establecimiento;
+use App\Models\EventoAuditoria;
 use App\Models\SesionCaja;
 use Filament\Pages\Page;
 use Illuminate\Support\Facades\DB;
@@ -52,11 +53,22 @@ class OpenSession extends Page
                 ->exists();
 
             if (! $active) {
-                SesionCaja::create([
+                $sesion = SesionCaja::create([
                     'establecimiento_id' => $establecimiento->getKey(),
                     'usuario_apertura_id' => auth()->id(),
                     'monto_inicial' => $this->montoInicial,
                     'fecha_apertura' => now(),
+                ]);
+
+                EventoAuditoria::create([
+                    'entidad_tipo' => SesionCaja::class,
+                    'entidad_id' => $sesion->getKey(),
+                    'usuario_id' => auth()->id(),
+                    'tipo_evento' => 'caja_abierta',
+                    'payload' => [
+                        'monto_inicial' => $this->montoInicial,
+                        'establecimiento_id' => $establecimiento->getKey(),
+                    ],
                 ]);
             }
         });
