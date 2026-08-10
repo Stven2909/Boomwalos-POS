@@ -34,7 +34,7 @@ class MesaResource extends Resource
 
     protected static ?string $navigationLabel = 'Mesas';
 
-    protected static string|UnitEnum|null $navigationGroup = 'OperaciÃ³n';
+    protected static string|UnitEnum|null $navigationGroup = 'Operación';
 
     protected static ?string $modelLabel = 'mesa';
 
@@ -49,13 +49,13 @@ class MesaResource extends Resource
     {
         return $schema
             ->components([
-                Section::make('ConfiguraciÃ³n de mesa')
+                Section::make('Configuración de mesa')
                     ->description('El estado libre u ocupada lo controla el flujo de pedidos.')
                     ->schema([
                         Grid::make(2)
                             ->schema([
                                 TextInput::make('numero')
-                                    ->label('NÃºmero de mesa')
+                                    ->label('Número de mesa')
                                     ->required()
                                     ->maxLength(10)
                                     ->unique(ignoreRecord: true),

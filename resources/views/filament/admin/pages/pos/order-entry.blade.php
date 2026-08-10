@@ -111,7 +111,7 @@
                     <div class="bw-pos-empty-state bw-pos-combo-empty-state">
                         <x-heroicon-o-squares-2x2 class="h-8 w-8" />
                         <strong>No hay combos disponibles.</strong>
-                        <span>El administrador puede crear o activar combos desde el catÃ¡logo.</span>
+                        <span>El administrador puede crear o activar combos desde el catálogo.</span>
                     </div>
                 @endif
                 @else

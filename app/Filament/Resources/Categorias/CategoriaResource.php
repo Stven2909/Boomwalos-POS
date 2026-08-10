@@ -27,13 +27,13 @@ class CategoriaResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedTag;
 
-    protected static ?string $navigationLabel = 'CategorÃ­as';
+    protected static ?string $navigationLabel = 'Categorías';
 
-    protected static string|UnitEnum|null $navigationGroup = 'CatÃ¡logo';
+    protected static string|UnitEnum|null $navigationGroup = 'Catálogo';
 
-    protected static ?string $modelLabel = 'categorÃ­a';
+    protected static ?string $modelLabel = 'categoría';
 
-    protected static ?string $pluralModelLabel = 'categorÃ­as';
+    protected static ?string $pluralModelLabel = 'categorías';
 
     public static function canAccess(): bool
     {
@@ -43,11 +43,11 @@ class CategoriaResource extends Resource
     public static function form(Schema $schema): Schema
     {
         return $schema->components([
-            Section::make('Datos de categorÃ­a')->schema([
+            Section::make('Datos de categoría')->schema([
                 Grid::make(2)->schema([
                     TextInput::make('nombre')->label('Nombre')->required()->maxLength(50)->unique(ignoreRecord: true),
-                    Toggle::make('activa')->label('CategorÃ­a activa')->default(true),
-                    Textarea::make('descripcion')->label('DescripciÃ³n')->rows(3)->maxLength(500)->columnSpanFull(),
+                    Toggle::make('activa')->label('Categoría activa')->default(true),
+                    Textarea::make('descripcion')->label('Descripción')->rows(3)->maxLength(500)->columnSpanFull(),
                 ]),
             ]),
         ]);
@@ -70,8 +70,8 @@ class CategoriaResource extends Resource
 
                         if ($categoria instanceof Categoria && $categoria->productos()->exists()) {
                             Notification::make()
-                                ->title('No se puede eliminar esta categorÃ­a')
-                                ->body('Tiene productos asociados. DesactÃ­vala para conservar el catÃ¡logo.')
+                                ->title('No se puede eliminar esta categoría')
+                                ->body('Tiene productos asociados. Desactívala para conservar el catálogo.')
                                 ->danger()
                                 ->send();
                             $action->halt();

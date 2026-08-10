@@ -30,7 +30,7 @@ class ProductoResource extends Resource
 
     protected static ?string $navigationLabel = 'Productos';
 
-    protected static string|UnitEnum|null $navigationGroup = 'CatÃ¡logo';
+    protected static string|UnitEnum|null $navigationGroup = 'Catálogo';
 
     protected static ?string $modelLabel = 'producto';
 
@@ -47,7 +47,7 @@ class ProductoResource extends Resource
             Section::make('Datos del producto')->schema([
                 Grid::make(2)->schema([
                     TextInput::make('nombre')->label('Nombre')->required()->maxLength(100),
-                    Select::make('categoria_id')->label('CategorÃ­a')->relationship('categoria', 'nombre')->searchable()->preload()->required()->native(false),
+                    Select::make('categoria_id')->label('Categoría')->relationship('categoria', 'nombre')->searchable()->preload()->required()->native(false),
                     TextInput::make('precio')->label('Precio')->numeric()->minValue(0)->prefix('$')->required(),
                     Select::make('disponibilidad')
                         ->label('Disponibilidad')
@@ -62,7 +62,7 @@ class ProductoResource extends Resource
                         ->directory('productos')
                         ->visibility('public')
                         ->maxSize(4096)
-                        ->helperText('JPG, PNG o WebP. MÃ¡ximo 4 MB.')
+                        ->helperText('JPG, PNG o WebP. Máximo 4 MB.')
                         ->columnSpanFull(),
                 ]),
             ]),
@@ -75,7 +75,7 @@ class ProductoResource extends Resource
             ->columns([
                 ImageColumn::make('imagen_url')->label('Imagen')->disk('public')->circular(),
                 TextColumn::make('nombre')->label('Producto')->searchable()->sortable(),
-                TextColumn::make('categoria.nombre')->label('CategorÃ­a')->sortable(),
+                TextColumn::make('categoria.nombre')->label('Categoría')->sortable(),
                 TextColumn::make('precio')->label('Precio')->money('USD')->sortable(),
                 TextColumn::make('disponibilidad')->label('Disponibilidad')->badge()->formatStateUsing(fn (?DisponibilidadProducto $state): string => $state?->label() ?? 'Sin estado')->color(fn (?DisponibilidadProducto $state): string => $state === DisponibilidadProducto::DISPONIBLE ? 'success' : 'gray'),
             ])

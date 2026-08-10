@@ -34,7 +34,7 @@ class ComboResource extends Resource
 
     protected static ?string $navigationLabel = 'Combos';
 
-    protected static string|UnitEnum|null $navigationGroup = 'CatÃ¡logo';
+    protected static string|UnitEnum|null $navigationGroup = 'Catálogo';
 
     protected static ?string $modelLabel = 'combo';
 
@@ -67,8 +67,8 @@ class ComboResource extends Resource
                         ->maxSize(4096),
                 ]),
             ]),
-            Section::make('Grupos de selecciÃ³n')
-                ->description('Define quÃ© puede escoger el cliente y cuÃ¡ntas unidades debe completar.')
+            Section::make('Grupos de selección')
+                ->description('Define qué puede escoger el cliente y cuántas unidades debe completar.')
                 ->schema([
                     Repeater::make('opciones')
                         ->label('Opciones del combo')

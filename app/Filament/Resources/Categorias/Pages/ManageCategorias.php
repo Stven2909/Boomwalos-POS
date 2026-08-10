@@ -12,6 +12,6 @@ class ManageCategorias extends ManageRecords
 
     protected function getHeaderActions(): array
     {
-        return [CreateAction::make()->label('Nueva categorÃ­a')];
+        return [CreateAction::make()->label('Nueva categoría')];
     }
 }

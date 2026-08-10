@@ -54,7 +54,7 @@ class DemoPosSeeder extends Seeder
         }
 
         $pupusaIds = Producto::query()
-            ->whereIn('nombre', ['Pupusa de queso', 'Pupusa revuelta', 'Pupusa con chicharrÃ³n'])
+            ->whereIn('nombre', ['Pupusa de queso', 'Pupusa revuelta', 'Pupusa con chicharrón'])
             ->pluck('id')
             ->all();
 
