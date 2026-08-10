@@ -23,6 +23,11 @@
         <env name="BCRYPT_ROUNDS" value="4"/>
         <env name="BROADCAST_CONNECTION" value="null"/>
         <env name="CACHE_STORE" value="array"/>
+        <env name="BOOMWALOS_ADMIN_EMAIL" value="admin@example.test"/>
+        <env name="BOOMWALOS_ADMIN_PASSWORD" value="testing-admin-password"/>
+        <env name="BOOMWALOS_CASHIER_EMAIL" value="cashier@example.test"/>
+        <env name="BOOMWALOS_CASHIER_CODE" value="98"/>
+        <env name="BOOMWALOS_CASHIER_PIN" value="testing-cashier-pin"/>
         <env name="DB_CONNECTION" value="sqlite"/>
         <env name="DB_DATABASE" value=":memory:"/>
         <env name="DB_URL" value=""/>

@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Facades\DB;
 
 class Pedido extends Model
 {
@@ -66,5 +67,26 @@ class Pedido extends Model
     public function documentosFiscales(): HasMany
     {
         return $this->hasMany(DocumentoFiscal::class);
+    }
+
+    public function isOpen(): bool
+    {
+        return in_array($this->estado_comercial, [
+            EstadoComercialPedido::ABIERTO,
+            EstadoComercialPedido::COBRADO,
+        ], true);
+    }
+
+    public function total(): float
+    {
+        if ($this->relationLoaded('detalles')) {
+            return (float) $this->detalles
+                ->where('estado_linea', \App\Enums\EstadoLineaPedido::ACTIVA)
+                ->sum(fn (DetallePedido $detalle): float => (float) $detalle->precio_unitario * $detalle->cantidad);
+        }
+
+        return (float) $this->detalles()
+            ->where('estado_linea', \App\Enums\EstadoLineaPedido::ACTIVA)
+            ->sum(DB::raw('cantidad * precio_unitario'));
     }
 }

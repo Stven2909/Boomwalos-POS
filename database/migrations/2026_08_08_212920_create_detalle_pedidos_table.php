@@ -23,14 +23,16 @@ return new class extends Migration
 
         // Requiere MySQL >= 8.0.16. Fuerza producto_id XOR combo_id: uno de los
         // dos, nunca ambos, nunca ninguno.
-        DB::statement('
-            ALTER TABLE detalles_pedido
-            ADD CONSTRAINT chk_producto_o_combo
-            CHECK (
-                (producto_id IS NOT NULL AND combo_id IS NULL) OR
-                (producto_id IS NULL AND combo_id IS NOT NULL)
-            )
-        ');
+        if (DB::getDriverName() !== 'sqlite') {
+            DB::statement('
+                ALTER TABLE detalles_pedido
+                ADD CONSTRAINT chk_producto_o_combo
+                CHECK (
+                    (producto_id IS NOT NULL AND combo_id IS NULL) OR
+                    (producto_id IS NULL AND combo_id IS NOT NULL)
+                )
+            ');
+        }
     }
 
     public function down(): void

@@ -3,6 +3,9 @@
 namespace App\Providers\Filament;
 
 use App\Filament\Pages\Dashboard;
+use App\Filament\Pages\Auth\Login;
+use App\Filament\Pages\Kitchen\KitchenDisplay;
+use App\Filament\Pages\Pos\ServiceSelection;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -28,7 +31,7 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->viteTheme('resources/css/filament/admin/theme.css')
-            ->login()
+            ->login(Login::class)
             ->brandName('Los Boomwalos')
             ->favicon(asset('images/favicon.png'))
             ->colors([
@@ -45,17 +48,16 @@ class AdminPanelProvider extends PanelProvider
             ->navigationItems([
                 NavigationItem::make('Punto de Venta')
                     ->icon('heroicon-o-calculator')
-                    ->url('#')
-                    ->isActiveWhen(fn (): bool => true),
+                    ->url(fn (): string => ServiceSelection::getUrl())
+                    ->isActiveWhen(fn (): bool => request()->routeIs('filament.admin.pages.pos.*')),
                 NavigationItem::make('Pedidos')
                     ->icon('heroicon-o-clipboard-document-list')
                     ->url('#'),
-                NavigationItem::make('Mesas')
-                    ->icon('heroicon-o-home-modern')
-                    ->url('#'),
                 NavigationItem::make('Cocina')
                     ->icon('heroicon-o-fire')
-                    ->url('#'),
+                    ->url(fn (): string => KitchenDisplay::getUrl())
+                    ->visible(fn (): bool => auth()->user()?->can('operar_cocina') ?? false)
+                    ->isActiveWhen(fn (): bool => request()->routeIs('filament.admin.pages.cocina')),
                 NavigationItem::make('Clientes')
                     ->icon('heroicon-o-users')
                     ->url('#'),

@@ -3,6 +3,11 @@
 .env
 .env.backup
 .env.production
+.ai/
+opencode.json
+boost.json
+design-qa.md
+.psysh-config/
 .phpactor.json
 .phpunit.result.cache
 /.codex

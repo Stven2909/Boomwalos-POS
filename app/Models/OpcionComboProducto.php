@@ -2,10 +2,10 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\Pivot;
 
-class OpcionComboProducto extends Model
+class OpcionComboProducto extends Pivot
 {
     protected $table = 'opciones_combo_productos';
 

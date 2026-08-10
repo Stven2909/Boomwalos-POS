@@ -1,0 +1,186 @@
+<?php
+
+namespace Database\Seeders;
+
+use App\Enums\DisponibilidadProducto;
+use App\Enums\EstadoComercialPedido;
+use App\Enums\EstadoLineaPedido;
+use App\Enums\EstadoMesa;
+use App\Enums\TipoPedido;
+use App\Enums\TipoImpresora;
+use App\Enums\ZonaMesa;
+use App\Models\Categoria;
+use App\Models\Combo;
+use App\Models\DetallePedido;
+use App\Models\Establecimiento;
+use App\Models\Impresora;
+use App\Models\Mesa;
+use App\Models\Pedido;
+use App\Models\Producto;
+use App\Models\SesionCaja;
+use App\Models\User;
+use Illuminate\Database\Seeder;
+
+class DemoPosSeeder extends Seeder
+{
+    public function run(): void
+    {
+        $establecimiento = Establecimiento::firstOrCreate(
+            ['nombre' => 'Los Boomwalos'],
+            [
+                'direccion' => 'Establecimiento principal',
+                'codigo_establecimiento' => null,
+                'codigo_punto_venta' => null,
+            ],
+        );
+
+        Impresora::firstOrCreate(
+            ['nombre' => 'Cocina', 'tipo' => TipoImpresora::COMANDA],
+            ['configuracion' => ['driver' => 'queue']],
+        );
+
+        $categories = [];
+        foreach ([
+            ['nombre' => 'Pupusas Normales', 'descripcion' => 'Pupusas clásicas del menú.'],
+            ['nombre' => 'Pupusas Especiales', 'descripcion' => 'Sabores especiales.'],
+            ['nombre' => 'Combos', 'descripcion' => 'Combinaciones para compartir.'],
+            ['nombre' => 'Bebidas Frías', 'descripcion' => 'Bebidas frías y refrescos.'],
+            ['nombre' => 'Bebidas Calientes', 'descripcion' => 'Café e infusiones.'],
+        ] as $data) {
+            $categories[$data['nombre']] = Categoria::firstOrCreate(
+                ['nombre' => $data['nombre']],
+                ['descripcion' => $data['descripcion']],
+            );
+        }
+
+        $pupusaIds = Producto::query()
+            ->whereIn('nombre', ['Pupusa de queso', 'Pupusa revuelta', 'Pupusa con chicharrÃ³n'])
+            ->pluck('id')
+            ->all();
+
+        if ($pupusaIds !== []) {
+            $combo = Combo::firstOrCreate(
+                ['nombre' => 'Combo 10 pupusas'],
+                [
+                    'precio_fijo' => 15.00,
+                    'disponibilidad' => DisponibilidadProducto::DISPONIBLE,
+                ],
+            );
+
+            $option = $combo->opcionesCombo()->firstOrCreate(
+                ['nombre' => 'Pupusas'],
+                [
+                    'cantidad_requerida' => 10,
+                    'es_obligatorio' => true,
+                ],
+            );
+
+            $option->productos()->sync($pupusaIds);
+        }
+
+        foreach ([
+            ['categoria' => 'Pupusas Normales', 'nombre' => 'Pupusa de queso', 'precio' => 1.50],
+            ['categoria' => 'Pupusas Normales', 'nombre' => 'Pupusa revuelta', 'precio' => 1.75],
+            ['categoria' => 'Pupusas Especiales', 'nombre' => 'Pupusa con chicharrón', 'precio' => 2.00],
+            ['categoria' => 'Bebidas Frías', 'nombre' => 'Limonada fresca', 'precio' => 4.00],
+            ['categoria' => 'Bebidas Frías', 'nombre' => 'Horchata de la casa', 'precio' => 3.50],
+            ['categoria' => 'Bebidas Calientes', 'nombre' => 'Café de olla', 'precio' => 2.50],
+        ] as $data) {
+            Producto::firstOrCreate(
+                ['nombre' => $data['nombre'], 'categoria_id' => $categories[$data['categoria']]->getKey()],
+                [
+                    'precio' => $data['precio'],
+                    'disponibilidad' => DisponibilidadProducto::DISPONIBLE,
+                ],
+            );
+        }
+
+        $pupusaIds = Producto::query()
+            ->whereIn('categoria_id', [
+                $categories['Pupusas Normales']->getKey(),
+                $categories['Pupusas Especiales']->getKey(),
+            ])
+            ->pluck('id')
+            ->all();
+
+        if ($pupusaIds !== []) {
+            $combo = Combo::firstOrCreate(
+                ['nombre' => 'Combo 10 pupusas'],
+                [
+                    'precio_fijo' => 15.00,
+                    'disponibilidad' => DisponibilidadProducto::DISPONIBLE,
+                ],
+            );
+
+            $option = $combo->opcionesCombo()->firstOrCreate(
+                ['nombre' => 'Pupusas'],
+                [
+                    'cantidad_requerida' => 10,
+                    'es_obligatorio' => true,
+                ],
+            );
+
+            $option->productos()->sync($pupusaIds);
+        }
+
+        foreach ([
+            ZonaMesa::SALON->value => range(1, 8),
+            ZonaMesa::TERRAZA->value => range(9, 12),
+            ZonaMesa::BAR->value => range(13, 16),
+        ] as $zona => $numbers) {
+            foreach ($numbers as $number) {
+                Mesa::firstOrCreate(
+                    ['numero' => (string) $number],
+                    [
+                        'establecimiento_id' => $establecimiento->getKey(),
+                        'zona' => $zona,
+                        'estado' => EstadoMesa::LIBRE,
+                        'activa' => true,
+                    ],
+                );
+            }
+        }
+
+        $admin = User::role('administrador')->first() ?? User::firstOrFail();
+
+        if (! SesionCaja::query()->whereNull('fecha_cierre')->exists()) {
+            SesionCaja::create([
+                'establecimiento_id' => $establecimiento->getKey(),
+                'usuario_apertura_id' => $admin->getKey(),
+                'monto_inicial' => 0,
+                'fecha_apertura' => now(),
+            ]);
+        }
+
+        $mesaDemo = Mesa::query()
+            ->where('establecimiento_id', $establecimiento->getKey())
+            ->where('numero', '3')
+            ->first();
+        $productoDemo = Producto::query()->where('nombre', 'Limonada fresca')->first();
+
+        if ($mesaDemo && $productoDemo) {
+            $pedido = Pedido::firstOrCreate(
+                ['numero_seguimiento' => 'BW-DEMO-0001'],
+                [
+                    'tipo_pedido' => TipoPedido::MESA,
+                    'mesa_id' => $mesaDemo->getKey(),
+                    'establecimiento_id' => $establecimiento->getKey(),
+                    'usuario_id' => $admin->getKey(),
+                    'estado_comercial' => EstadoComercialPedido::ABIERTO,
+                ],
+            );
+
+            $mesaDemo->update(['estado' => EstadoMesa::OCUPADA]);
+
+            DetallePedido::firstOrCreate(
+                ['pedido_id' => $pedido->getKey(), 'producto_id' => $productoDemo->getKey()],
+                [
+                    'tanda_id' => null,
+                    'estado_linea' => EstadoLineaPedido::ACTIVA,
+                    'cantidad' => 1,
+                    'precio_unitario' => $productoDemo->precio,
+                ],
+            );
+        }
+    }
+}

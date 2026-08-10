@@ -16,10 +16,12 @@ class RolesPermissionsSeeder extends Seeder
         $permissions = [
             'crear_pedido',
             'cobrar_pedido',
+            'operar_cocina',
             'cancelar_pedido',
             'aplicar_descuento',
             'gestionar_productos',
             'gestionar_combos',
+            'gestionar_mesas',
             'gestionar_notas_cocina',
             'gestionar_usuarios',
             'abrir_caja',
@@ -38,8 +40,10 @@ class RolesPermissionsSeeder extends Seeder
         $administrador->syncPermissions([
             'crear_pedido',
             'cobrar_pedido',
+            'operar_cocina',
             'gestionar_productos',
             'gestionar_combos',
+            'gestionar_mesas',
             'gestionar_notas_cocina',
             'gestionar_usuarios',
             'abrir_caja',
@@ -50,6 +54,7 @@ class RolesPermissionsSeeder extends Seeder
         $cajero->syncPermissions([
             'crear_pedido',
             'cobrar_pedido',
+            'operar_cocina',
             'abrir_caja',
             'cerrar_caja',
         ]);

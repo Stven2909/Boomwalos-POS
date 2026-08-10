@@ -1,0 +1,367 @@
+<?php
+
+namespace Tests\Feature;
+
+use App\Enums\EstadoComercialPedido;
+use App\Enums\EstadoLineaPedido;
+use App\Enums\EstadoMesa;
+use App\Enums\EstadoCocina;
+use App\Enums\MetodoPago;
+use App\Enums\TipoPedido;
+use App\Enums\ZonaMesa;
+use App\Filament\Pages\Pos\ChargeOrder;
+use App\Filament\Pages\Pos\ServiceSelection;
+use App\Filament\Pages\Pos\TableSelection;
+use App\Models\Categoria;
+use App\Models\Combo;
+use App\Models\Establecimiento;
+use App\Models\Impresora;
+use App\Models\Mesa;
+use App\Models\Pedido;
+use App\Models\Producto;
+use App\Models\SesionCaja;
+use App\Models\User;
+use App\Enums\TipoImpresora;
+use App\Services\PedidoService;
+use App\Services\CobroService;
+use Database\Seeders\RolesPermissionsSeeder;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
+
+class PointOfSaleFlowTest extends TestCase
+{
+    use RefreshDatabase;
+
+    private User $cashier;
+
+    private Establecimiento $establishment;
+
+    private Mesa $table;
+
+    private Producto $product;
+
+    private Producto $secondProduct;
+
+    private Producto $thirdProduct;
+
+    private Combo $combo;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->seed(RolesPermissionsSeeder::class);
+
+        $this->cashier = User::factory()->create([
+            'usuario' => '21',
+            'password' => '1234',
+        ]);
+        $this->cashier->assignRole('cajero');
+
+        $this->establishment = Establecimiento::create([
+            'nombre' => 'Los Boomwalos',
+            'direccion' => 'Dirección de prueba',
+        ]);
+
+        $this->table = Mesa::create([
+            'establecimiento_id' => $this->establishment->getKey(),
+            'numero' => '8',
+            'zona' => ZonaMesa::SALON,
+            'estado' => EstadoMesa::LIBRE,
+        ]);
+
+        $category = Categoria::create(['nombre' => 'Bebidas Frías']);
+        $this->product = Producto::create([
+            'categoria_id' => $category->getKey(),
+            'nombre' => 'Limonada fresca',
+            'precio' => 4,
+            'disponibilidad' => 'DISPONIBLE',
+        ]);
+
+        $this->secondProduct = Producto::create([
+            'categoria_id' => $category->getKey(),
+            'nombre' => 'Pupusa revuelta de prueba',
+            'precio' => 1.75,
+            'disponibilidad' => 'DISPONIBLE',
+        ]);
+
+        $this->thirdProduct = Producto::create([
+            'categoria_id' => $category->getKey(),
+            'nombre' => 'Pupusa especial de prueba',
+            'precio' => 2.00,
+            'disponibilidad' => 'DISPONIBLE',
+        ]);
+
+        $this->combo = Combo::create([
+            'nombre' => 'Combo de prueba',
+            'precio_fijo' => 15,
+            'disponibilidad' => 'DISPONIBLE',
+        ]);
+
+        $this->combo->opcionesCombo()->create([
+            'nombre' => 'Pupusas',
+            'cantidad_requerida' => 10,
+            'es_obligatorio' => true,
+        ])->productos()->sync([
+            $this->product->getKey(),
+            $this->secondProduct->getKey(),
+            $this->thirdProduct->getKey(),
+        ]);
+
+        SesionCaja::create([
+            'establecimiento_id' => $this->establishment->getKey(),
+            'usuario_apertura_id' => $this->cashier->getKey(),
+            'monto_inicial' => 0,
+            'fecha_apertura' => now(),
+        ]);
+
+        Impresora::create([
+            'nombre' => 'Cocina',
+            'tipo' => TipoImpresora::COMANDA,
+            'configuracion' => ['driver' => 'queue'],
+        ]);
+    }
+
+    public function test_cashier_can_open_a_table_add_a_product_and_send_a_batch(): void
+    {
+        $service = app(PedidoService::class);
+        $pedido = $service->startOrder(TipoPedido::MESA, $this->cashier, $this->table->getKey());
+        $detail = $service->addProduct($pedido, $this->product, $this->cashier);
+        $batch = $service->sendPendingBatch($pedido, $this->cashier);
+
+        $this->assertSame(1, $batch->numero_tanda);
+        $this->assertSame($batch->getKey(), $detail->fresh()->tanda_id);
+        $this->assertDatabaseHas('mesas', [
+            'id' => $this->table->getKey(),
+            'estado' => EstadoMesa::OCUPADA->value,
+        ]);
+        $this->assertDatabaseHas('evento_auditorias', [
+            'entidad_id' => $pedido->getKey(),
+            'tipo_evento' => 'pedido_enviado_cocina',
+        ]);
+        $printJob = $batch->fresh()->trabajosImpresion()->first();
+        $this->assertNotNull($printJob);
+        $this->assertSame('PENDIENTE', $printJob->estado->value);
+        $this->assertStringContainsString('Limonada fresca', $printJob->contenido);
+    }
+
+    public function test_selecting_an_occupied_table_reuses_the_open_order(): void
+    {
+        $existing = Pedido::create([
+            'numero_seguimiento' => 'BW-TEST-0001',
+            'tipo_pedido' => TipoPedido::MESA,
+            'mesa_id' => $this->table->getKey(),
+            'establecimiento_id' => $this->establishment->getKey(),
+            'usuario_id' => $this->cashier->getKey(),
+            'estado_comercial' => EstadoComercialPedido::ABIERTO,
+        ]);
+        $this->table->update(['estado' => EstadoMesa::OCUPADA]);
+
+        $reused = app(PedidoService::class)->startOrder(TipoPedido::MESA, $this->cashier, $this->table->getKey());
+
+        $this->assertSame($existing->getKey(), $reused->getKey());
+        $this->assertDatabaseCount('pedidos', 1);
+    }
+
+    public function test_pending_products_can_be_removed_and_restored(): void
+    {
+        $service = app(PedidoService::class);
+        $pedido = $service->startOrder(TipoPedido::MESA, $this->cashier, $this->table->getKey());
+        $detail = $service->addProduct($pedido, $this->product, $this->cashier);
+
+        $service->removePendingLine($pedido, $detail);
+        $this->assertDatabaseMissing('detalles_pedido', ['id' => $detail->getKey()]);
+
+        $restored = $service->restorePendingLine($pedido, $this->product->getKey(), 1, '4.00');
+
+        $this->assertSame(EstadoLineaPedido::ACTIVA, $restored->estado_linea);
+        $this->assertNull($restored->tanda_id);
+    }
+
+    public function test_point_of_sale_redirects_to_cash_opening_without_an_active_session(): void
+    {
+        SesionCaja::query()->delete();
+
+        $this->actingAs($this->cashier)
+            ->get(ServiceSelection::getUrl())
+            ->assertRedirect('/admin/caja/abrir');
+    }
+
+    public function test_combo_accepts_a_mixed_selection_and_keeps_different_combinations_separate(): void
+    {
+        $service = app(PedidoService::class);
+        $pedido = $service->startOrder(TipoPedido::MESA, $this->cashier, $this->table->getKey());
+        $optionId = $this->combo->opcionesCombo()->value('id');
+
+        $firstSelection = [
+            (string) $optionId => [
+                (string) $this->product->getKey() => 4,
+                (string) $this->secondProduct->getKey() => 3,
+                (string) $this->thirdProduct->getKey() => 3,
+            ],
+        ];
+
+        $firstLine = $service->addCombo($pedido, $this->combo, $firstSelection, $this->cashier);
+        $sameLine = $service->addCombo($pedido, $this->combo, $firstSelection, $this->cashier);
+
+        $differentSelection = [
+            (string) $optionId => [
+                (string) $this->product->getKey() => 5,
+                (string) $this->secondProduct->getKey() => 5,
+            ],
+        ];
+        $differentLine = $service->addCombo($pedido, $this->combo, $differentSelection, $this->cashier);
+
+        $this->assertSame($firstLine->getKey(), $sameLine->getKey());
+        $this->assertNotSame($firstLine->getKey(), $differentLine->getKey());
+        $this->assertSame(2, $firstLine->fresh()->cantidad);
+        $this->assertSame(2, $pedido->fresh()->detalles()->whereNotNull('combo_id')->count());
+        $this->assertEquals(45.00, $pedido->fresh()->total());
+    }
+
+    public function test_combo_rejects_an_incomplete_selection_and_second_send_does_not_duplicate_batch(): void
+    {
+        $service = app(PedidoService::class);
+        $pedido = $service->startOrder(TipoPedido::MESA, $this->cashier, $this->table->getKey());
+        $optionId = $this->combo->opcionesCombo()->value('id');
+
+        $this->expectException(\Illuminate\Validation\ValidationException::class);
+        $service->addCombo($pedido, $this->combo, [
+            (string) $optionId => [(string) $this->product->getKey() => 9],
+        ], $this->cashier);
+    }
+
+    public function test_resending_without_new_lines_returns_the_existing_batch(): void
+    {
+        $service = app(PedidoService::class);
+        $pedido = $service->startOrder(TipoPedido::MESA, $this->cashier, $this->table->getKey());
+        $service->addProduct($pedido, $this->product, $this->cashier);
+
+        $firstBatch = $service->sendPendingBatch($pedido, $this->cashier);
+        $sameBatch = $service->sendPendingBatch($pedido, $this->cashier);
+
+        $this->assertSame($firstBatch->getKey(), $sameBatch->getKey());
+        $this->assertDatabaseCount('tandas_pedido', 1);
+    }
+
+    public function test_new_pending_lines_after_a_first_send_create_a_second_batch(): void
+    {
+        $service = app(PedidoService::class);
+        $pedido = $service->startOrder(TipoPedido::MESA, $this->cashier, $this->table->getKey());
+
+        $firstDetail = $service->addProduct($pedido, $this->product, $this->cashier);
+        $firstBatch = $service->sendPendingBatch($pedido, $this->cashier);
+        $secondDetail = $service->addProduct($pedido, $this->product, $this->cashier);
+        $secondBatch = $service->sendPendingBatch($pedido, $this->cashier);
+
+        $this->assertNotSame($firstBatch->getKey(), $secondBatch->getKey());
+        $this->assertSame(2, $secondBatch->numero_tanda);
+        $this->assertSame($firstBatch->getKey(), $firstDetail->fresh()->tanda_id);
+        $this->assertSame($secondBatch->getKey(), $secondDetail->fresh()->tanda_id);
+        $this->assertDatabaseCount('tandas_pedido', 2);
+    }
+
+    public function test_cash_payment_registers_change_and_keeps_the_table_occupied(): void
+    {
+        $service = app(PedidoService::class);
+        $pedido = $service->startOrder(TipoPedido::MESA, $this->cashier, $this->table->getKey());
+        $service->addProduct($pedido, $this->product, $this->cashier);
+        $service->sendPendingBatch($pedido, $this->cashier);
+
+        $payment = app(CobroService::class)->charge(
+            $pedido,
+            MetodoPago::EFECTIVO,
+            '10.00',
+            $this->cashier,
+        );
+
+        $this->assertSame(MetodoPago::EFECTIVO, $payment->metodo_pago);
+        $this->assertEquals('10.00', $payment->monto_recibido);
+        $this->assertEquals('6.00', $payment->cambio_devuelto);
+        $this->assertDatabaseHas('pedidos', [
+            'id' => $pedido->getKey(),
+            'estado_comercial' => EstadoComercialPedido::COBRADO->value,
+        ]);
+        $this->assertDatabaseHas('mesas', [
+            'id' => $this->table->getKey(),
+            'estado' => EstadoMesa::OCUPADA->value,
+        ]);
+        $this->assertDatabaseHas('evento_auditorias', [
+            'entidad_id' => $pedido->getKey(),
+            'tipo_evento' => 'pedido_cobrado',
+        ]);
+    }
+
+    public function test_card_payment_uses_the_exact_total(): void
+    {
+        $service = app(PedidoService::class);
+        $pedido = $service->startOrder(TipoPedido::MESA, $this->cashier, $this->table->getKey());
+        $service->addProduct($pedido, $this->product, $this->cashier);
+        $service->sendPendingBatch($pedido, $this->cashier);
+
+        $payment = app(CobroService::class)->charge(
+            $pedido,
+            MetodoPago::TARJETA,
+            null,
+            $this->cashier,
+        );
+
+        $this->assertEquals('4.00', $payment->monto_recibido);
+        $this->assertEquals('0.00', $payment->cambio_devuelto);
+    }
+
+    public function test_pending_lines_block_payment(): void
+    {
+        $service = app(PedidoService::class);
+        $pedido = $service->startOrder(TipoPedido::MESA, $this->cashier, $this->table->getKey());
+        $service->addProduct($pedido, $this->product, $this->cashier);
+
+        $this->expectException(\Illuminate\Validation\ValidationException::class);
+
+        app(CobroService::class)->charge($pedido, MetodoPago::EFECTIVO, '4.00', $this->cashier);
+    }
+
+    public function test_second_payment_is_rejected_and_does_not_duplicate_payment(): void
+    {
+        $service = app(PedidoService::class);
+        $pedido = $service->startOrder(TipoPedido::MESA, $this->cashier, $this->table->getKey());
+        $service->addProduct($pedido, $this->product, $this->cashier);
+        $service->sendPendingBatch($pedido, $this->cashier);
+        app(CobroService::class)->charge($pedido, MetodoPago::TARJETA, null, $this->cashier);
+
+        try {
+            app(CobroService::class)->charge($pedido, MetodoPago::TARJETA, null, $this->cashier);
+            $this->fail('El segundo cobro debía ser rechazado.');
+        } catch (\Illuminate\Validation\ValidationException) {
+            // La cuenta debe permanecer con un solo pago.
+        }
+
+        $this->assertDatabaseCount('pagos', 1);
+    }
+
+    public function test_cobrado_order_cannot_receive_new_products(): void
+    {
+        $service = app(PedidoService::class);
+        $pedido = $service->startOrder(TipoPedido::MESA, $this->cashier, $this->table->getKey());
+        $service->addProduct($pedido, $this->product, $this->cashier);
+        $service->sendPendingBatch($pedido, $this->cashier);
+        app(CobroService::class)->charge($pedido, MetodoPago::TARJETA, null, $this->cashier);
+
+        $this->expectException(\Illuminate\Validation\ValidationException::class);
+        $service->addProduct($pedido, $this->secondProduct, $this->cashier);
+    }
+
+    public function test_cashier_can_access_operational_table_map(): void
+    {
+        $this->actingAs($this->cashier)
+            ->get(TableSelection::getUrl([
+                'tipo' => TipoPedido::MESA->value,
+                'entrada' => 'mesas',
+            ]))
+            ->assertSuccessful();
+
+        $this->actingAs($this->cashier)
+            ->get(ChargeOrder::getUrl(['pedido' => 999999]))
+            ->assertNotFound();
+    }
+}
