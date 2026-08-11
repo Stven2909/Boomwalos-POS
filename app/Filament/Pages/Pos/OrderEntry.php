@@ -5,6 +5,7 @@ namespace App\Filament\Pages\Pos;
 use App\Enums\DisponibilidadProducto;
 use App\Enums\EstadoComercialPedido;
 use App\Enums\EstadoLineaPedido;
+use App\Enums\OrigenPedido;
 use App\Models\Categoria;
 use App\Models\Combo;
 use App\Models\DetallePedido;
@@ -283,6 +284,18 @@ class OrderEntry extends PosPage
         }
     }
 
+    public function sendToCashRegister(): void
+    {
+        try {
+            app(PedidoService::class)->sendToCashRegister($this->pedido, auth()->user());
+            session()->flash('pos_feedback', 'La cuenta fue enviada a caja. Espera el cobro en el mostrador.');
+            $this->undoLine = null;
+            $this->redirect(ServiceSelection::getUrl());
+        } catch (ValidationException $exception) {
+            $this->feedback = collect($exception->errors())->flatten()->first() ?? 'No se pudo enviar el pedido a caja.';
+        }
+    }
+
     public function openCharge(): void
     {
         if (! $this->canCharge) {
@@ -384,9 +397,14 @@ class OrderEntry extends PosPage
             && auth()->user()?->can('cobrar_pedido');
     }
 
+    public function getIsDeviceOrderProperty(): bool
+    {
+        return $this->pedido->origen_pedido === OrigenPedido::DISPOSITIVO;
+    }
+
     public function getIsReadOnlyProperty(): bool
     {
-        return $this->pedido->estado_comercial !== EstadoComercialPedido::ABIERTO;
+        return ! $this->pedido->estado_comercial->isPayable();
     }
 
     public function comboSelectionTotal(int $optionId): int

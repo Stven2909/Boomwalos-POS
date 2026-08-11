@@ -2458,6 +2458,127 @@ body:has(.bw-cashier-dashboard) .fi-page-header-main-ctn > .fi-header {
     }
 }
 
+/* Pedidos por cobrar: lista táctil para el cajero. */
+.bw-pos-orders-main {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.bw-pos-orders-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.bw-pos-order-card {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 20px;
+    border: 2px solid #ded9e1;
+    border-radius: 16px;
+    background: #fff;
+    padding: 18px 24px;
+    color: #202027;
+    cursor: pointer;
+    text-align: left;
+    transition: border-color 150ms ease, box-shadow 150ms ease, transform 150ms ease;
+}
+
+.bw-pos-order-card:hover,
+.bw-pos-order-card:focus-visible {
+    border-color: #bba8b8;
+    box-shadow: 0 10px 24px rgba(107, 78, 99, 0.11);
+    transform: translateY(-2px);
+}
+
+.bw-pos-order-code {
+    display: flex;
+    min-width: 84px;
+    flex-direction: column;
+    gap: 2px;
+    align-items: center;
+}
+
+.bw-pos-order-code strong {
+    font-size: 22px;
+    font-weight: 800;
+    line-height: 1;
+    color: #6b4e63;
+}
+
+.bw-pos-order-code small {
+    font-size: 12px;
+    font-weight: 600;
+    color: #7d7682;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+}
+
+.bw-pos-order-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    font-size: 13px;
+    color: #57515c;
+}
+
+.bw-pos-order-meta span:first-child {
+    font-weight: 700;
+    color: #202027;
+}
+
+.bw-pos-order-amount {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+}
+
+.bw-pos-order-amount strong {
+    font-size: 22px;
+    font-weight: 800;
+    color: #202027;
+}
+
+.bw-pos-order-amount small {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: #6b4e63;
+}
+
+.bw-pos-pending-badge {
+    display: inline-flex;
+    min-width: 22px;
+    height: 22px;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    background: #b3372e;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 800;
+    padding: 0 6px;
+    vertical-align: middle;
+}
+
+@media (max-width: 600px) {
+    .bw-pos-order-card {
+        grid-template-columns: auto 1fr;
+        gap: 12px;
+        padding: 14px 16px;
+    }
+
+    .bw-pos-order-amount {
+        grid-column: 1 / -1;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+    }
+}
+
 /* Cocina KDS: tablero oscuro, legible a distancia y operativo con toque. */
 body:has(.bw-kds-page) {
     background: #17171e;

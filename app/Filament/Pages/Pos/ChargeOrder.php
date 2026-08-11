@@ -2,9 +2,9 @@
 
 namespace App\Filament\Pages\Pos;
 
-use App\Enums\EstadoComercialPedido;
 use App\Enums\EstadoLineaPedido;
 use App\Enums\MetodoPago;
+use App\Enums\OrigenPedido;
 use App\Models\Pedido;
 use App\Services\CobroService;
 use Illuminate\Validation\ValidationException;
@@ -39,10 +39,17 @@ class ChargeOrder extends PosPage
         }
 
         abort_unless($pedido->establecimiento_id === $this->establishment()->getKey(), 404);
-        abort_unless($pedido->estado_comercial === EstadoComercialPedido::ABIERTO, 404);
+        abort_unless($pedido->estado_comercial->isPayable(), 404);
 
         $this->pedido = $pedido;
         $this->refreshPedido();
+    }
+
+    public function backUrl(): string
+    {
+        return $this->pedido->origen_pedido === OrigenPedido::DISPOSITIVO
+            ? ListaPedidos::getUrl()
+            : OrderEntry::getUrl(['pedido' => $this->pedido->getKey()]);
     }
 
     public function updatedMetodoPago(string $metodo): void

@@ -4,6 +4,7 @@ namespace App\Filament\Pages\Pos;
 
 use App\Enums\EstadoComercialPedido;
 use App\Enums\EstadoMesa;
+use App\Enums\OrigenPedido;
 use App\Enums\TipoPedido;
 use App\Enums\ZonaMesa;
 use App\Models\Mesa;
@@ -61,6 +62,12 @@ class TableSelection extends PosPage
         $pedido = $mesa->pedidos->first();
 
         if ($pedido) {
+            if ($pedido->estado_comercial === EstadoComercialPedido::PENDIENTE_COBRO) {
+                $this->redirect(ChargeOrder::getUrl(['pedido' => $pedido->getKey()]));
+
+                return;
+            }
+
             $this->redirect(OrderEntry::getUrl(['pedido' => $pedido->getKey()]));
 
             return;
@@ -105,15 +112,24 @@ class TableSelection extends PosPage
             TipoPedido::MESA,
             auth()->user(),
             $mesaId,
+            $this->requestedOrigen(),
         );
 
         $this->redirect(OrderEntry::getUrl(['pedido' => $pedido->getKey()]));
+    }
+
+    private function requestedOrigen(): OrigenPedido
+    {
+        return request()->query('origen') === 'dispositivo'
+            ? OrigenPedido::DISPOSITIVO
+            : OrigenPedido::CAJA;
     }
 
     public function getTablesProperty()
     {
         $activeStates = [
             EstadoComercialPedido::ABIERTO->value,
+            EstadoComercialPedido::PENDIENTE_COBRO->value,
             EstadoComercialPedido::COBRADO->value,
         ];
 

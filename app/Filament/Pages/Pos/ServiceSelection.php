@@ -2,7 +2,10 @@
 
 namespace App\Filament\Pages\Pos;
 
+use App\Enums\EstadoComercialPedido;
+use App\Enums\OrigenPedido;
 use App\Enums\TipoPedido;
+use App\Models\Pedido;
 use App\Services\PedidoService;
 
 class ServiceSelection extends PosPage
@@ -23,7 +26,10 @@ class ServiceSelection extends PosPage
 
     public function selectLocal(): void
     {
-        $this->redirect(TableSelection::getUrl(['tipo' => TipoPedido::MESA->value]));
+        $this->redirect(TableSelection::getUrl([
+            'tipo' => TipoPedido::MESA->value,
+            'origen' => $this->requestedOrigen()->value,
+        ]));
     }
 
     public function selectTakeaway(): void
@@ -35,8 +41,30 @@ class ServiceSelection extends PosPage
         $pedido = app(PedidoService::class)->startOrder(
             TipoPedido::PARA_LLEVAR,
             auth()->user(),
+            null,
+            $this->requestedOrigen(),
         );
 
         $this->redirect(OrderEntry::getUrl(['pedido' => $pedido->getKey()]));
+    }
+
+    public function openPendingList(): void
+    {
+        $this->redirect(ListaPedidos::getUrl());
+    }
+
+    public function getPendingCountProperty(): int
+    {
+        return (int) Pedido::query()
+            ->where('establecimiento_id', $this->establishment()->getKey())
+            ->where('estado_comercial', EstadoComercialPedido::PENDIENTE_COBRO->value)
+            ->count();
+    }
+
+    private function requestedOrigen(): OrigenPedido
+    {
+        return request()->query('origen') === 'dispositivo'
+            ? OrigenPedido::DISPOSITIVO
+            : OrigenPedido::CAJA;
     }
 }

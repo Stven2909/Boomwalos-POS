@@ -36,7 +36,7 @@ class CobroService
                 ->lockForUpdate()
                 ->findOrFail($pedido->getKey());
 
-            if ($pedido->estado_comercial !== EstadoComercialPedido::ABIERTO) {
+            if (! $pedido->estado_comercial->isPayable()) {
                 throw ValidationException::withMessages([
                     'pago' => 'Este pedido ya fue cobrado o cerrado.',
                 ]);
@@ -81,6 +81,8 @@ class CobroService
                 'total' => $total,
                 'monto_recibido' => $recibido,
                 'cambio_devuelto' => $cambio,
+                'origen_pedido' => $pedido->origen_pedido?->value,
+                'codigo_corto' => $pedido->codigo_corto,
             ]);
 
             app(KitchenService::class)->closeOrderIfReady($pedido, $actor);

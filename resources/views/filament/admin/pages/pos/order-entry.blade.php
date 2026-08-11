@@ -5,9 +5,11 @@
             'centerLabel' => $pedido->tipo_pedido?->label() === 'Mesa'
                 ? 'MESA ' . $pedido->mesa?->numero . ' · EN EL LOCAL'
                 : 'PARA LLEVAR · MOSTRADOR',
-            'rightLabel' => $pedido->estado_comercial?->value === 'COBRADO'
-                ? 'COBRADO · PENDIENTE DE ENTREGA'
-                : 'CUENTA ABIERTA',
+            'rightLabel' => $pedido->estado_comercial?->value === 'PENDIENTE_COBRO'
+                ? 'ENVIADO A CAJA · ESPERA COBRO'
+                : ($pedido->estado_comercial?->value === 'COBRADO'
+                    ? 'COBRADO · PENDIENTE DE ENTREGA'
+                    : 'CUENTA ABIERTA'),
         ])
 
         <main class="bw-pos-order-main">
@@ -116,9 +118,15 @@
                 @endif
                 @else
                     <div class="bw-pos-read-only-state" role="status">
-                        <x-heroicon-o-check-badge class="h-7 w-7" />
-                        <strong>Pedido cobrado</strong>
-                        <span>La cuenta está pendiente de entrega. No se pueden agregar productos.</span>
+                        @if ($pedido->estado_comercial?->value === 'PENDIENTE_COBRO')
+                            <x-heroicon-o-banknotes class="h-7 w-7" />
+                            <strong>Enviado a caja</strong>
+                            <span>La cuenta quedó registrada y espera el cobro en caja. No se pueden agregar productos.</span>
+                        @else
+                            <x-heroicon-o-check-badge class="h-7 w-7" />
+                            <strong>Pedido cobrado</strong>
+                            <span>La cuenta está pendiente de entrega. No se pueden agregar productos.</span>
+                        @endif
                     </div>
                 @endif
             </section>
@@ -212,8 +220,22 @@
                 @if ($this->isReadOnly)
                     <div class="bw-pos-paid-status" role="status">
                         <x-heroicon-o-check-circle class="h-5 w-5" />
-                        <span>Cobrado · pendiente de entrega</span>
+                        <span>
+                            {{ $pedido->estado_comercial?->value === 'PENDIENTE_COBRO'
+                                ? 'Enviado a caja · esperando cobro'
+                                : 'Cobrado · pendiente de entrega' }}
+                        </span>
                     </div>
+                @elseif ($this->isDeviceOrder)
+                    <button
+                        type="button"
+                        wire:click="sendToCashRegister"
+                        class="bw-pos-charge-button"
+                        @disabled($this->pendingDetails->isEmpty() && $this->sentDetails->where('estado_linea', \App\Enums\EstadoLineaPedido::ACTIVA)->isEmpty())
+                    >
+                        <x-heroicon-o-banknotes class="h-5 w-5" />
+                        Enviar cuenta a caja
+                    </button>
                 @elseif ($this->canCharge)
                     <button type="button" wire:click="openCharge" class="bw-pos-charge-button">
                         <x-heroicon-o-credit-card class="h-5 w-5" />
@@ -300,3 +322,4 @@
         @endif
     </div>
 </x-filament-panels::page>
+

@@ -7,6 +7,7 @@ use App\Enums\EstadoLineaPedido;
 use App\Enums\EstadoMesa;
 use App\Enums\EstadoCocina;
 use App\Enums\MetodoPago;
+use App\Enums\OrigenPedido;
 use App\Enums\TipoPedido;
 use App\Enums\ZonaMesa;
 use App\Filament\Pages\Pos\ChargeOrder;
@@ -363,5 +364,128 @@ class PointOfSaleFlowTest extends TestCase
         $this->actingAs($this->cashier)
             ->get(ChargeOrder::getUrl(['pedido' => 999999]))
             ->assertNotFound();
+    }
+
+    public function test_start_order_assigns_incrementing_short_code_per_day(): void
+    {
+        $service = app(PedidoService::class);
+
+        $first = $service->startOrder(TipoPedido::PARA_LLEVAR, $this->cashier);
+        $second = $service->startOrder(TipoPedido::PARA_LLEVAR, $this->cashier);
+
+        $this->assertSame(OrigenPedido::CAJA, $first->origen_pedido);
+        $this->assertSame(1, $first->codigo_corto);
+        $this->assertSame(now()->toDateString(), $first->fecha_codigo?->toDateString());
+        $this->assertSame(2, $second->codigo_corto);
+        $this->assertDatabaseHas('secuencias_pedidos', [
+            'establecimiento_id' => $this->establishment->getKey(),
+            'fecha' => now()->toDateString(),
+            'ultimo_valor' => 2,
+        ]);
+    }
+
+    public function test_device_order_sends_pending_lines_to_kitchen_and_marks_pendiente_cobro(): void
+    {
+        $service = app(PedidoService::class);
+        $pedido = $service->startOrder(TipoPedido::PARA_LLEVAR, $this->cashier, null, OrigenPedido::DISPOSITIVO);
+        $service->addProduct($pedido, $this->product, $this->cashier);
+
+        $service->sendToCashRegister($pedido, $this->cashier);
+
+        $pedido->refresh();
+        $this->assertSame(OrigenPedido::DISPOSITIVO, $pedido->origen_pedido);
+        $this->assertSame(EstadoComercialPedido::PENDIENTE_COBRO, $pedido->estado_comercial);
+        $this->assertSame(1, $pedido->tandas()->count());
+        $this->assertDatabaseHas('evento_auditorias', [
+            'entidad_id' => $pedido->getKey(),
+            'tipo_evento' => 'pedido_enviado_caja',
+        ]);
+        $this->assertDatabaseHas('evento_auditorias', [
+            'entidad_id' => $pedido->getKey(),
+            'tipo_evento' => 'pedido_enviado_cocina',
+        ]);
+    }
+
+    public function test_sending_the_same_order_to_cash_register_twice_is_rejected(): void
+    {
+        $service = app(PedidoService::class);
+        $pedido = $service->startOrder(TipoPedido::PARA_LLEVAR, $this->cashier, null, OrigenPedido::DISPOSITIVO);
+        $service->addProduct($pedido, $this->product, $this->cashier);
+        $service->sendToCashRegister($pedido, $this->cashier);
+
+        $this->expectException(\Illuminate\Validation\ValidationException::class);
+        $service->sendToCashRegister($pedido, $this->cashier);
+    }
+
+    public function test_pendiente_cobro_order_cannot_receive_new_products(): void
+    {
+        $service = app(PedidoService::class);
+        $pedido = $service->startOrder(TipoPedido::PARA_LLEVAR, $this->cashier, null, OrigenPedido::DISPOSITIVO);
+        $service->addProduct($pedido, $this->product, $this->cashier);
+        $service->sendToCashRegister($pedido, $this->cashier);
+
+        $this->expectException(\Illuminate\Validation\ValidationException::class);
+        $service->addProduct($pedido, $this->secondProduct, $this->cashier);
+    }
+
+    public function test_cashier_can_charge_a_device_order_pending_in_cash_register(): void
+    {
+        $service = app(PedidoService::class);
+        $pedido = $service->startOrder(TipoPedido::PARA_LLEVAR, $this->cashier, null, OrigenPedido::DISPOSITIVO);
+        $service->addProduct($pedido, $this->product, $this->cashier);
+        $service->sendToCashRegister($pedido, $this->cashier);
+
+        $payment = app(CobroService::class)->charge(
+            $pedido,
+            MetodoPago::TARJETA,
+            null,
+            $this->cashier,
+        );
+
+        $this->assertSame($pedido->getKey(), $payment->pedido_id);
+        $this->assertDatabaseHas('pedidos', [
+            'id' => $pedido->getKey(),
+            'estado_comercial' => EstadoComercialPedido::COBRADO->value,
+        ]);
+    }
+
+    public function test_cashier_can_access_pending_orders_page(): void
+    {
+        $this->actingAs($this->cashier)
+            ->get(\App\Filament\Pages\Pos\ListaPedidos::getUrl())
+            ->assertSuccessful();
+
+        $this->actingAs($this->cashier)
+            ->get(\App\Filament\Pages\Pos\ServiceSelection::getUrl())
+            ->assertSuccessful();
+    }
+
+    public function test_order_and_charge_views_render_for_a_valid_pedido(): void
+    {
+        $service = app(PedidoService::class);
+        $pedido = $service->startOrder(TipoPedido::PARA_LLEVAR, $this->cashier);
+        $service->addProduct($pedido, $this->product, $this->cashier);
+        $service->sendPendingBatch($pedido, $this->cashier);
+
+        $this->actingAs($this->cashier)
+            ->get(\App\Filament\Pages\Pos\OrderEntry::getUrl(['pedido' => $pedido->getKey()]))
+            ->assertSuccessful();
+
+        $this->actingAs($this->cashier)
+            ->get(\App\Filament\Pages\Pos\ChargeOrder::getUrl(['pedido' => $pedido->getKey()]))
+            ->assertSuccessful();
+    }
+
+    public function test_cashier_pending_orders_page_lists_orders_waiting_to_be_charged(): void
+    {
+        $service = app(PedidoService::class);
+        $deviceOrder = $service->startOrder(TipoPedido::PARA_LLEVAR, $this->cashier, null, OrigenPedido::DISPOSITIVO);
+        $service->addProduct($deviceOrder, $this->product, $this->cashier);
+        $service->sendToCashRegister($deviceOrder, $this->cashier);
+
+        $page = app(\App\Filament\Pages\Pos\ListaPedidos::class);
+
+        $this->assertTrue($page->pendingOrders->contains('id', $deviceOrder->getKey()));
+        $this->assertSame(4.00, $page->orderTotal($deviceOrder->fresh(['detalles'])));
     }
 }

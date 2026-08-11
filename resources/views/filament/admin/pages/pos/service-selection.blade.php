@@ -27,6 +27,19 @@
                     <strong>Para llevar</strong>
                     <span>Retiro en mostrador</span>
                 </button>
+
+                <button type="button" wire:click="openPendingList" class="bw-pos-service-card">
+                    <span class="bw-pos-service-icon" aria-hidden="true">
+                        <x-heroicon-o-banknotes class="h-9 w-9" />
+                    </span>
+                    <strong>Pedidos por cobrar</strong>
+                    <span>
+                        {{ $this->pendingCount }} en caja
+                        @if ($this->pendingCount > 0)
+                            <b class="bw-pos-pending-badge">{{ $this->pendingCount }}</b>
+                        @endif
+                    </span>
+                </button>
             </section>
 
             @if ($feedback)
@@ -46,3 +59,4 @@
         </main>
     </div>
 </x-filament-panels::page>
+

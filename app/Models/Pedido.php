@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\EstadoComercialPedido;
+use App\Enums\OrigenPedido;
 use App\Enums\TipoPedido;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -18,6 +19,9 @@ class Pedido extends Model
         'mesa_id',
         'establecimiento_id',
         'usuario_id',
+        'origen_pedido',
+        'codigo_corto',
+        'fecha_codigo',
         'estado_comercial',
     ];
 
@@ -25,7 +29,10 @@ class Pedido extends Model
     {
         return [
             'tipo_pedido' => TipoPedido::class,
+            'origen_pedido' => OrigenPedido::class,
             'estado_comercial' => EstadoComercialPedido::class,
+            'codigo_corto' => 'integer',
+            'fecha_codigo' => 'date',
         ];
     }
 
@@ -73,8 +80,22 @@ class Pedido extends Model
     {
         return in_array($this->estado_comercial, [
             EstadoComercialPedido::ABIERTO,
+            EstadoComercialPedido::PENDIENTE_COBRO,
             EstadoComercialPedido::COBRADO,
         ], true);
+    }
+
+    public function isUnpaid(): bool
+    {
+        return in_array($this->estado_comercial, [
+            EstadoComercialPedido::ABIERTO,
+            EstadoComercialPedido::PENDIENTE_COBRO,
+        ], true);
+    }
+
+    public function codigoCortoLabel(): string
+    {
+        return $this->codigo_corto !== null ? '#'.$this->codigo_corto : '';
     }
 
     public function total(): float

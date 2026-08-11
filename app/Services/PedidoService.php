@@ -8,6 +8,7 @@ use App\Enums\EstadoCocina;
 use App\Enums\EstadoComercialPedido;
 use App\Enums\EstadoLineaPedido;
 use App\Enums\EstadoMesa;
+use App\Enums\OrigenPedido;
 use App\Enums\TipoPedido;
 use App\Models\Combo;
 use App\Models\DetallePedido;
@@ -25,9 +26,9 @@ use Illuminate\Validation\ValidationException;
 
 class PedidoService
 {
-    public function startOrder(TipoPedido $tipo, User $actor, ?int $mesaId = null): Pedido
+    public function startOrder(TipoPedido $tipo, User $actor, ?int $mesaId = null, OrigenPedido $origen = OrigenPedido::CAJA): Pedido
     {
-        return DB::transaction(function () use ($tipo, $actor, $mesaId): Pedido {
+        return DB::transaction(function () use ($tipo, $actor, $mesaId, $origen): Pedido {
             $establecimientoId = $this->establishmentId();
 
             $this->ensureActiveCashSession($establecimientoId);
@@ -53,6 +54,7 @@ class PedidoService
                 $activeOrder = $mesa->pedidos()
                     ->whereIn('estado_comercial', [
                         EstadoComercialPedido::ABIERTO->value,
+                        EstadoComercialPedido::PENDIENTE_COBRO->value,
                         EstadoComercialPedido::COBRADO->value,
                     ])
                     ->latest('id')
@@ -69,12 +71,17 @@ class PedidoService
                 }
             }
 
+            $codigoCorto = $this->nextCodigoCorto($establecimientoId);
+
             $pedido = Pedido::create([
                 'numero_seguimiento' => $this->nextTrackingNumber(),
                 'tipo_pedido' => $tipo,
                 'mesa_id' => $mesa?->id,
                 'establecimiento_id' => $establecimientoId,
                 'usuario_id' => $actor->getKey(),
+                'origen_pedido' => $origen,
+                'codigo_corto' => $codigoCorto,
+                'fecha_codigo' => now()->toDateString(),
                 'estado_comercial' => EstadoComercialPedido::ABIERTO,
             ]);
 
@@ -84,6 +91,8 @@ class PedidoService
 
             $this->audit($pedido, $actor, 'pedido_creado', [
                 'tipo_pedido' => $tipo->value,
+                'origen_pedido' => $origen->value,
+                'codigo_corto' => $codigoCorto,
                 'mesa_id' => $mesa?->id,
             ]);
 
@@ -355,21 +364,10 @@ class PedidoService
                 ]);
             }
 
-            $numeroTanda = ((int) $pedido->tandas()->max('numero_tanda')) + 1;
-            $tanda = $pedido->tandas()->create([
-                'numero_tanda' => $numeroTanda,
-                'estado_cocina' => EstadoCocina::PENDIENTE,
-            ]);
-
-            $pedido->detalles()
-                ->whereIn('id', $pendingLines->modelKeys())
-                ->update(['tanda_id' => $tanda->getKey()]);
-
-            $printJob = app(QueueKitchenBatch::class)->handle($tanda);
-
+            $tanda = $this->createBatchForLockedOrder($pedido, $pendingLines, $actor);
             $this->audit($pedido, $actor, 'pedido_enviado_cocina', [
                 'tanda_id' => $tanda->getKey(),
-                'numero_tanda' => $numeroTanda,
+                'numero_tanda' => $tanda->numero_tanda,
                 'detalles' => $pendingLines->map(fn (DetallePedido $detalle): array => [
                     'id' => $detalle->getKey(),
                     'producto_id' => $detalle->producto_id,
@@ -377,13 +375,74 @@ class PedidoService
                 ])->values()->all(),
             ]);
 
-            $this->audit($pedido, $actor, $printJob ? 'comanda_en_cola' : 'comanda_sin_impresora', [
-                'tanda_id' => $tanda->getKey(),
-                'trabajo_impresion_id' => $printJob?->getKey(),
-            ]);
-
             return $tanda->load('detalles.producto');
         });
+    }
+
+    public function sendToCashRegister(Pedido $pedido, User $actor): ?TandaPedido
+    {
+        return DB::transaction(function () use ($pedido, $actor): ?TandaPedido {
+            $pedido = $this->lockPedido($pedido);
+
+            if ($pedido->estado_comercial !== EstadoComercialPedido::ABIERTO) {
+                throw ValidationException::withMessages([
+                    'pedido' => 'Este pedido ya fue enviado a caja.',
+                ]);
+            }
+
+            $pendingLines = $pedido->detalles()
+                ->whereNull('tanda_id')
+                ->where('estado_linea', EstadoLineaPedido::ACTIVA->value)
+                ->lockForUpdate()
+                ->get();
+
+            $tanda = null;
+
+            if ($pendingLines->isNotEmpty()) {
+            $tanda = $this->createBatchForLockedOrder($pedido, $pendingLines, $actor);
+
+                $this->audit($pedido, $actor, 'pedido_enviado_cocina', [
+                    'tanda_id' => $tanda->getKey(),
+                    'numero_tanda' => $tanda->numero_tanda,
+                    'detalles' => $pendingLines->map(fn (DetallePedido $detalle): array => [
+                        'id' => $detalle->getKey(),
+                        'producto_id' => $detalle->producto_id,
+                        'cantidad' => $detalle->cantidad,
+                    ])->values()->all(),
+                ]);
+            }
+
+            $pedido->update(['estado_comercial' => EstadoComercialPedido::PENDIENTE_COBRO]);
+
+            $this->audit($pedido, $actor, 'pedido_enviado_caja', [
+                'tanda_id' => $tanda?->getKey(),
+                'total_lineas' => $pendingLines->count(),
+            ]);
+
+            return $tanda?->load('detalles.producto');
+        });
+    }
+
+    private function createBatchForLockedOrder(Pedido $pedido, $pendingLines, User $actor): TandaPedido
+    {
+        $numeroTanda = ((int) $pedido->tandas()->max('numero_tanda')) + 1;
+        $tanda = $pedido->tandas()->create([
+            'numero_tanda' => $numeroTanda,
+            'estado_cocina' => EstadoCocina::PENDIENTE,
+        ]);
+
+        $pedido->detalles()
+            ->whereIn('id', $pendingLines->modelKeys())
+            ->update(['tanda_id' => $tanda->getKey()]);
+
+        $printJob = app(QueueKitchenBatch::class)->handle($tanda);
+
+        $this->audit($pedido, $actor, $printJob ? 'comanda_en_cola' : 'comanda_sin_impresora', [
+            'tanda_id' => $tanda->getKey(),
+            'trabajo_impresion_id' => $printJob?->getKey(),
+        ]);
+
+        return $tanda;
     }
 
     public function cancelSentLine(DetallePedido $detalle, User $actor, string $motivo = 'Anulación desde Punto de Venta'): void
@@ -428,7 +487,7 @@ class PedidoService
     {
         if ($pedido->estado_comercial !== EstadoComercialPedido::ABIERTO) {
             throw ValidationException::withMessages([
-                'pedido' => 'Este pedido ya fue cobrado y no acepta nuevos productos.',
+                'pedido' => 'Este pedido ya fue enviado a caja o cobrado y no acepta cambios.',
             ]);
         }
     }
@@ -460,6 +519,40 @@ class PedidoService
                 'sesion' => 'No hay una caja activa. Abre un turno antes de crear pedidos.',
             ]);
         }
+    }
+
+    private function nextCodigoCorto(int $establecimientoId): int
+    {
+        $fecha = now()->toDateString();
+
+        $secuencia = DB::table('secuencias_pedidos')
+            ->where('establecimiento_id', $establecimientoId)
+            ->where('fecha', $fecha)
+            ->lockForUpdate()
+            ->first();
+
+        if ($secuencia) {
+            DB::table('secuencias_pedidos')
+                ->where('id', $secuencia->id)
+                ->increment('ultimo_valor');
+
+            $secuencia = DB::table('secuencias_pedidos')->find($secuencia->id);
+        } else {
+            DB::table('secuencias_pedidos')->insert([
+                'establecimiento_id' => $establecimientoId,
+                'fecha' => $fecha,
+                'ultimo_valor' => 1,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+            $secuencia = DB::table('secuencias_pedidos')
+                ->where('establecimiento_id', $establecimientoId)
+                ->where('fecha', $fecha)
+                ->first();
+        }
+
+        return (int) $secuencia->ultimo_valor;
     }
 
     private function nextTrackingNumber(): string

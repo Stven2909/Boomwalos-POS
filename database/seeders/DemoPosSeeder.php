@@ -6,6 +6,7 @@ use App\Enums\DisponibilidadProducto;
 use App\Enums\EstadoComercialPedido;
 use App\Enums\EstadoLineaPedido;
 use App\Enums\EstadoMesa;
+use App\Enums\OrigenPedido;
 use App\Enums\TipoPedido;
 use App\Enums\TipoImpresora;
 use App\Enums\ZonaMesa;
@@ -20,6 +21,7 @@ use App\Models\Producto;
 use App\Models\SesionCaja;
 use App\Models\User;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 
 class DemoPosSeeder extends Seeder
 {
@@ -166,6 +168,9 @@ class DemoPosSeeder extends Seeder
                     'mesa_id' => $mesaDemo->getKey(),
                     'establecimiento_id' => $establecimiento->getKey(),
                     'usuario_id' => $admin->getKey(),
+                    'origen_pedido' => OrigenPedido::CAJA,
+                    'codigo_corto' => 1,
+                    'fecha_codigo' => now()->toDateString(),
                     'estado_comercial' => EstadoComercialPedido::ABIERTO,
                 ],
             );
@@ -181,6 +186,52 @@ class DemoPosSeeder extends Seeder
                     'precio_unitario' => $productoDemo->precio,
                 ],
             );
+        }
+
+        $this->seedCodigoCortoSequence($establecimiento->getKey());
+
+        $pedidoPendiente = Pedido::firstOrCreate(
+            ['numero_seguimiento' => 'BW-DEMO-0002'],
+            [
+                'tipo_pedido' => TipoPedido::PARA_LLEVAR,
+                'mesa_id' => null,
+                'establecimiento_id' => $establecimiento->getKey(),
+                'usuario_id' => $admin->getKey(),
+                'origen_pedido' => OrigenPedido::DISPOSITIVO,
+                'codigo_corto' => 2,
+                'fecha_codigo' => now()->toDateString(),
+                'estado_comercial' => EstadoComercialPedido::PENDIENTE_COBRO,
+            ],
+        );
+
+        if (! $pedidoPendiente->detalles()->exists()) {
+            DetallePedido::create([
+                'pedido_id' => $pedidoPendiente->getKey(),
+                'tanda_id' => null,
+                'estado_linea' => EstadoLineaPedido::ACTIVA,
+                'producto_id' => $productoDemo->getKey(),
+                'combo_id' => null,
+                'cantidad' => 2,
+                'precio_unitario' => $productoDemo->precio,
+            ]);
+        }
+    }
+
+    private function seedCodigoCortoSequence(int $establecimientoId): void
+    {
+        $fecha = now()->toDateString();
+
+        if (DB::table('secuencias_pedidos')
+            ->where('establecimiento_id', $establecimientoId)
+            ->where('fecha', $fecha)
+            ->doesntExist()) {
+            DB::table('secuencias_pedidos')->insert([
+                'establecimiento_id' => $establecimientoId,
+                'fecha' => $fecha,
+                'ultimo_valor' => 2,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
         }
     }
 }

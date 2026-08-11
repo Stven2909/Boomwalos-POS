@@ -1,7 +1,8 @@
 <x-filament-panels::page>
     <div class="bw-pos-page bw-pos-charge-page">
         @include('filament.admin.components.pos-header', [
-            'backUrl' => \App\Filament\Pages\Pos\OrderEntry::getUrl(['pedido' => $pedido->getKey()]),
+            'backUrl' => $this->backUrl(),
+            'backLabel' => $pedido->origen_pedido?->value === \App\Enums\OrigenPedido::DISPOSITIVO->value ? 'Pendientes' : 'Pedido',
             'centerLabel' => $pedido->mesa
                 ? 'MESA ' . $pedido->mesa->numero . ' · COBRO'
                 : 'PARA LLEVAR · COBRO',
@@ -14,7 +15,12 @@
                     <div>
                         <span class="bw-pos-step-label">COBRO DE CUENTA</span>
                         <h1 id="charge-title">Cobrar cuenta</h1>
-                        <p>{{ $pedido->mesa ? 'Mesa ' . $pedido->mesa->numero : 'Pedido para llevar' }}</p>
+                        <p>
+                            {{ $pedido->mesa ? 'Mesa ' . $pedido->mesa->numero : 'Pedido para llevar' }}
+                            @if ($pedido->codigoCortoLabel())
+                                · {{ $pedido->codigoCortoLabel() }}
+                            @endif
+                        </p>
                     </div>
                     <span class="bw-pos-order-tracking">{{ $pedido->numero_seguimiento }}</span>
                 </div>
@@ -104,8 +110,8 @@
                     Confirmar pago
                 </button>
 
-                <a href="{{ \App\Filament\Pages\Pos\OrderEntry::getUrl(['pedido' => $pedido->getKey()]) }}" class="bw-pos-secondary-button bw-pos-charge-back">
-                    Volver al pedido
+                <a href="{{ $this->backUrl() }}" class="bw-pos-secondary-button bw-pos-charge-back">
+                    {{ $pedido->origen_pedido?->value === \App\Enums\OrigenPedido::DISPOSITIVO->value ? 'Volver a pendientes' : 'Volver al pedido' }}
                 </a>
             </aside>
         </main>
