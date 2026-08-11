@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Enums\EstadoComercialPedido;
 use App\Enums\MetodoPago;
+use App\Models\Establecimiento;
 use App\Models\EventoAuditoria;
 use App\Models\Pago;
 use App\Models\Pedido;
@@ -17,22 +18,35 @@ class CierreCajaService
 {
     public function calcularEsperado(SesionCaja $sesion): string
     {
-        $esperado = bcadd((string) $sesion->monto_inicial, '0', 2);
+        return $this->calcularResumen($sesion)['efectivo_esperado'];
+    }
 
-        $pagosEfectivo = Pago::query()
-            ->where('metodo_pago', MetodoPago::EFECTIVO)
-            ->whereBetween('created_at', [$sesion->fecha_apertura, now()])
-            ->whereHas('pedido', function ($query) use ($sesion): void {
-                $query->where('establecimiento_id', $sesion->establecimiento_id);
-            })
+    public function calcularResumen(SesionCaja $sesion): array
+    {
+        $totalEfectivo = '0.00';
+        $totalTarjeta = '0.00';
+
+        $pagos = Pago::query()
+            ->where('sesion_caja_id', $sesion->getKey())
             ->get();
 
-        foreach ($pagosEfectivo as $pago) {
+        foreach ($pagos as $pago) {
             $neto = bcsub((string) $pago->monto_recibido, (string) $pago->cambio_devuelto, 2);
-            $esperado = bcadd($esperado, $neto, 2);
+
+            if ($pago->metodo_pago === MetodoPago::EFECTIVO) {
+                $totalEfectivo = bcadd($totalEfectivo, $neto, 2);
+            } else {
+                $totalTarjeta = bcadd($totalTarjeta, $neto, 2);
+            }
         }
 
-        return $esperado;
+        return [
+            'monto_inicial' => bcadd((string) $sesion->monto_inicial, '0', 2),
+            'total_efectivo' => $totalEfectivo,
+            'total_tarjeta' => $totalTarjeta,
+            'total_ventas' => bcadd($totalEfectivo, $totalTarjeta, 2),
+            'efectivo_esperado' => bcadd((string) $sesion->monto_inicial, $totalEfectivo, 2),
+        ];
     }
 
     public function cerrar(SesionCaja $sesion, string $efectivoContado, User $actor): SesionCaja
@@ -42,6 +56,10 @@ class CierreCajaService
         }
 
         return DB::transaction(function () use ($sesion, $efectivoContado, $actor): SesionCaja {
+            Establecimiento::query()
+                ->lockForUpdate()
+                ->findOrFail($sesion->establecimiento_id);
+
             $sesion = SesionCaja::query()
                 ->lockForUpdate()
                 ->findOrFail($sesion->getKey());
@@ -52,48 +70,60 @@ class CierreCajaService
                 ]);
             }
 
-            $contado = $this->normalizeAmount($efectivoContado);
-            $esperado = $this->calcularEsperado($sesion);
-            $diferencia = bcsub($contado, $esperado, 2);
+            $this->ensureNoOpenOrders($sesion);
 
-            $pedidosAbiertos = Pedido::query()
-                ->where('establecimiento_id', $sesion->establecimiento_id)
-                ->where('estado_comercial', EstadoComercialPedido::ABIERTO->value)
-                ->get(['id', 'numero_seguimiento'])
-                ->map(fn (Pedido $pedido): array => [
-                    'id' => $pedido->getKey(),
-                    'numero_seguimiento' => $pedido->numero_seguimiento,
-                ])
-                ->values()
-                ->all();
+            $contado = $this->normalizeAmount($efectivoContado);
+            $resumen = $this->calcularResumen($sesion);
+            $diferencia = bcsub($contado, $resumen['efectivo_esperado'], 2);
 
             $sesion->update([
                 'usuario_cierre_id' => $actor->getKey(),
-                'efectivo_esperado' => $esperado,
+                'total_efectivo' => $resumen['total_efectivo'],
+                'total_tarjeta' => $resumen['total_tarjeta'],
+                'total_ventas' => $resumen['total_ventas'],
+                'efectivo_esperado' => $resumen['efectivo_esperado'],
                 'efectivo_contado' => $contado,
                 'diferencia' => $diferencia,
                 'fecha_cierre' => now(),
             ]);
 
             $this->audit($sesion, $actor, 'caja_cerrada', [
-                'monto_inicial' => (string) $sesion->monto_inicial,
-                'efectivo_esperado' => $esperado,
+                'monto_inicial' => $resumen['monto_inicial'],
+                'total_efectivo' => $resumen['total_efectivo'],
+                'total_tarjeta' => $resumen['total_tarjeta'],
+                'total_ventas' => $resumen['total_ventas'],
+                'efectivo_esperado' => $resumen['efectivo_esperado'],
                 'efectivo_contado' => $contado,
                 'diferencia' => $diferencia,
-                'pedidos_abiertos' => $pedidosAbiertos,
             ]);
 
             return $sesion->fresh(['usuarioApertura', 'usuarioCierre']);
         });
     }
 
+    private function ensureNoOpenOrders(SesionCaja $sesion): void
+    {
+        $openOrders = Pedido::query()
+            ->where('establecimiento_id', $sesion->establecimiento_id)
+            ->where('estado_comercial', EstadoComercialPedido::ABIERTO->value)
+            ->count();
+
+        if ($openOrders > 0) {
+            $pendientes = $openOrders === 1 ? 'pedido pendiente' : 'pedidos pendientes';
+
+            throw ValidationException::withMessages([
+                'pedidos_abiertos' => "No puedes cerrar la caja. Hay {$openOrders} {$pendientes} de cobro. Resuelve esos pedidos antes de cerrar el turno.",
+            ]);
+        }
+    }
+
     private function normalizeAmount(string $value): string
     {
         $raw = trim($value);
 
-        if ($raw === '' || ! preg_match('/^\d+(\.\d+)?$/', $raw)) {
+        if ($raw === '' || ! preg_match('/^\d+(\.\d{1,2})?$/', $raw)) {
             throw ValidationException::withMessages([
-                'efectivoContado' => 'Escribe un monto contado válido.',
+                'efectivoContado' => 'Escribe un monto contado válido con hasta dos decimales.',
             ]);
         }
 

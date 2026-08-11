@@ -2,6 +2,12 @@
 
 namespace App\Filament\Pages\Auth;
 
+use App\Filament\Pages\Cash\CloseSession;
+use App\Filament\Pages\Cash\OpenSession;
+use App\Filament\Pages\Pos\ServiceSelection;
+use App\Models\Establecimiento;
+use App\Models\SesionCaja;
+use App\Models\User;
 use DanHarrin\LivewireRateLimiting\Exceptions\TooManyRequestsException;
 use Filament\Auth\Http\Responses\Contracts\LoginResponse;
 use Filament\Auth\Pages\Login as BaseLogin;
@@ -11,7 +17,6 @@ use Filament\Schemas\Schema;
 use Illuminate\Auth\SessionGuard;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Validation\ValidationException;
-use App\Models\User;
 
 class Login extends BaseLogin
 {
@@ -125,6 +130,43 @@ class Login extends BaseLogin
 
         session()->regenerate();
 
+        $this->routeAfterLogin($authGuard->user());
+
         return app(LoginResponse::class);
+    }
+
+    private function routeAfterLogin(User $user): void
+    {
+        $hasActiveSession = $this->hasActiveCashSession();
+
+        if ($user->hasRole('cajero')) {
+            if (! $hasActiveSession) {
+                session()->flash('turno_cerrado', true);
+                session()->put('url.intended', OpenSession::getUrl());
+
+                return;
+            }
+
+            session()->put('url.intended', ServiceSelection::getUrl());
+
+            return;
+        }
+
+        session()->flash('turno_cerrado', ! $hasActiveSession);
+        session()->put('url.intended', CloseSession::getUrl());
+    }
+
+    private function hasActiveCashSession(): bool
+    {
+        $establishmentId = Establecimiento::query()->orderBy('id')->value('id');
+
+        if (! $establishmentId) {
+            return false;
+        }
+
+        return SesionCaja::query()
+            ->where('establecimiento_id', $establishmentId)
+            ->whereNull('fecha_cierre')
+            ->exists();
     }
 }

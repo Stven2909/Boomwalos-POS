@@ -10,6 +10,7 @@ class Pago extends Model
 {
     protected $fillable = [
         'pedido_id',
+        'sesion_caja_id',
         'metodo_pago',
         'monto_recibido',
         'cambio_devuelto',
@@ -27,5 +28,10 @@ class Pago extends Model
     public function pedido(): BelongsTo
     {
         return $this->belongsTo(Pedido::class);
+    }
+
+    public function sesionCaja(): BelongsTo
+    {
+        return $this->belongsTo(SesionCaja::class);
     }
 }

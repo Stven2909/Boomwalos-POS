@@ -2,13 +2,20 @@
 
 namespace Tests\Feature;
 
-use App\Models\User;
+use App\Filament\Pages\Auth\Login;
+use App\Filament\Pages\Cash\CloseSession;
+use App\Filament\Pages\Cash\OpenSession;
+use App\Filament\Pages\Pos\ServiceSelection;
 use App\Filament\Resources\Mesas\MesaResource;
+use App\Models\Establecimiento;
+use App\Models\SesionCaja;
+use App\Models\User;
 use Database\Seeders\DemoUsersSeeder;
 use Database\Seeders\RolesPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
+use Livewire\Livewire;
 use Tests\TestCase;
 
 class AuthenticationFlowTest extends TestCase
@@ -123,5 +130,86 @@ class AuthenticationFlowTest extends TestCase
             'usuario' => '98',
             'password' => 'testing-cashier-pin',
         ]));
+    }
+
+    public function test_cashier_without_an_active_session_is_sent_to_open_session_with_banner(): void
+    {
+        $this->seed(RolesPermissionsSeeder::class);
+
+        $cashier = User::factory()->create([
+            'usuario' => '98',
+            'password' => '1234',
+        ]);
+        $cashier->assignRole('cajero');
+
+        Establecimiento::create([
+            'nombre' => 'Los Boomwalos',
+            'direccion' => 'Dirección de prueba',
+        ]);
+
+        Livewire::test(Login::class)
+            ->set('mode', 'cashier')
+            ->call('authenticateCashier', '98', '1234')
+            ->assertHasNoErrors()
+            ->assertRedirect(OpenSession::getUrl());
+
+        $this->assertTrue(session()->has('turno_cerrado'));
+    }
+
+    public function test_cashier_with_an_active_session_is_sent_to_the_point_of_sale(): void
+    {
+        $this->seed(RolesPermissionsSeeder::class);
+
+        $cashier = User::factory()->create([
+            'usuario' => '98',
+            'password' => '1234',
+        ]);
+        $cashier->assignRole('cajero');
+
+        $establishment = Establecimiento::create([
+            'nombre' => 'Los Boomwalos',
+            'direccion' => 'Dirección de prueba',
+        ]);
+
+        SesionCaja::create([
+            'establecimiento_id' => $establishment->getKey(),
+            'usuario_apertura_id' => $cashier->getKey(),
+            'monto_inicial' => 50,
+            'fecha_apertura' => now(),
+        ]);
+
+        Livewire::test(Login::class)
+            ->set('mode', 'cashier')
+            ->call('authenticateCashier', '98', '1234')
+            ->assertHasNoErrors()
+            ->assertRedirect(ServiceSelection::getUrl());
+
+        $this->assertFalse(session()->has('turno_cerrado'));
+    }
+
+    public function test_administrator_is_sent_to_the_cash_closing_page(): void
+    {
+        $this->seed(RolesPermissionsSeeder::class);
+
+        $admin = User::factory()->create([
+            'email' => 'admin@example.test',
+            'password' => 'admin-password',
+        ]);
+        $admin->assignRole('administrador');
+
+        Establecimiento::create([
+            'nombre' => 'Los Boomwalos',
+            'direccion' => 'Dirección de prueba',
+        ]);
+
+        Livewire::test(Login::class)
+            ->set('mode', 'admin')
+            ->set('email', 'admin@example.test')
+            ->set('password', 'admin-password')
+            ->call('authenticate')
+            ->assertHasNoErrors()
+            ->assertRedirect(CloseSession::getUrl());
+
+        $this->assertTrue(session()->has('turno_cerrado'));
     }
 }

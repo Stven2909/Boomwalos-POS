@@ -8,6 +8,7 @@ use App\Models\EventoAuditoria;
 use App\Models\SesionCaja;
 use Filament\Pages\Page;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class OpenSession extends Page
 {
@@ -36,27 +37,38 @@ class OpenSession extends Page
     public function openSession(): void
     {
         $this->validate([
-            'montoInicial' => ['required', 'numeric', 'min:0'],
+            'montoInicial' => ['required', 'regex:/^\d+(\.\d{1,2})?$/'],
         ], [
             'montoInicial.required' => 'Escribe el monto inicial de caja.',
-            'montoInicial.numeric' => 'El monto inicial debe ser numérico.',
-            'montoInicial.min' => 'El monto inicial no puede ser negativo.',
+            'montoInicial.regex' => 'El monto inicial debe ser numérico con hasta dos decimales.',
         ]);
 
-        $establecimiento = Establecimiento::query()->orderBy('id')->firstOrFail();
+        $establecimientoId = Establecimiento::query()->orderBy('id')->value('id');
 
-        DB::transaction(function () use ($establecimiento): void {
+        if (! $establecimientoId) {
+            throw ValidationException::withMessages([
+                'establecimiento' => 'Configura un establecimiento antes de abrir el turno.',
+            ]);
+        }
+
+        DB::transaction(function () use ($establecimientoId): void {
+            Establecimiento::query()
+                ->lockForUpdate()
+                ->findOrFail($establecimientoId);
+
             $active = SesionCaja::query()
-                ->where('establecimiento_id', $establecimiento->getKey())
+                ->where('establecimiento_id', $establecimientoId)
                 ->whereNull('fecha_cierre')
                 ->lockForUpdate()
                 ->exists();
 
             if (! $active) {
+                $montoInicial = bcadd($this->montoInicial, '0', 2);
+
                 $sesion = SesionCaja::create([
-                    'establecimiento_id' => $establecimiento->getKey(),
+                    'establecimiento_id' => $establecimientoId,
                     'usuario_apertura_id' => auth()->id(),
-                    'monto_inicial' => $this->montoInicial,
+                    'monto_inicial' => $montoInicial,
                     'fecha_apertura' => now(),
                 ]);
 
@@ -66,8 +78,8 @@ class OpenSession extends Page
                     'usuario_id' => auth()->id(),
                     'tipo_evento' => 'caja_abierta',
                     'payload' => [
-                        'monto_inicial' => $this->montoInicial,
-                        'establecimiento_id' => $establecimiento->getKey(),
+                        'monto_inicial' => $montoInicial,
+                        'establecimiento_id' => $establecimientoId,
                     ],
                 ]);
             }

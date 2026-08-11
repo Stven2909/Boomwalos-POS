@@ -6,6 +6,7 @@ use App\Filament\Pages\Dashboard;
 use App\Models\Establecimiento;
 use App\Models\SesionCaja;
 use App\Services\CierreCajaService;
+use Filament\Facades\Filament;
 use Filament\Pages\Page;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Validation\ValidationException;
@@ -31,23 +32,41 @@ class CloseSession extends Page
 
     public function mount(): void
     {
-        if (! $this->activeSession()) {
+        if (! $this->activeSession() && ! session()->has('turno_cerrado')) {
             $this->redirect(Dashboard::getUrl());
         }
     }
 
-    public function getEfectivoEsperadoProperty(): string
+    public function getHasActiveSessionProperty(): bool
+    {
+        return $this->activeSession() !== null;
+    }
+
+    public function getResumenProperty(): array
     {
         $sesion = $this->activeSession();
 
-        return $sesion ? app(CierreCajaService::class)->calcularEsperado($sesion) : '0.00';
+        return $sesion
+            ? app(CierreCajaService::class)->calcularResumen($sesion)
+            : [
+                'monto_inicial' => '0.00',
+                'total_efectivo' => '0.00',
+                'total_tarjeta' => '0.00',
+                'total_ventas' => '0.00',
+                'efectivo_esperado' => '0.00',
+            ];
+    }
+
+    public function getEfectivoEsperadoProperty(): string
+    {
+        return $this->resumen['efectivo_esperado'];
     }
 
     public function getDiferenciaProperty(): string
     {
         $contado = trim($this->efectivoContado);
 
-        if ($contado === '' || ! preg_match('/^\d+(\.\d+)?$/', $contado)) {
+        if ($contado === '' || ! preg_match('/^\d+(\.\d{1,2})?$/', $contado)) {
             return '0.00';
         }
 
@@ -57,11 +76,10 @@ class CloseSession extends Page
     public function closeSession(): void
     {
         $this->validate([
-            'efectivoContado' => ['required', 'numeric', 'min:0'],
+            'efectivoContado' => ['required', 'regex:/^\d+(\.\d{1,2})?$/'],
         ], [
             'efectivoContado.required' => 'Escribe el monto contado en efectivo.',
-            'efectivoContado.numeric' => 'El monto contado debe ser numérico.',
-            'efectivoContado.min' => 'El monto contado no puede ser negativo.',
+            'efectivoContado.regex' => 'El monto contado debe ser numérico con hasta dos decimales.',
         ]);
 
         $sesion = $this->activeSession();
@@ -74,14 +92,19 @@ class CloseSession extends Page
 
         try {
             app(CierreCajaService::class)->cerrar($sesion, $this->efectivoContado, auth()->user());
-
-            session()->flash('pos_feedback', 'Turno de caja cerrado correctamente.');
-            $this->redirect(Dashboard::getUrl());
         } catch (ValidationException|AuthorizationException $exception) {
             $this->feedback = $exception instanceof AuthorizationException
                 ? $exception->getMessage()
                 : collect($exception->errors())->flatten()->first() ?? 'No se pudo cerrar la caja.';
+
+            return;
         }
+
+        Filament::auth()->logout();
+        session()->invalidate();
+        session()->regenerateToken();
+
+        $this->redirect(Filament::getLoginUrl());
     }
 
     public function money(string $amount): string

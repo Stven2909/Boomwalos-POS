@@ -10,6 +10,12 @@
                 <h1 id="cash-opening-title">Abre el turno de caja</h1>
                 <p>Necesitas un turno activo para registrar pedidos y mantener el control del efectivo.</p>
 
+                @if (session('turno_cerrado'))
+                    <div class="bw-pos-feedback" role="status">
+                        Tu turno anterior fue cerrado. Abre uno nuevo para volver al punto de venta.
+                    </div>
+                @endif
+
                 <form wire:submit="openSession" class="bw-cash-opening-form">
                     <label for="montoInicial">Monto inicial</label>
                     <div class="bw-cash-amount-field">

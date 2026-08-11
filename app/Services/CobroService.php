@@ -8,6 +8,7 @@ use App\Enums\MetodoPago;
 use App\Models\EventoAuditoria;
 use App\Models\Pago;
 use App\Models\Pedido;
+use App\Models\SesionCaja;
 use App\Models\User;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\DB;
@@ -26,8 +27,12 @@ class CobroService
         }
 
         return DB::transaction(function () use ($pedido, $metodo, $montoRecibido, $actor): Pago {
+            $establecimientoId = $this->establishmentId();
+
+            $sesionCaja = $this->activeCashSession($establecimientoId);
+
             $pedido = Pedido::query()
-                ->where('establecimiento_id', $this->establishmentId())
+                ->where('establecimiento_id', $establecimientoId)
                 ->lockForUpdate()
                 ->findOrFail($pedido->getKey());
 
@@ -62,6 +67,7 @@ class CobroService
 
             $pago = Pago::create([
                 'pedido_id' => $pedido->getKey(),
+                'sesion_caja_id' => $sesionCaja->getKey(),
                 'metodo_pago' => $metodo,
                 'monto_recibido' => $recibido,
                 'cambio_devuelto' => $cambio,
@@ -91,9 +97,9 @@ class CobroService
 
         $rawAmount = trim((string) $montoRecibido);
 
-        if ($rawAmount === '' || ! is_numeric($rawAmount)) {
+        if ($rawAmount === '' || ! preg_match('/^\d+(\.\d{1,2})?$/', $rawAmount)) {
             throw ValidationException::withMessages([
-                'montoRecibido' => 'Ingresa el monto recibido en efectivo.',
+                'montoRecibido' => 'Ingresa un monto en efectivo válido con hasta dos decimales.',
             ]);
         }
 
@@ -119,6 +125,24 @@ class CobroService
         }
 
         return (int) $id;
+    }
+
+    private function activeCashSession(int $establecimientoId): SesionCaja
+    {
+        $sesion = SesionCaja::query()
+            ->where('establecimiento_id', $establecimientoId)
+            ->whereNull('fecha_cierre')
+            ->latest('id')
+            ->lockForUpdate()
+            ->first();
+
+        if (! $sesion) {
+            throw ValidationException::withMessages([
+                'sesion' => 'No hay una caja activa. Abre un turno antes de cobrar.',
+            ]);
+        }
+
+        return $sesion;
     }
 
     private function audit(Pedido $pedido, User $actor, string $type, array $payload): void

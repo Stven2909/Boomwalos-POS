@@ -2,19 +2,20 @@
 
 namespace App\Services;
 
+use App\Application\Kitchen\QueueKitchenBatch;
 use App\Enums\DisponibilidadProducto;
+use App\Enums\EstadoCocina;
 use App\Enums\EstadoComercialPedido;
 use App\Enums\EstadoLineaPedido;
 use App\Enums\EstadoMesa;
-use App\Enums\EstadoCocina;
 use App\Enums\TipoPedido;
-use App\Application\Kitchen\QueueKitchenBatch;
+use App\Models\Combo;
 use App\Models\DetallePedido;
 use App\Models\EventoAuditoria;
-use App\Models\Combo;
 use App\Models\Mesa;
 use App\Models\Pedido;
 use App\Models\Producto;
+use App\Models\SesionCaja;
 use App\Models\TandaPedido;
 use App\Models\User;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -28,6 +29,9 @@ class PedidoService
     {
         return DB::transaction(function () use ($tipo, $actor, $mesaId): Pedido {
             $establecimientoId = $this->establishmentId();
+
+            $this->ensureActiveCashSession($establecimientoId);
+
             $mesa = null;
 
             if ($tipo === TipoPedido::MESA) {
@@ -442,10 +446,26 @@ class PedidoService
         return (int) $id;
     }
 
+    private function ensureActiveCashSession(int $establecimientoId): void
+    {
+        $sesion = SesionCaja::query()
+            ->where('establecimiento_id', $establecimientoId)
+            ->whereNull('fecha_cierre')
+            ->latest('id')
+            ->lockForUpdate()
+            ->first();
+
+        if (! $sesion) {
+            throw ValidationException::withMessages([
+                'sesion' => 'No hay una caja activa. Abre un turno antes de crear pedidos.',
+            ]);
+        }
+    }
+
     private function nextTrackingNumber(): string
     {
         do {
-            $tracking = 'BW-' . now()->format('ymdHis') . '-' . strtoupper(substr(bin2hex(random_bytes(2)), 0, 4));
+            $tracking = 'BW-'.now()->format('ymdHis').'-'.strtoupper(substr(bin2hex(random_bytes(2)), 0, 4));
         } while (Pedido::query()->where('numero_seguimiento', $tracking)->exists());
 
         return $tracking;
@@ -528,5 +548,4 @@ class PedidoService
             'payload' => $payload,
         ]);
     }
-
 }
