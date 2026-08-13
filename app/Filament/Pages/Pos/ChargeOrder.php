@@ -62,17 +62,19 @@ class ChargeOrder extends PosPage
     public function charge(): void
     {
         try {
-            app(CobroService::class)->charge(
+            app(CobroService::class)->chargeAndSend(
                 $this->pedido,
                 MetodoPago::tryFrom($this->metodoPago) ?? MetodoPago::EFECTIVO,
                 $this->metodoPago === MetodoPago::EFECTIVO->value ? $this->montoRecibido : null,
                 auth()->user(),
             );
 
-            session()->flash('pos_feedback', 'Pago registrado. El pedido quedó cobrado.');
+            session()->flash('pos_feedback', 'Pago registrado y comanda enviada a cocina.');
             $this->redirect(ServiceSelection::getUrl());
         } catch (ValidationException $exception) {
             $this->feedback = collect($exception->errors())->flatten()->first() ?? 'No se pudo registrar el pago.';
+        } catch (\Throwable $exception) {
+            $this->feedback = $exception->getMessage();
         }
     }
 
@@ -101,8 +103,7 @@ class ChargeOrder extends PosPage
 
     public function getIsReadyToChargeProperty(): bool
     {
-        return $this->activeDetails->isNotEmpty()
-            && $this->activeDetails->every(fn ($detalle): bool => $detalle->tanda_id !== null);
+        return $this->activeDetails->isNotEmpty();
     }
 
     public function comboLineSummary($line): string

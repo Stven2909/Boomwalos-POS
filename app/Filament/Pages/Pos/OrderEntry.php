@@ -5,10 +5,13 @@ namespace App\Filament\Pages\Pos;
 use App\Enums\DisponibilidadProducto;
 use App\Enums\EstadoComercialPedido;
 use App\Enums\EstadoLineaPedido;
+use App\Enums\EstadoMesa;
 use App\Enums\OrigenPedido;
+use App\Enums\ZonaMesa;
 use App\Models\Categoria;
 use App\Models\Combo;
 use App\Models\DetallePedido;
+use App\Models\Mesa;
 use App\Models\Pedido;
 use App\Models\Producto;
 use App\Services\PedidoService;
@@ -41,6 +44,10 @@ class OrderEntry extends PosPage
     public ?int $editingComboLineId = null;
 
     public array $comboSelections = [];
+
+    public bool $mesaModalOpen = false;
+
+    public string $mesaZona = ZonaMesa::SALON->value;
 
     public function mount(Pedido $pedido): void
     {
@@ -299,14 +306,52 @@ class OrderEntry extends PosPage
     public function openCharge(): void
     {
         if (! $this->canCharge) {
-            $this->feedback = $this->pendingDetails->isNotEmpty()
-                ? 'Envía a cocina los productos pendientes antes de cobrar.'
-                : 'La cuenta todavía no tiene productos enviados a cocina.';
+            $this->feedback = 'Agrega al menos un producto antes de cobrar y enviar a cocina.';
 
             return;
         }
 
         $this->redirect(ChargeOrder::getUrl(['pedido' => $this->pedido->getKey()]));
+    }
+
+    public function openMesaPicker(): void
+    {
+        $this->mesaZona = $this->pedido->mesa?->zona?->value ?? ZonaMesa::SALON->value;
+        $this->mesaModalOpen = true;
+    }
+
+    public function closeMesaPicker(): void
+    {
+        $this->mesaModalOpen = false;
+    }
+
+    public function setMesaZona(string $zona): void
+    {
+        $this->mesaZona = (ZonaMesa::tryFrom($zona) ?? ZonaMesa::SALON)->value;
+    }
+
+    public function assignTable(int $mesaId): void
+    {
+        $mesa = $this->mesas->firstWhere('id', $mesaId);
+
+        if (! $mesa) {
+            return;
+        }
+
+        $wasAssigned = $this->pedido->mesa_id === $mesa->getKey();
+
+        try {
+            app(PedidoService::class)->assignTable($this->pedido, $mesa, auth()->user());
+            $this->feedback = $wasAssigned
+                ? 'La mesa ya estaba asignada a este pedido.'
+                : 'Mesa ' . $mesa->numero . ' asignada. El pedido pasó a "en el local".';
+            $this->mesaModalOpen = false;
+            $this->refreshPedido();
+        } catch (ValidationException $exception) {
+            $this->feedback = collect($exception->errors())->flatten()->first() ?? 'No se pudo asignar la mesa.';
+        } catch (\Throwable $exception) {
+            $this->feedback = $exception->getMessage();
+        }
     }
 
     public function cancelSentLine(int $lineId): void
@@ -389,11 +434,17 @@ class OrderEntry extends PosPage
         return $this->pedido->total();
     }
 
+    public function getActiveDetailsProperty()
+    {
+        return $this->pedido->detalles
+            ->where('estado_linea', EstadoLineaPedido::ACTIVA)
+            ->values();
+    }
+
     public function getCanChargeProperty(): bool
     {
         return $this->pedido->estado_comercial === EstadoComercialPedido::ABIERTO
-            && $this->pendingDetails->isEmpty()
-            && $this->sentDetails->where('estado_linea', EstadoLineaPedido::ACTIVA)->isNotEmpty()
+            && $this->activeDetails->isNotEmpty()
             && auth()->user()?->can('cobrar_pedido');
     }
 
@@ -405,6 +456,27 @@ class OrderEntry extends PosPage
     public function getIsReadOnlyProperty(): bool
     {
         return ! $this->pedido->estado_comercial->isPayable();
+    }
+
+    public function getMesasProperty()
+    {
+        $activeStates = [
+            EstadoComercialPedido::ABIERTO->value,
+            EstadoComercialPedido::PENDIENTE_COBRO->value,
+            EstadoComercialPedido::COBRADO->value,
+        ];
+
+        return Mesa::query()
+            ->where('establecimiento_id', $this->establishment()->getKey())
+            ->where('activa', true)
+            ->where('zona', $this->mesaZona)
+            ->with(['pedidos' => function ($query) use ($activeStates): void {
+                $query
+                    ->whereIn('estado_comercial', $activeStates)
+                    ->latest('id');
+            }])
+            ->orderBy('numero')
+            ->get();
     }
 
     public function comboSelectionTotal(int $optionId): int

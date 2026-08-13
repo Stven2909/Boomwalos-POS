@@ -48,7 +48,12 @@
                 @if (! $this->isReadyToCharge)
                     <div class="bw-pos-feedback is-error" role="alert">
                         <x-heroicon-o-exclamation-triangle class="h-5 w-5" />
-                        Envía a cocina todos los productos pendientes antes de cobrar.
+                        La cuenta no tiene productos activos para cobrar.
+                    </div>
+                @else
+                    <div class="bw-pos-charge-note">
+                        <x-heroicon-o-fire class="h-5 w-5" />
+                        <span>Al confirmar el pago, los productos pendientes se envían a cocina.</span>
                     </div>
                 @endif
             </section>
@@ -107,7 +112,7 @@
 
                 <button type="button" wire:click="charge" class="bw-pos-charge-button" @disabled(! $this->isReadyToCharge)>
                     <x-heroicon-o-check-circle class="h-5 w-5" />
-                    Confirmar pago
+                    Cobrar y enviar a cocina
                 </button>
 
                 <a href="{{ $this->backUrl() }}" class="bw-pos-secondary-button bw-pos-charge-back">

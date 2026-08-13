@@ -41,6 +41,7 @@ class RolesPermissionsSeeder extends Seeder
             'crear_pedido',
             'cobrar_pedido',
             'operar_cocina',
+            'cancelar_pedido',
             'gestionar_productos',
             'gestionar_combos',
             'gestionar_mesas',
@@ -59,8 +60,8 @@ class RolesPermissionsSeeder extends Seeder
             'cerrar_caja',
         ]);
 
-        // cancelar_pedido, aplicar_descuento y gestionar_solicitudes_fiscales
-        // quedan creados como permisos existentes pero SIN asignar a ningún rol,
-        // a la espera de la decisión de Los Boomwalos sobre su asignación.
+        // aplicar_descuento y gestionar_solicitudes_fiscales quedan creados como
+        // permisos existentes pero SIN asignar, a la espera de la decisión de Los Boomwalos.
+        // cancelar_pedido se asignó al administrador para anular pedidos completos.
     }
 }

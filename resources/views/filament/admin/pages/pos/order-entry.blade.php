@@ -9,7 +9,9 @@
                 ? 'ENVIADO A CAJA · ESPERA COBRO'
                 : ($pedido->estado_comercial?->value === 'COBRADO'
                     ? 'COBRADO · PENDIENTE DE ENTREGA'
-                    : 'CUENTA ABIERTA'),
+                    : ($pedido->estado_comercial?->value === 'CANCELADO'
+                        ? 'CANCELADO'
+                        : 'CUENTA ABIERTA')),
         ])
 
         <main class="bw-pos-order-main">
@@ -122,6 +124,10 @@
                             <x-heroicon-o-banknotes class="h-7 w-7" />
                             <strong>Enviado a caja</strong>
                             <span>La cuenta quedó registrada y espera el cobro en caja. No se pueden agregar productos.</span>
+                        @elseif ($pedido->estado_comercial?->value === 'CANCELADO')
+                            <x-heroicon-o-x-circle class="h-7 w-7" />
+                            <strong>Pedido cancelado</strong>
+                            <span>Este pedido fue cancelado y quedó registrado en auditoría.</span>
                         @else
                             <x-heroicon-o-check-badge class="h-7 w-7" />
                             <strong>Pedido cobrado</strong>
@@ -139,6 +145,18 @@
                     </div>
                     <span class="bw-pos-summary-count">{{ $pedido->detalles->where('estado_linea', \App\Enums\EstadoLineaPedido::ACTIVA)->sum('cantidad') }} ítems</span>
                 </div>
+
+                @if (! $this->isReadOnly)
+                    <button type="button" wire:click="openMesaPicker" class="bw-pos-assign-table">
+                        @if ($pedido->mesa)
+                            <x-heroicon-o-table-cells class="h-5 w-5" />
+                            Mesa {{ $pedido->mesa->numero }} · Cambiar
+                        @else
+                            <x-heroicon-o-table-cells class="h-5 w-5" />
+                            Asignar mesa (opcional)
+                        @endif
+                    </button>
+                @endif
 
                 @if ($feedback)
                     <div class="bw-pos-feedback" role="status">{{ $feedback }}</div>
@@ -219,27 +237,32 @@
 
                 @if ($this->isReadOnly)
                     <div class="bw-pos-paid-status" role="status">
-                        <x-heroicon-o-check-circle class="h-5 w-5" />
-                        <span>
-                            {{ $pedido->estado_comercial?->value === 'PENDIENTE_COBRO'
-                                ? 'Enviado a caja · esperando cobro'
-                                : 'Cobrado · pendiente de entrega' }}
-                        </span>
+                        @if ($pedido->estado_comercial?->value === 'CANCELADO')
+                            <x-heroicon-o-x-circle class="h-5 w-5" />
+                            <span>Cancelado</span>
+                        @else
+                            <x-heroicon-o-check-circle class="h-5 w-5" />
+                            <span>
+                                {{ $pedido->estado_comercial?->value === 'PENDIENTE_COBRO'
+                                    ? 'Enviado a caja · esperando cobro'
+                                    : 'Cobrado · pendiente de entrega' }}
+                            </span>
+                        @endif
                     </div>
                 @elseif ($this->isDeviceOrder)
                     <button
                         type="button"
                         wire:click="sendToCashRegister"
                         class="bw-pos-charge-button"
-                        @disabled($this->pendingDetails->isEmpty() && $this->sentDetails->where('estado_linea', \App\Enums\EstadoLineaPedido::ACTIVA)->isEmpty())
+                        @disabled($this->activeDetails->isEmpty())
                     >
                         <x-heroicon-o-banknotes class="h-5 w-5" />
                         Enviar cuenta a caja
                     </button>
                 @elseif ($this->canCharge)
                     <button type="button" wire:click="openCharge" class="bw-pos-charge-button">
-                        <x-heroicon-o-credit-card class="h-5 w-5" />
-                        Cobrar cuenta
+                        <x-heroicon-o-fire class="h-5 w-5" />
+                        Cobrar y enviar a cocina
                     </button>
                 @endif
 
@@ -316,6 +339,82 @@
                                 {{ $editingComboLineId ? 'Guardar cambios' : 'Agregar combo' }}
                             </button>
                         </div>
+                    </footer>
+                </section>
+            </div>
+        @endif
+
+        @if ($mesaModalOpen)
+            <div class="bw-pos-combo-modal" role="dialog" aria-modal="true" aria-labelledby="mesa-modal-title">
+                <button type="button" class="bw-pos-combo-backdrop" wire:click="closeMesaPicker" aria-label="Cerrar selector de mesa"></button>
+                <section class="bw-pos-combo-dialog bw-pos-mesa-dialog">
+                    <header class="bw-pos-combo-dialog-header">
+                        <div>
+                            <span class="bw-pos-step-label">ASIGNAR MESA</span>
+                            <h2 id="mesa-modal-title">Mesa para este pedido</h2>
+                            <p>Al asignar una mesa, el pedido pasa a ser "en el local".</p>
+                        </div>
+                        <button type="button" wire:click="closeMesaPicker" class="bw-pos-dialog-close" aria-label="Cerrar">
+                            <x-heroicon-o-x-mark class="h-5 w-5" />
+                        </button>
+                    </header>
+
+                    <nav class="bw-pos-zone-tabs" aria-label="Zonas del establecimiento">
+                        @foreach (\App\Enums\ZonaMesa::cases() as $zone)
+                            <button
+                                type="button"
+                                wire:click="setMesaZona('{{ $zone->value }}')"
+                                class="bw-pos-zone-tab {{ $mesaZona === $zone->value ? 'is-active' : '' }}"
+                                aria-pressed="{{ $mesaZona === $zone->value ? 'true' : 'false' }}"
+                            >
+                                {{ $zone->label() }}
+                            </button>
+                        @endforeach
+                    </nav>
+
+                    <div class="bw-pos-mesa-grid-scroll">
+                        <section class="bw-pos-table-grid" aria-label="Mesas disponibles">
+                            @forelse ($this->mesas as $mesa)
+                                @php
+                                    $activeOrder = $mesa->pedidos->first();
+                                    $isThisOrder = $activeOrder?->getKey() === $pedido->getKey();
+                                    $isOccupied = $mesa->estado === \App\Enums\EstadoMesa::OCUPADA;
+                                    $isBusy = $isOccupied && ! $isThisOrder;
+                                    $isSelected = $pedido->mesa_id === $mesa->getKey();
+                                @endphp
+                                <button
+                                    type="button"
+                                    wire:click="assignTable({{ $mesa->getKey() }})"
+                                    class="bw-pos-table-node {{ $isSelected ? 'is-selected' : ($isBusy ? 'is-occupied' : 'is-free') }}"
+                                    @disabled($isBusy)
+                                    aria-label="Mesa {{ $mesa->numero }}, {{ $isBusy ? 'ocupada' : 'disponible' }}"
+                                >
+                                    <span class="bw-pos-table-figure" aria-hidden="true">
+                                        <span class="bw-pos-table-surface">
+                                            <x-heroicon-o-table-cells class="h-9 w-9" />
+                                        </span>
+                                        <span class="bw-pos-table-leg bw-pos-table-leg-left"></span>
+                                        <span class="bw-pos-table-leg bw-pos-table-leg-right"></span>
+                                    </span>
+                                    <strong class="bw-pos-table-number">MESA {{ str_pad($mesa->numero, 2, '0', STR_PAD_LEFT) }}</strong>
+                                    <span class="bw-pos-table-state">{{ $isSelected ? 'Seleccionada' : ($isBusy ? 'Ocupada' : 'Libre') }}</span>
+                                    @if ($isSelected)
+                                        <span class="bw-pos-selected-mark" aria-hidden="true">
+                                            <x-heroicon-o-check class="h-4 w-4" />
+                                        </span>
+                                    @endif
+                                </button>
+                            @empty
+                                <div class="bw-pos-empty-state">
+                                    <x-heroicon-o-table-cells class="h-8 w-8" />
+                                    <strong>No hay mesas configuradas en esta zona.</strong>
+                                </div>
+                            @endforelse
+                        </section>
+                    </div>
+
+                    <footer class="bw-pos-combo-dialog-footer">
+                        <button type="button" wire:click="closeMesaPicker" class="bw-pos-secondary-button">Cancelar</button>
                     </footer>
                 </section>
             </div>

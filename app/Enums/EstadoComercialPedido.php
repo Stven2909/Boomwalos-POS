@@ -8,6 +8,7 @@ enum EstadoComercialPedido: string
     case PENDIENTE_COBRO = 'PENDIENTE_COBRO';
     case COBRADO = 'COBRADO';
     case CERRADO = 'CERRADO';
+    case CANCELADO = 'CANCELADO';
 
     public function label(): string
     {
@@ -16,6 +17,7 @@ enum EstadoComercialPedido: string
             self::PENDIENTE_COBRO => 'Pendiente de cobro',
             self::COBRADO => 'Cobrado',
             self::CERRADO => 'Cerrado',
+            self::CANCELADO => 'Cancelado',
         };
     }
 
@@ -26,6 +28,6 @@ enum EstadoComercialPedido: string
 
     public function isReadOnly(): bool
     {
-        return in_array($this, [self::COBRADO, self::CERRADO], true);
+        return in_array($this, [self::COBRADO, self::CERRADO, self::CANCELADO], true);
     }
 }

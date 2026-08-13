@@ -364,7 +364,23 @@ class PedidoService
                 ]);
             }
 
-            $tanda = $this->createBatchForLockedOrder($pedido, $pendingLines, $actor);
+            $numeroTanda = ((int) $pedido->tandas()->max('numero_tanda')) + 1;
+            $tanda = $pedido->tandas()->create([
+                'numero_tanda' => $numeroTanda,
+                'estado_cocina' => EstadoCocina::PENDIENTE,
+            ]);
+
+            $pedido->detalles()
+                ->whereIn('id', $pendingLines->modelKeys())
+                ->update(['tanda_id' => $tanda->getKey()]);
+
+            $printJob = app(QueueKitchenBatch::class)->handle($tanda);
+
+            $this->audit($pedido, $actor, $printJob ? 'comanda_en_cola' : 'comanda_sin_impresora', [
+                'tanda_id' => $tanda->getKey(),
+                'trabajo_impresion_id' => $printJob?->getKey(),
+            ]);
+
             $this->audit($pedido, $actor, 'pedido_enviado_cocina', [
                 'tanda_id' => $tanda->getKey(),
                 'numero_tanda' => $tanda->numero_tanda,
@@ -379,9 +395,9 @@ class PedidoService
         });
     }
 
-    public function sendToCashRegister(Pedido $pedido, User $actor): ?TandaPedido
+    public function sendToCashRegister(Pedido $pedido, User $actor): Pedido
     {
-        return DB::transaction(function () use ($pedido, $actor): ?TandaPedido {
+        return DB::transaction(function () use ($pedido, $actor): Pedido {
             $pedido = $this->lockPedido($pedido);
 
             if ($pedido->estado_comercial !== EstadoComercialPedido::ABIERTO) {
@@ -390,59 +406,129 @@ class PedidoService
                 ]);
             }
 
-            $pendingLines = $pedido->detalles()
-                ->whereNull('tanda_id')
+            $activeLines = $pedido->detalles()
                 ->where('estado_linea', EstadoLineaPedido::ACTIVA->value)
                 ->lockForUpdate()
                 ->get();
 
-            $tanda = null;
-
-            if ($pendingLines->isNotEmpty()) {
-            $tanda = $this->createBatchForLockedOrder($pedido, $pendingLines, $actor);
-
-                $this->audit($pedido, $actor, 'pedido_enviado_cocina', [
-                    'tanda_id' => $tanda->getKey(),
-                    'numero_tanda' => $tanda->numero_tanda,
-                    'detalles' => $pendingLines->map(fn (DetallePedido $detalle): array => [
-                        'id' => $detalle->getKey(),
-                        'producto_id' => $detalle->producto_id,
-                        'cantidad' => $detalle->cantidad,
-                    ])->values()->all(),
+            if ($activeLines->isEmpty()) {
+                throw ValidationException::withMessages([
+                    'pedido' => 'Agrega al menos un producto antes de enviar la cuenta a caja.',
                 ]);
             }
 
             $pedido->update(['estado_comercial' => EstadoComercialPedido::PENDIENTE_COBRO]);
 
             $this->audit($pedido, $actor, 'pedido_enviado_caja', [
-                'tanda_id' => $tanda?->getKey(),
-                'total_lineas' => $pendingLines->count(),
+                'origen_pedido' => $pedido->origen_pedido?->value,
+                'codigo_corto' => $pedido->codigo_corto,
+                'total_lineas' => $activeLines->count(),
             ]);
 
-            return $tanda?->load('detalles.producto');
+            return $pedido->fresh(['mesa', 'detalles.producto', 'detalles.tanda']);
         });
     }
 
-    private function createBatchForLockedOrder(Pedido $pedido, $pendingLines, User $actor): TandaPedido
+    public function assignTable(Pedido $pedido, Mesa $mesa, User $actor): Pedido
     {
-        $numeroTanda = ((int) $pedido->tandas()->max('numero_tanda')) + 1;
-        $tanda = $pedido->tandas()->create([
-            'numero_tanda' => $numeroTanda,
-            'estado_cocina' => EstadoCocina::PENDIENTE,
-        ]);
+        return DB::transaction(function () use ($pedido, $mesa, $actor): Pedido {
+            $pedido = $this->lockPedido($pedido);
+            $this->ensureEditable($pedido);
 
-        $pedido->detalles()
-            ->whereIn('id', $pendingLines->modelKeys())
-            ->update(['tanda_id' => $tanda->getKey()]);
+            $mesa = Mesa::query()
+                ->where('establecimiento_id', $this->establishmentId())
+                ->lockForUpdate()
+                ->findOrFail($mesa->getKey());
 
-        $printJob = app(QueueKitchenBatch::class)->handle($tanda);
+            if ($pedido->mesa_id === $mesa->getKey()) {
+                return $pedido->fresh(['mesa', 'detalles.producto', 'detalles.tanda']);
+            }
 
-        $this->audit($pedido, $actor, $printJob ? 'comanda_en_cola' : 'comanda_sin_impresora', [
-            'tanda_id' => $tanda->getKey(),
-            'trabajo_impresion_id' => $printJob?->getKey(),
-        ]);
+            $activeStates = [
+                EstadoComercialPedido::ABIERTO->value,
+                EstadoComercialPedido::PENDIENTE_COBRO->value,
+                EstadoComercialPedido::COBRADO->value,
+            ];
 
-        return $tanda;
+            $otherOrder = $mesa->pedidos()
+                ->whereIn('estado_comercial', $activeStates)
+                ->where('id', '<>', $pedido->getKey())
+                ->exists();
+
+            if ($otherOrder) {
+                throw ValidationException::withMessages([
+                    'mesa' => "La mesa {$mesa->numero} ya tiene una cuenta abierta.",
+                ]);
+            }
+
+            if (! in_array($mesa->estado, [EstadoMesa::LIBRE, EstadoMesa::OCUPADA], true)) {
+                throw ValidationException::withMessages([
+                    'mesa' => 'La mesa no está disponible en este momento.',
+                ]);
+            }
+
+            $previousMesaId = $pedido->mesa_id;
+
+            if ($previousMesaId && $previousMesaId !== $mesa->getKey()) {
+                $previousMesa = Mesa::query()->find($previousMesaId);
+
+                $stillUsed = $previousMesa
+                    ? $previousMesa->pedidos()
+                        ->whereIn('estado_comercial', $activeStates)
+                        ->where('id', '<>', $pedido->getKey())
+                        ->exists()
+                    : false;
+
+                if ($previousMesa && ! $stillUsed) {
+                    $previousMesa->update(['estado' => EstadoMesa::LIBRE]);
+                }
+            }
+
+            $pedido->update([
+                'mesa_id' => $mesa->getKey(),
+                'tipo_pedido' => TipoPedido::MESA,
+            ]);
+
+            $mesa->update(['estado' => EstadoMesa::OCUPADA]);
+
+            $this->audit($pedido, $actor, 'mesa_asignada', [
+                'mesa_id' => $mesa->getKey(),
+                'mesa_anterior_id' => $previousMesaId,
+            ]);
+
+            return $pedido->fresh(['mesa', 'detalles.producto', 'detalles.tanda']);
+        });
+    }
+
+    public function cancelOrder(Pedido $pedido, User $actor, string $motivo = 'Anulación del pedido'): Pedido
+    {
+        if (! $actor->can('cancelar_pedido')) {
+            throw new AuthorizationException('No tienes permiso para cancelar pedidos.');
+        }
+
+        return DB::transaction(function () use ($pedido, $actor, $motivo): Pedido {
+            $pedido = $this->lockPedido($pedido);
+
+            if (! $pedido->estado_comercial->isPayable()) {
+                throw ValidationException::withMessages([
+                    'pedido' => 'Solo puedes cancelar pedidos que todavía no fueron cobrados.',
+                ]);
+            }
+
+            $pedido->update(['estado_comercial' => EstadoComercialPedido::CANCELADO]);
+
+            if ($pedido->mesa_id) {
+                $pedido->mesa()->update(['estado' => EstadoMesa::LIBRE]);
+            }
+
+            $this->audit($pedido, $actor, 'pedido_cancelado', [
+                'motivo' => $motivo,
+                'origen_pedido' => $pedido->origen_pedido?->value,
+                'codigo_corto' => $pedido->codigo_corto,
+            ]);
+
+            return $pedido->fresh(['mesa']);
+        });
     }
 
     public function cancelSentLine(DetallePedido $detalle, User $actor, string $motivo = 'Anulación desde Punto de Venta'): void

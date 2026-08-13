@@ -5,6 +5,7 @@ namespace App\Providers\Filament;
 use App\Filament\Pages\Dashboard;
 use App\Filament\Pages\Auth\Login;
 use App\Filament\Pages\Kitchen\KitchenDisplay;
+use App\Filament\Pages\Pos\EntregaDisplay;
 use App\Filament\Pages\Pos\ServiceSelection;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -58,6 +59,11 @@ class AdminPanelProvider extends PanelProvider
                     ->url(fn (): string => KitchenDisplay::getUrl())
                     ->visible(fn (): bool => auth()->user()?->can('operar_cocina') ?? false)
                     ->isActiveWhen(fn (): bool => request()->routeIs('filament.admin.pages.cocina')),
+                NavigationItem::make('Entrega')
+                    ->icon('heroicon-o-shopping-bag')
+                    ->url(fn (): string => EntregaDisplay::getUrl())
+                    ->visible(fn (): bool => auth()->user()?->can('operar_cocina') ?? false)
+                    ->isActiveWhen(fn (): bool => request()->routeIs('filament.admin.pages.entrega')),
                 NavigationItem::make('Clientes')
                     ->icon('heroicon-o-users')
                     ->url('#'),
