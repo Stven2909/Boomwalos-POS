@@ -11,6 +11,33 @@
                 <p>Toca una opción para continuar</p>
             </section>
 
+            @foreach ($this->cashAlerts as $alert)
+                <div class="bw-pos-cash-alert is-{{ $alert['tipo'] }}" role="{{ $alert['tipo'] === 'error' ? 'alert' : 'warning' }}">
+                    <x-heroicon-o-exclamation-triangle class="h-5 w-5" />
+                    <div>
+                        <strong>{{ $alert['titulo'] }}</strong>
+                        <span>{{ $alert['mensaje'] }}</span>
+                    </div>
+                </div>
+            @endforeach
+
+            <section class="bw-pos-sales-summary" aria-label="Resumen de ventas">
+                <div class="bw-pos-sales-stat">
+                    <span>Ventas del turno</span>
+                    <strong>
+                        @if ($this->turnoSales === null)
+                            —
+                        @else
+                            {{ $this->simboloMoneda }}{{ number_format((float) $this->turnoSales, 2, '.', ',') }}
+                        @endif
+                    </strong>
+                </div>
+                <div class="bw-pos-sales-stat">
+                    <span>Ventas del día</span>
+                    <strong>{{ $this->simboloMoneda }}{{ number_format((float) $this->daySales, 2, '.', ',') }}</strong>
+                </div>
+            </section>
+
             <section class="bw-pos-service-options bw-pos-service-options-five" aria-label="Acciones del punto de venta">
                 <button type="button" wire:click="startNewOrder" class="bw-pos-service-card">
                     <span class="bw-pos-service-icon" aria-hidden="true">

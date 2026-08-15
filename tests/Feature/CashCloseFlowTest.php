@@ -82,7 +82,8 @@ class CashCloseFlowTest extends TestCase
 
     private function cobrar(Pedido $pedido, MetodoPago $metodo, ?string $montoRecibido): void
     {
-        app(CobroService::class)->charge($pedido, $metodo, $montoRecibido, $this->cashier);
+        $tarjeta = $metodo === MetodoPago::TARJETA ? ['aprobada' => true, 'referencia' => 'TEST-REF'] : null;
+        app(CobroService::class)->charge($pedido, $metodo, $montoRecibido, $this->cashier, $tarjeta);
     }
 
     public function test_expected_cash_sums_initial_cash_and_net_cash_payments(): void

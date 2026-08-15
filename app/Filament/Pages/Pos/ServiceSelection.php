@@ -6,7 +6,9 @@ use App\Enums\EstadoComercialPedido;
 use App\Enums\OrigenPedido;
 use App\Enums\TipoPedido;
 use App\Filament\Pages\Cash\OpenSession;
+use App\Models\Pago;
 use App\Models\Pedido;
+use App\Services\ConfiguracionService;
 use App\Services\PedidoService;
 use Illuminate\Validation\ValidationException;
 
@@ -102,6 +104,61 @@ class ServiceSelection extends PosPage
             'monto_inicial' => (float) $session->monto_inicial,
             'fecha_apertura' => $session->fecha_apertura,
         ];
+    }
+
+    public function getTurnoSalesProperty(): ?string
+    {
+        $session = $this->activeCashSession();
+
+        return $session
+            ? $this->netoSales(Pago::query()->where('sesion_caja_id', $session->getKey()))
+            : null;
+    }
+
+    public function getDaySalesProperty(): string
+    {
+        return $this->netoSales(
+            Pago::query()
+                ->whereHas('sesionCaja', fn ($query) => $query->where('establecimiento_id', $this->establishment()->getKey()))
+                ->whereDate('created_at', now()->toDateString()),
+        );
+    }
+
+    public function getCashAlertsProperty(): array
+    {
+        $session = $this->activeCashSession();
+
+        if (! $session) {
+            return [[
+                'tipo' => 'error',
+                'titulo' => 'No hay turno abierto',
+                'mensaje' => 'Abre la caja para comenzar a registrar ventas.',
+            ]];
+        }
+
+        if ($session->fecha_apertura?->startOfDay()->lt(now()->startOfDay())) {
+            return [[
+                'tipo' => 'warning',
+                'titulo' => 'Turno sin cerrar',
+                'mensaje' => 'El turno abierto es de un día anterior. Ciérralo para operar con una caja limpia.',
+            ]];
+        }
+
+        return [];
+    }
+
+    public function getSimboloMonedaProperty(): string
+    {
+        return (string) app(ConfiguracionService::class)->get('moneda.simbolo', '$');
+    }
+
+    private function netoSales($query): string
+    {
+        $row = $query->selectRaw(
+            'COALESCE(SUM(monto_recibido), 0) as monto, COALESCE(SUM(cambio_devuelto), 0) as cambio',
+        )->first();
+
+        return bcsub((string) $row->monto, (string) $row->cambio, 2);
     }
 
     private function requestedOrigen(): OrigenPedido

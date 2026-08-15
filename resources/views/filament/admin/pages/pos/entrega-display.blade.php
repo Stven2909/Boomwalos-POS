@@ -43,6 +43,16 @@
 
                         <button
                             type="button"
+                            wire:click="reimprimirTicket({{ $tanda->pedido_id }})"
+                            class="bw-pos-entrega-reprint"
+                            title="Reimprimir ticket de cliente"
+                        >
+                            <x-heroicon-o-printer class="h-5 w-5" />
+                            Reimprimir ticket
+                        </button>
+
+                        <button
+                            type="button"
                             wire:click="markDelivered({{ $tanda->getKey() }})"
                             class="bw-pos-entrega-deliver"
                         >

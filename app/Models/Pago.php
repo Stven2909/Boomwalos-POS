@@ -14,6 +14,7 @@ class Pago extends Model
         'metodo_pago',
         'monto_recibido',
         'cambio_devuelto',
+        'referencia_externa',
     ];
 
     protected function casts(): array

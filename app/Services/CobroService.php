@@ -2,17 +2,21 @@
 
 namespace App\Services;
 
+use App\Application\Fiscal\FiscalOutboxService;
 use App\Application\Kitchen\QueueKitchenBatch;
+use App\Application\Printing\QueueCustomerTicket;
 use App\Enums\EstadoComercialPedido;
 use App\Enums\EstadoCocina;
 use App\Enums\EstadoLineaPedido;
 use App\Enums\MetodoPago;
+use App\Models\ConfiguracionFiscal;
 use App\Models\EventoAuditoria;
 use App\Models\Pago;
 use App\Models\Pedido;
 use App\Models\SesionCaja;
 use App\Models\TandaPedido;
 use App\Models\User;
+use App\Models\VentaFiscalPos;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -24,14 +28,19 @@ class CobroService
         MetodoPago $metodo,
         ?string $montoRecibido,
         User $actor,
+        ?array $tarjeta = null,
     ): array {
         if (! $actor->can('cobrar_pedido')) {
             throw new AuthorizationException('No tienes permiso para cobrar pedidos.');
         }
 
-        return DB::transaction(function () use ($pedido, $metodo, $montoRecibido, $actor): array {
-            return $this->applyCharge($pedido, $metodo, $montoRecibido, $actor, sendPendingToKitchen: true);
+        $resultado = DB::transaction(function () use ($pedido, $metodo, $montoRecibido, $actor, $tarjeta): array {
+            return $this->applyCharge($pedido, $metodo, $montoRecibido, $actor, sendPendingToKitchen: true, tarjeta: $tarjeta);
         });
+
+        $this->registrarVentaFiscal($resultado[0]);
+
+        return $resultado;
     }
 
     public function charge(
@@ -39,16 +48,21 @@ class CobroService
         MetodoPago $metodo,
         ?string $montoRecibido,
         User $actor,
+        ?array $tarjeta = null,
     ): Pago {
         if (! $actor->can('cobrar_pedido')) {
             throw new AuthorizationException('No tienes permiso para cobrar pedidos.');
         }
 
-        return DB::transaction(function () use ($pedido, $metodo, $montoRecibido, $actor): Pago {
-            [$pago] = $this->applyCharge($pedido, $metodo, $montoRecibido, $actor, sendPendingToKitchen: false);
+        $pago = DB::transaction(function () use ($pedido, $metodo, $montoRecibido, $actor, $tarjeta): Pago {
+            [$pago] = $this->applyCharge($pedido, $metodo, $montoRecibido, $actor, sendPendingToKitchen: false, tarjeta: $tarjeta);
 
             return $pago;
         });
+
+        $this->registrarVentaFiscal($pago);
+
+        return $pago;
     }
 
     private function applyCharge(
@@ -57,6 +71,7 @@ class CobroService
         ?string $montoRecibido,
         User $actor,
         bool $sendPendingToKitchen,
+        ?array $tarjeta = null,
     ): array {
         $establecimientoId = $this->establishmentId();
 
@@ -96,6 +111,10 @@ class CobroService
             fn ($detalle): float => (float) $detalle->precio_unitario * (int) $detalle->cantidad,
         ), 2);
 
+        if ($metodo === MetodoPago::TARJETA) {
+            $this->validateCard($tarjeta);
+        }
+
         [$recibido, $cambio] = $this->resolveAmounts($metodo, $montoRecibido, $total);
 
         $pago = Pago::create([
@@ -104,6 +123,7 @@ class CobroService
             'metodo_pago' => $metodo,
             'monto_recibido' => $recibido,
             'cambio_devuelto' => $cambio,
+            'referencia_externa' => $metodo === MetodoPago::TARJETA ? trim((string) ($tarjeta['referencia'] ?? '')) : null,
         ]);
 
         $pedido->update(['estado_comercial' => EstadoComercialPedido::COBRADO]);
@@ -149,9 +169,62 @@ class CobroService
             ]);
         }
 
+        $ticketResult = $this->queueCustomerTicket($pedido, $pago, $actor);
+
         app(KitchenService::class)->closeOrderIfReady($pedido, $actor);
 
-        return [$pago->fresh(['pedido']), $tanda];
+        return [$pago->fresh(['pedido']), $tanda, $ticketResult];
+    }
+
+    private function registrarVentaFiscal(Pago $pago): void
+    {
+        $configuracion = ConfiguracionFiscal::query()
+            ->where('establecimiento_id', $pago->pedido->establecimiento_id)
+            ->where('fiscal_habilitada', true)
+            ->first();
+
+        if (! $configuracion) {
+            return;
+        }
+
+        if (VentaFiscalPos::query()->where('pago_id', $pago->getKey())->exists()) {
+            return;
+        }
+
+        app(FiscalOutboxService::class)->registrarVenta($pago->pedido, $pago, $configuracion);
+    }
+
+    private function queueCustomerTicket(Pedido $pedido, Pago $pago, User $actor): \App\Application\Printing\QueueTicketResult
+    {
+        $result = app(QueueCustomerTicket::class)->handle($pedido, $pago, $actor);
+
+        $event = match ($result->status) {
+            \App\Application\Printing\QueueTicketResult::NO_PRINTER => 'ticket_sin_impresora',
+            \App\Application\Printing\QueueTicketResult::FAILED => 'ticket_fallido',
+            default => 'ticket_en_cola',
+        };
+
+        $this->audit($pedido, $actor, $event, [
+            'trabajo_impresion_id' => $result->trabajo?->getKey(),
+            'tipo_trabajo' => $result->trabajo?->tipo_trabajo?->value ?? 'TICKET',
+            'mensaje' => $result->message,
+        ]);
+
+        return $result;
+    }
+    private function validateCard(?array $tarjeta): void
+    {
+        if (($tarjeta['aprobada'] ?? false) !== true) {
+            throw ValidationException::withMessages([
+                'tarjeta' => 'La aprobación del datáfono es obligatoria para cobrar con tarjeta.',
+            ]);
+        }
+
+        if (trim((string) ($tarjeta['referencia'] ?? '')) === '') {
+            throw ValidationException::withMessages([
+                'tarjeta' => 'Ingresa la referencia de la transacción del datáfono.',
+            ]);
+        }
     }
 
     private function resolveAmounts(MetodoPago $metodo, ?string $montoRecibido, float $total): array

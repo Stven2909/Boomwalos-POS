@@ -143,7 +143,7 @@ class KitchenFlowTest extends TestCase
 
         $this->assertSame(EstadoComercialPedido::ABIERTO, $pedido->fresh()->estado_comercial);
 
-        app(CobroService::class)->charge($pedido, MetodoPago::TARJETA, null, $this->cashier);
+        app(CobroService::class)->charge($pedido, MetodoPago::TARJETA, null, $this->cashier, ['aprobada' => true, 'referencia' => 'TEST-REF']);
 
         $this->assertDatabaseHas('pedidos', [
             'id' => $pedido->getKey(),
@@ -181,7 +181,7 @@ class KitchenFlowTest extends TestCase
         }
 
         $kitchen->transition($firstBatch, EstadoCocina::ENTREGADA, $this->cashier);
-        app(CobroService::class)->charge($pedido, MetodoPago::TARJETA, null, $this->cashier);
+        app(CobroService::class)->charge($pedido, MetodoPago::TARJETA, null, $this->cashier, ['aprobada' => true, 'referencia' => 'TEST-REF']);
 
         $this->assertSame(EstadoComercialPedido::COBRADO, $pedido->fresh()->estado_comercial);
 

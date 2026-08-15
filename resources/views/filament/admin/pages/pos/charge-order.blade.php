@@ -91,13 +91,36 @@
                 </fieldset>
 
                 @if ($metodoPago === \App\Enums\MetodoPago::EFECTIVO->value)
-                    <label class="bw-pos-payment-field">
+                    <div class="bw-pos-payment-field">
                         <span>Monto recibido</span>
-                        <div>
-                            <span>$</span>
-                            <input type="number" min="0" step="0.01" wire:model.live="montoRecibido" inputmode="decimal" placeholder="0.00">
+                        <div class="bw-pos-amount-display">
+                            <span>{{ $this->simboloMoneda }}</span>
+                            <strong>{{ $montoRecibido === '' ? '0.00' : $montoRecibido }}</strong>
                         </div>
-                    </label>
+                    </div>
+
+                    <div class="bw-pos-quick-amounts" aria-label="Montos rápidos">
+                        @foreach ($this->montosRapidos as $monto)
+                            <button type="button" wire:click="usarMontoRapido('{{ $monto }}')" class="bw-pos-quick-amount">
+                                {{ $this->simboloMoneda }}{{ number_format((float) $monto, 2) }}
+                            </button>
+                        @endforeach
+                        <button type="button" wire:click="usarMontoExacto" class="bw-pos-quick-amount is-exacto">
+                            Exacto
+                        </button>
+                    </div>
+
+                    <div class="bw-pos-numpad" aria-label="Teclado numérico">
+                        @foreach (['7','8','9','4','5','6','1','2','3'] as $digito)
+                            <button type="button" wire:click="ingresarDigito('{{ $digito }}')" class="bw-pos-numpad-key">{{ $digito }}</button>
+                        @endforeach
+                        <button type="button" wire:click="limpiarMonto" class="bw-pos-numpad-key is-utility">C</button>
+                        <button type="button" wire:click="ingresarDigito('0')" class="bw-pos-numpad-key">0</button>
+                        <button type="button" wire:click="ingresarDigito('.')" class="bw-pos-numpad-key">.</button>
+                        <button type="button" wire:click="borrarDigito" class="bw-pos-numpad-key is-utility" aria-label="Borrar último dígito">
+                            <x-heroicon-o-backspace class="h-5 w-5" />
+                        </button>
+                    </div>
 
                     <div class="bw-pos-change-row">
                         <span>Cambio</span>
@@ -108,9 +131,25 @@
                         <x-heroicon-o-information-circle class="h-5 w-5" />
                         <span>Se cobrará el total exacto con tarjeta.</span>
                     </div>
+
+                    <label class="bw-pos-toggle {{ $tarjetaAprobada ? 'is-on' : '' }}">
+                        <input type="checkbox" wire:model.live="tarjetaAprobada">
+                        <span class="bw-pos-toggle-track" aria-hidden="true"></span>
+                        <span>El datáfono aprobó el pago</span>
+                    </label>
+
+                    <label class="bw-pos-payment-field">
+                        <span>Referencia de la transacción</span>
+                        <input type="text" wire:model="tarjetaReferencia" maxlength="100" placeholder="Ej. 123456" inputmode="numeric">
+                    </label>
+
+                    <label class="bw-pos-payment-field">
+                        <span>Terminal (opcional)</span>
+                        <input type="text" wire:model="tarjetaTerminal" maxlength="100" placeholder="Ej. DAT-01">
+                    </label>
                 @endif
 
-                <button type="button" wire:click="charge" class="bw-pos-charge-button" @disabled(! $this->isReadyToCharge)>
+                <button type="button" wire:click="charge" class="bw-pos-charge-button" @disabled(! $this->canSubmitPayment)>
                     <x-heroicon-o-check-circle class="h-5 w-5" />
                     Cobrar y enviar a cocina
                 </button>
@@ -122,3 +161,4 @@
         </main>
     </div>
 </x-filament-panels::page>
+

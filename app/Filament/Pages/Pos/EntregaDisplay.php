@@ -2,10 +2,13 @@
 
 namespace App\Filament\Pages\Pos;
 
+use App\Application\Printing\QueueTicketResult;
+use App\Application\Printing\ReprintTicket;
 use App\Enums\EstadoCocina;
 use App\Enums\EstadoLineaPedido;
 use App\Enums\TipoPedido;
 use App\Models\Establecimiento;
+use App\Models\Pedido;
 use App\Models\TandaPedido;
 use App\Services\KitchenService;
 use Filament\Pages\Page;
@@ -47,6 +50,23 @@ class EntregaDisplay extends Page
         } catch (\Throwable $exception) {
             report($exception);
             $this->feedback = 'No se pudo marcar la entrega. Inténtalo nuevamente.';
+        }
+    }
+
+    public function reimprimirTicket(int $pedidoId): void
+    {
+        try {
+            $pedido = Pedido::query()->findOrFail($pedidoId);
+            $result = app(ReprintTicket::class)->handle($pedido, auth()->user());
+
+            $this->feedback = match ($result->status) {
+                QueueTicketResult::NO_PRINTER => 'No hay una impresora de ticket configurada.',
+                QueueTicketResult::FAILED => $result->message ?? 'No se pudo reimprimir el ticket.',
+                default => 'Ticket reimpreso y encolado para imprimir.',
+            };
+        } catch (\Throwable $exception) {
+            report($exception);
+            $this->feedback = 'No se pudo reimprimir el ticket.';
         }
     }
 

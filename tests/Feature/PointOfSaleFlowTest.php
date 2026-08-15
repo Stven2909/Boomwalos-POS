@@ -306,6 +306,7 @@ class PointOfSaleFlowTest extends TestCase
             MetodoPago::TARJETA,
             null,
             $this->cashier,
+            ['aprobada' => true, 'referencia' => 'TEST-REF'],
         );
 
         $this->assertEquals('4.00', $payment->monto_recibido);
@@ -329,10 +330,10 @@ class PointOfSaleFlowTest extends TestCase
         $pedido = $service->startOrder(TipoPedido::MESA, $this->cashier, $this->table->getKey());
         $service->addProduct($pedido, $this->product, $this->cashier);
         $service->sendPendingBatch($pedido, $this->cashier);
-        app(CobroService::class)->charge($pedido, MetodoPago::TARJETA, null, $this->cashier);
+        app(CobroService::class)->charge($pedido, MetodoPago::TARJETA, null, $this->cashier, ['aprobada' => true, 'referencia' => 'TEST-REF']);
 
         try {
-            app(CobroService::class)->charge($pedido, MetodoPago::TARJETA, null, $this->cashier);
+            app(CobroService::class)->charge($pedido, MetodoPago::TARJETA, null, $this->cashier, ['aprobada' => true, 'referencia' => 'TEST-REF']);
             $this->fail('El segundo cobro debía ser rechazado.');
         } catch (\Illuminate\Validation\ValidationException) {
             // La cuenta debe permanecer con un solo pago.
@@ -347,7 +348,7 @@ class PointOfSaleFlowTest extends TestCase
         $pedido = $service->startOrder(TipoPedido::MESA, $this->cashier, $this->table->getKey());
         $service->addProduct($pedido, $this->product, $this->cashier);
         $service->sendPendingBatch($pedido, $this->cashier);
-        app(CobroService::class)->charge($pedido, MetodoPago::TARJETA, null, $this->cashier);
+        app(CobroService::class)->charge($pedido, MetodoPago::TARJETA, null, $this->cashier, ['aprobada' => true, 'referencia' => 'TEST-REF']);
 
         $this->expectException(\Illuminate\Validation\ValidationException::class);
         $service->addProduct($pedido, $this->secondProduct, $this->cashier);
@@ -442,6 +443,7 @@ class PointOfSaleFlowTest extends TestCase
             MetodoPago::TARJETA,
             null,
             $this->cashier,
+            ['aprobada' => true, 'referencia' => 'TEST-REF'],
         );
 
         $this->assertSame($pedido->getKey(), $payment->pedido_id);
@@ -534,10 +536,10 @@ class PointOfSaleFlowTest extends TestCase
         $pedido = $service->startOrder(TipoPedido::PARA_LLEVAR, $this->cashier);
         $service->addProduct($pedido, $this->product, $this->cashier);
 
-        app(CobroService::class)->chargeAndSend($pedido, MetodoPago::TARJETA, null, $this->cashier);
+        app(CobroService::class)->chargeAndSend($pedido, MetodoPago::TARJETA, null, $this->cashier, ['aprobada' => true, 'referencia' => 'TEST-REF']);
 
         try {
-            app(CobroService::class)->chargeAndSend($pedido, MetodoPago::TARJETA, null, $this->cashier);
+            app(CobroService::class)->chargeAndSend($pedido, MetodoPago::TARJETA, null, $this->cashier, ['aprobada' => true, 'referencia' => 'TEST-REF']);
             $this->fail('El segundo cobro debía ser rechazado.');
         } catch (\Illuminate\Validation\ValidationException) {
             // El pedido cobrado no puede volver a cobrarse.
@@ -601,7 +603,7 @@ class PointOfSaleFlowTest extends TestCase
         $service = app(PedidoService::class);
         $pedido = $service->startOrder(TipoPedido::PARA_LLEVAR, $this->cashier);
         $service->addProduct($pedido, $this->product, $this->cashier);
-        [, $tanda] = app(CobroService::class)->chargeAndSend($pedido, MetodoPago::TARJETA, null, $this->cashier);
+        [, $tanda] = app(CobroService::class)->chargeAndSend($pedido, MetodoPago::TARJETA, null, $this->cashier, ['aprobada' => true, 'referencia' => 'TEST-REF']);
 
         app(KitchenService::class)->transition($tanda, EstadoCocina::EN_PREPARACION, $this->cashier);
         app(KitchenService::class)->transition($tanda, EstadoCocina::LISTA, $this->cashier);
@@ -620,7 +622,7 @@ class PointOfSaleFlowTest extends TestCase
         $service = app(PedidoService::class);
         $pedido = $service->startOrder(TipoPedido::MESA, $this->cashier, $this->table->getKey());
         $service->addProduct($pedido, $this->product, $this->cashier);
-        [, $tanda] = app(CobroService::class)->chargeAndSend($pedido, MetodoPago::TARJETA, null, $this->cashier);
+        [, $tanda] = app(CobroService::class)->chargeAndSend($pedido, MetodoPago::TARJETA, null, $this->cashier, ['aprobada' => true, 'referencia' => 'TEST-REF']);
 
         $this->assertDatabaseHas('mesas', [
             'id' => $this->table->getKey(),
@@ -683,7 +685,7 @@ class PointOfSaleFlowTest extends TestCase
         $service->cancelOrder($pedido, $admin);
 
         try {
-            app(CobroService::class)->chargeAndSend($pedido, MetodoPago::TARJETA, null, $admin);
+            app(CobroService::class)->chargeAndSend($pedido, MetodoPago::TARJETA, null, $admin, ['aprobada' => true, 'referencia' => 'TEST-REF']);
             $this->fail('Un pedido cancelado no puede cobrarse.');
         } catch (\Illuminate\Validation\ValidationException) {
             // Rechazado: el estado CANCELADO no es cobrable.

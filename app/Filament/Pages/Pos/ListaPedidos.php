@@ -2,6 +2,8 @@
 
 namespace App\Filament\Pages\Pos;
 
+use App\Application\Printing\QueueTicketResult;
+use App\Application\Printing\ReprintTicket;
 use App\Enums\EstadoComercialPedido;
 use App\Enums\EstadoLineaPedido;
 use App\Enums\TipoPedido;
@@ -63,12 +65,33 @@ class ListaPedidos extends PosPage
         }
     }
 
+    public function reimprimirTicket(int $pedidoId): void
+    {
+        try {
+            $pedido = Pedido::query()->findOrFail($pedidoId);
+            $result = app(ReprintTicket::class)->handle($pedido, auth()->user());
+
+            $this->feedback = match ($result->status) {
+                QueueTicketResult::NO_PRINTER => 'No hay una impresora de ticket configurada.',
+                QueueTicketResult::FAILED => $result->message ?? 'No se pudo reimprimir el ticket.',
+                default => 'Ticket reimpreso y encolado para imprimir.',
+            };
+        } catch (\Throwable $exception) {
+            report($exception);
+            $this->feedback = 'No se pudo reimprimir el ticket.';
+        }
+    }
+
     public function getOrdersProperty()
     {
         $states = match ($this->filtro) {
             'abiertos' => [EstadoComercialPedido::ABIERTO->value],
             'pendientes' => [EstadoComercialPedido::PENDIENTE_COBRO->value],
-            default => [EstadoComercialPedido::ABIERTO->value, EstadoComercialPedido::PENDIENTE_COBRO->value],
+            default => [
+                EstadoComercialPedido::ABIERTO->value,
+                EstadoComercialPedido::PENDIENTE_COBRO->value,
+                EstadoComercialPedido::COBRADO->value,
+            ],
         };
 
         $code = preg_replace('/\D/', '', trim($this->search));

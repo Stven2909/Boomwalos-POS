@@ -1,0 +1,110 @@
+openapi: 3.1.0
+info:
+  title: API Fiscal v1 — Los Boomwalos POS
+  version: 1.0.0
+  description: |
+    Contrato de integración con la plataforma de emisión de DTE.
+    En desarrollo/QA el proveedor se simula con FISCAL_MOCK_ENABLED=true
+    (prohibido en APP_ENV=production). Autenticación por HMAC-SHA256.
+servers:
+  - url: /api/fiscal/v1
+security:
+  - HmacAuth: []
+paths:
+  /ventas:
+    post:
+      operationId: enviarVenta
+      summary: Envía una venta para sincronización fiscal.
+      description: |
+        Acepta la venta y devuelve 202 con estado RECIBIDA (la API recibió la
+        venta; el DTE aún no está emitido). Idempotente por clave_reintento;
+        409 si la misma clave llega con un payload distinto.
+      security:
+        - HmacAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Venta'
+      responses:
+        '202':
+          description: Venta aceptada.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VentaRecibida'
+        '401':
+          description: Firma ausente, vencida o inválida.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Clave de reintento reutilizada con otro payload.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: Cuerpo inválido.
+        '404':
+          description: Simulador desactivado (ambiente no habilita el mock).
+components:
+  securitySchemes:
+    HmacAuth:
+      type: apiKey
+      in: header
+      name: X-Fiscal-Hmac
+      description: 'sha256=<hex64> = hex(hmac_sha256(cuerpo_crudo, cliente_secret))'
+  schemas:
+    Venta:
+      type: object
+      additionalProperties: false
+      required: [clave_reintento, referencia, fecha_emision, monto_total]
+      properties:
+        clave_reintento:
+          type: string
+          maxLength: 100
+          description: Clave de idempotencia del envío.
+        referencia:
+          type: string
+          maxLength: 50
+          description: Número de seguimiento del POS.
+        fecha_emision:
+          type: string
+          format: date-time
+          description: Fecha de emisión RFC 3339.
+        monto_total:
+          type: string
+          description: Monto total con dos decimales.
+        metodo_pago:
+          type: string
+          enum: [EFECTIVO, TARJETA]
+        receptor:
+          type: object
+          nullable: true
+          description: Datos del receptor (factura/CCF). Se borra al sincronizar.
+    VentaRecibida:
+      type: object
+      additionalProperties: false
+      required: [fiscal_sale_id, estado, qr_url]
+      properties:
+        fiscal_sale_id:
+          type: string
+        estado:
+          type: string
+          enum: [RECIBIDA]
+        qr_url:
+          type: string
+          nullable: true
+    Error:
+      type: object
+      additionalProperties: false
+      required: [error]
+      properties:
+        error:
+          type: string
+          enum: [FIRMA_REQUERIDA, MARCA_TIEMPO_VENCIDA, FIRMA_INVALIDA, FIRMA_NO_CONFIGURADA, CLAVE_REUTILIZADA]
+        mensaje:
+          type: string

@@ -28,6 +28,10 @@ class RolesPermissionsSeeder extends Seeder
             'cerrar_caja',
             'ver_reportes',
             'gestionar_solicitudes_fiscales',
+            'gestionar_configuracion_fiscal',
+            'ver_ventas_fiscales',
+            'reintentar_sincronizacion_fiscal',
+            'solicitar_documento_fiscal',
         ];
 
         foreach ($permissions as $permission) {
@@ -50,6 +54,11 @@ class RolesPermissionsSeeder extends Seeder
             'abrir_caja',
             'cerrar_caja',
             'ver_reportes',
+            'gestionar_solicitudes_fiscales',
+            'gestionar_configuracion_fiscal',
+            'ver_ventas_fiscales',
+            'reintentar_sincronizacion_fiscal',
+            'solicitar_documento_fiscal',
         ]);
 
         $cajero->syncPermissions([
@@ -60,8 +69,8 @@ class RolesPermissionsSeeder extends Seeder
             'cerrar_caja',
         ]);
 
-        // aplicar_descuento y gestionar_solicitudes_fiscales quedan creados como
-        // permisos existentes pero SIN asignar, a la espera de la decisión de Los Boomwalos.
+        // aplicar_descuento queda creado como permiso existente pero SIN asignar,
+        // a la espera de la decisión de Los Boomwalos.
         // cancelar_pedido se asignó al administrador para anular pedidos completos.
     }
 }

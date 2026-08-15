@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Establecimiento extends Model
 {
@@ -27,5 +28,20 @@ class Establecimiento extends Model
     public function sesionesCaja(): HasMany
     {
         return $this->hasMany(SesionCaja::class);
+    }
+
+    public function configuracionFiscal(): HasOne
+    {
+        return $this->hasOne(ConfiguracionFiscal::class);
+    }
+
+    public function fiscalSyncState(): HasOne
+    {
+        return $this->hasOne(FiscalSyncState::class);
+    }
+
+    public function ventasFiscalesPos(): HasMany
+    {
+        return $this->hasMany(VentaFiscalPos::class);
     }
 }

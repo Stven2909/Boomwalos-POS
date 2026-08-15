@@ -4,6 +4,7 @@ namespace App\Application\Kitchen;
 
 use App\Enums\EstadoImpresion;
 use App\Enums\TipoImpresora;
+use App\Enums\TipoTrabajoImpresion;
 use App\Models\Impresora;
 use App\Models\TandaPedido;
 use App\Models\TrabajoImpresion;
@@ -35,6 +36,7 @@ class QueueKitchenBatch
             ],
             [
                 'pedido_id' => $batch->pedido_id,
+                'tipo_trabajo' => TipoTrabajoImpresion::COMANDA,
                 'estado' => EstadoImpresion::PENDIENTE,
                 'contenido' => $this->render($batch),
             ],

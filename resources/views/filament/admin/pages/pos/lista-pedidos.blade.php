@@ -77,10 +77,23 @@
                                         Comanda
                                     </button>
                                 @endif
-                                <button type="button" wire:click="openOrder({{ $order->getKey() }})" class="bw-pos-action-button is-primary">
-                                    <x-heroicon-o-banknotes class="h-4 w-4" />
-                                    Cobrar y enviar
-                                </button>
+                                @if ($order->estado_comercial?->isPayable())
+                                    <button type="button" wire:click="openOrder({{ $order->getKey() }})" class="bw-pos-action-button is-primary">
+                                        <x-heroicon-o-banknotes class="h-4 w-4" />
+                                        Cobrar y enviar
+                                    </button>
+                                @endif
+                                @if ($order->estado_comercial === \App\Enums\EstadoComercialPedido::COBRADO)
+                                    <button
+                                        type="button"
+                                        wire:click="reimprimirTicket({{ $order->getKey() }})"
+                                        class="bw-pos-action-button"
+                                        title="Reimprimir ticket de cliente"
+                                    >
+                                        <x-heroicon-o-printer class="h-4 w-4" />
+                                        Reimprimir
+                                    </button>
+                                @endif
                                 @can('cancelar_pedido')
                                     <button
                                         type="button"

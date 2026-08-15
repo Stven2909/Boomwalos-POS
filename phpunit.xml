@@ -37,5 +37,7 @@
         <env name="PULSE_ENABLED" value="false"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
         <env name="NIGHTWATCH_ENABLED" value="false"/>
+        <env name="FISCAL_MOCK_ENABLED" value="true"/>
+        <env name="FISCAL_MOCK_SECRET" value="test-mock-secret"/>
     </php>
 </phpunit>
