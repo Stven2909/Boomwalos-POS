@@ -272,10 +272,11 @@ class ReportesService
 
         $porSucursalYPeriodo = TandaPedido::query()
             ->join('pedidos', 'pedidos.id', '=', 'tandas_pedido.pedido_id')
+            ->join('establecimientos', 'establecimientos.id', '=', 'pedidos.establecimiento_id')
             ->whereIn('pedidos.establecimiento_id', $ids)
             ->whereBetween('tandas_pedido.created_at', [$desde, $hasta])
-            ->groupBy('pedidos.establecimiento_id')
-            ->selectRaw('pedidos.establecimiento_id, COUNT(*) as total')
+            ->groupBy('pedidos.establecimiento_id', 'establecimientos.nombre')
+            ->selectRaw('establecimientos.nombre as sucursal, COUNT(*) as total')
             ->get();
 
         return [

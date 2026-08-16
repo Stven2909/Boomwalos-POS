@@ -37,6 +37,8 @@ class ActividadReport extends Page
 
     public int $totalPaginas = 1;
 
+    public int $totalEventos = 0;
+
     public bool $showSucursalFilter = false;
 
     public static function canAccess(): bool
@@ -68,6 +70,7 @@ class ActividadReport extends Page
 
         $this->eventos = $paginator->items();
         $this->totalPaginas = $paginator->lastPage();
+        $this->totalEventos = $paginator->total();
     }
 
     public function goToPage(int $page): void
