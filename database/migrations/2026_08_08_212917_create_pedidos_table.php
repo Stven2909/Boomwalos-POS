@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('pedidos', function (Blueprint $table) {
             $table->id();
-            $table->string('numero_seguimiento', 20)->unique();
+            $table->string('numero_seguimiento', 30)->unique();
             $table->enum('tipo_pedido', ['MESA', 'PARA_LLEVAR']);
             $table->foreignId('mesa_id')->nullable()->constrained('mesas')->restrictOnDelete();
             $table->foreignId('establecimiento_id')->constrained('establecimientos')->restrictOnDelete();
