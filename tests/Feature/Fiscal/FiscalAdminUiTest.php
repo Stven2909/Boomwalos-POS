@@ -72,7 +72,7 @@ class FiscalAdminUiTest extends TestCase
         $this->cashier->assignRole('cajero');
 
         $this->establishment = Establecimiento::create([
-            'nombre' => 'Los Boomwalos',
+            'nombre' => 'Pupusería Demo',
             'direccion' => 'Dirección de prueba',
         ]);
 
@@ -162,7 +162,7 @@ class FiscalAdminUiTest extends TestCase
         $this->actingAs($this->admin);
 
         $otro = Establecimiento::create([
-            'nombre' => 'Los Boomwalos Dos',
+            'nombre' => 'Pupusería Demo Dos',
             'direccion' => 'Segunda dirección',
         ]);
 

@@ -2,10 +2,11 @@
 
 namespace App\Application\Fiscal;
 
+use App\Contracts\FiscalGatewayInterface;
 use App\Models\ConfiguracionFiscal;
 use Illuminate\Support\Facades\Http;
 
-class FiscalClient
+class FiscalClient implements FiscalGatewayInterface
 {
     public function enviarVenta(ConfiguracionFiscal $config, array $payload): array
     {

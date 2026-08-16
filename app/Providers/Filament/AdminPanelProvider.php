@@ -7,6 +7,7 @@ use App\Filament\Pages\Auth\Login;
 use App\Filament\Pages\Kitchen\KitchenDisplay;
 use App\Filament\Pages\Pos\EntregaDisplay;
 use App\Filament\Pages\Pos\ServiceSelection;
+use App\Contracts\BrandingServiceInterface;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -33,8 +34,8 @@ class AdminPanelProvider extends PanelProvider
             ->path('admin')
             ->viteTheme('resources/css/filament/admin/theme.css')
             ->login(Login::class)
-            ->brandName('Los Boomwalos')
-            ->favicon(asset('images/favicon.png'))
+            ->brandName(fn (): string => app(BrandingServiceInterface::class)->displayName())
+            ->favicon(fn (): string => app(BrandingServiceInterface::class)->faviconUrl())
             ->colors([
                 'primary' => '#6B4E63',
                 'gray' => Color::Stone,

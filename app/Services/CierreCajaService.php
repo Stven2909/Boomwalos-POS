@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Contracts\EstablishmentContextInterface;
 use App\Enums\EstadoComercialPedido;
 use App\Enums\MetodoPago;
 use App\Models\Establecimiento;
@@ -16,6 +17,8 @@ use Illuminate\Validation\ValidationException;
 
 class CierreCajaService
 {
+    public function __construct(private readonly EstablishmentContextInterface $establishmentContext) {}
+
     public function calcularEsperado(SesionCaja $sesion): string
     {
         return $this->calcularResumen($sesion)['efectivo_esperado'];
@@ -53,6 +56,10 @@ class CierreCajaService
     {
         if (! $actor->can('cerrar_caja')) {
             throw new AuthorizationException('No tienes permiso para cerrar la caja.');
+        }
+
+        if ($this->establishmentContext->id() !== (int) $sesion->establecimiento_id) {
+            throw new AuthorizationException('La caja no pertenece a la sucursal activa.');
         }
 
         return DB::transaction(function () use ($sesion, $efectivoContado, $actor): SesionCaja {

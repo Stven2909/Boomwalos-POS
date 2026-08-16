@@ -2,6 +2,8 @@
 
 namespace App\Application\Printing;
 
+use App\Contracts\CustomerTicketDispatcherInterface;
+use App\Contracts\BrandingServiceInterface;
 use App\Enums\EstadoImpresion;
 use App\Enums\MetodoPago;
 use App\Enums\TipoImpresora;
@@ -12,8 +14,15 @@ use App\Models\Pedido;
 use App\Models\TrabajoImpresion;
 use App\Models\User;
 
-class QueueCustomerTicket
+class QueueCustomerTicket implements CustomerTicketDispatcherInterface
 {
+    public function __construct(private readonly BrandingServiceInterface $branding) {}
+
+    public function dispatch(Pedido $pedido, Pago $pago, User $actor): QueueTicketResult
+    {
+        return $this->handle($pedido, $pago, $actor);
+    }
+
     public function handle(Pedido $pedido, Pago $pago, User $actor): QueueTicketResult
     {
         $printer = Impresora::query()
@@ -94,6 +103,10 @@ class QueueCustomerTicket
         $lines[] = '';
         $lines[] = 'ATENDIDO POR: ' . $actor->nombre;
 
+        if ($this->branding->ticketFooter()) {
+            $lines[] = $this->branding->ticketFooter();
+        }
+
         $qrLine = $this->qrLine($pedido);
 
         if ($qrLine !== null) {
@@ -108,7 +121,7 @@ class QueueCustomerTicket
 
     protected function encabezado(Pedido $pedido): string
     {
-        return mb_strtoupper($pedido->establecimiento?->nombre ?? 'LOS BOOMWALOS');
+        return mb_strtoupper((string) ($pedido->establecimiento?->nombre ?: 'POS'));
     }
 
     protected function fechaHora(): string

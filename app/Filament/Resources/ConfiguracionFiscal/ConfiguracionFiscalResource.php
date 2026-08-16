@@ -60,6 +60,15 @@ class ConfiguracionFiscalResource extends Resource
                                     ->label('Fiscal habilitada')
                                     ->helperText('Al activarlo, cada cobro generará una venta fiscal en la cola de envío.')
                                     ->default(false),
+                                TextInput::make('razon_social')
+                                    ->label('Razón social')
+                                    ->maxLength(200),
+                                TextInput::make('nit')
+                                    ->label('NIT')
+                                    ->maxLength(30),
+                                TextInput::make('nrc')
+                                    ->label('NRC')
+                                    ->maxLength(30),
                                 TextInput::make('cliente_key')
                                     ->label('Clave del cliente')
                                     ->required()

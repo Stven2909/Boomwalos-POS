@@ -28,7 +28,7 @@ class DemoPosSeeder extends Seeder
     public function run(): void
     {
         $establecimiento = Establecimiento::firstOrCreate(
-            ['nombre' => 'Los Boomwalos'],
+            ['nombre' => 'Pupusería Demo'],
             [
                 'direccion' => 'Establecimiento principal',
                 'codigo_establecimiento' => null,
@@ -144,6 +144,11 @@ class DemoPosSeeder extends Seeder
         }
 
         $admin = User::role('administrador')->first() ?? User::firstOrFail();
+        $cashier = User::role('cajero')->first();
+
+        if ($cashier) {
+            $cashier->establecimientos()->syncWithoutDetaching([$establecimiento->getKey()]);
+        }
 
         if (! SesionCaja::query()->whereNull('fecha_cierre')->exists()) {
             SesionCaja::create([
@@ -162,7 +167,7 @@ class DemoPosSeeder extends Seeder
 
         if ($mesaDemo && $productoDemo) {
             $pedido = Pedido::firstOrCreate(
-                ['numero_seguimiento' => 'BW-DEMO-0001'],
+                ['numero_seguimiento' => 'POS-DEMO-0001'],
                 [
                     'tipo_pedido' => TipoPedido::MESA,
                     'mesa_id' => $mesaDemo->getKey(),
@@ -191,7 +196,7 @@ class DemoPosSeeder extends Seeder
         $this->seedCodigoCortoSequence($establecimiento->getKey());
 
         $pedidoPendiente = Pedido::firstOrCreate(
-            ['numero_seguimiento' => 'BW-DEMO-0002'],
+            ['numero_seguimiento' => 'POS-DEMO-0002'],
             [
                 'tipo_pedido' => TipoPedido::PARA_LLEVAR,
                 'mesa_id' => null,

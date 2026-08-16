@@ -1,6 +1,6 @@
-# Fase 0A — Dominio de Boomwalos POS
+# Fase 0A — Dominio de POS
 
-Este documento define la arquitectura y especificación detallada del dominio de **Boomwalos POS** para la Fase 0A. Refleja las decisiones operativas, las reglas de negocio estrictas, las entidades de datos y los pendientes explícitos identificados en las iteraciones con el cliente y los stakeholders.
+Este documento define la arquitectura y especificación detallada del dominio de **POS** para la Fase 0A. Refleja las decisiones operativas, las reglas de negocio estrictas, las entidades de datos y los pendientes explícitos identificados en las iteraciones con el cliente y los stakeholders.
 
 ---
 

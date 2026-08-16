@@ -114,7 +114,7 @@ class CloseSession extends Page
 
     private function activeSession(): ?SesionCaja
     {
-        $establishmentId = Establecimiento::query()->orderBy('id')->value('id');
+        $establishmentId = app(\App\Contracts\EstablishmentContextInterface::class)->id();
 
         return $establishmentId
             ? SesionCaja::query()

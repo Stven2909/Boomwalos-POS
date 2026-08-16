@@ -143,7 +143,7 @@ class AuthenticationFlowTest extends TestCase
         $cashier->assignRole('cajero');
 
         Establecimiento::create([
-            'nombre' => 'Los Boomwalos',
+            'nombre' => 'Pupusería Demo',
             'direccion' => 'Dirección de prueba',
         ]);
 
@@ -167,7 +167,7 @@ class AuthenticationFlowTest extends TestCase
         $cashier->assignRole('cajero');
 
         $establishment = Establecimiento::create([
-            'nombre' => 'Los Boomwalos',
+            'nombre' => 'Pupusería Demo',
             'direccion' => 'Dirección de prueba',
         ]);
 
@@ -198,7 +198,7 @@ class AuthenticationFlowTest extends TestCase
         $admin->assignRole('administrador');
 
         Establecimiento::create([
-            'nombre' => 'Los Boomwalos',
+            'nombre' => 'Pupusería Demo',
             'direccion' => 'Dirección de prueba',
         ]);
 

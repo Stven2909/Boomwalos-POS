@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Contracts\EstablishmentContextInterface;
 use App\Enums\EstadoComercialPedido;
 use App\Enums\EstadoCocina;
 use App\Enums\EstadoMesa;
@@ -15,6 +16,8 @@ use Illuminate\Validation\ValidationException;
 
 class KitchenService
 {
+    public function __construct(private readonly EstablishmentContextInterface $establishmentContext) {}
+
     public function transition(TandaPedido $tanda, EstadoCocina $destination, User $actor): TandaPedido
     {
         if (! $actor->can('operar_cocina')) {
@@ -140,15 +143,7 @@ class KitchenService
 
     private function establishmentId(): int
     {
-        $id = DB::table('establecimientos')->orderBy('id')->value('id');
-
-        if (! $id) {
-            throw ValidationException::withMessages([
-                'establecimiento' => 'Configura un establecimiento antes de operar la cocina.',
-            ]);
-        }
-
-        return (int) $id;
+        return $this->establishmentContext->id();
     }
 
     private function tandaRelations(): array

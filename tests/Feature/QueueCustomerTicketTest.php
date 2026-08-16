@@ -45,7 +45,7 @@ class QueueCustomerTicketTest extends TestCase
         $this->cashier->assignRole('cajero');
 
         $this->establishment = Establecimiento::create([
-            'nombre' => 'Los Boomwalos',
+            'nombre' => 'Pupusería Demo',
             'direccion' => 'Dirección de prueba',
         ]);
 
@@ -93,7 +93,7 @@ class QueueCustomerTicketTest extends TestCase
             ->where('tipo_trabajo', 'TICKET')
             ->value('contenido');
 
-        $this->assertStringContainsString('LOS BOOMWALOS', $contenido);
+        $this->assertStringContainsString('PUPUSERÍA DEMO', $contenido);
         $this->assertStringContainsString('TICKET DE CLIENTE', $contenido);
         $this->assertStringContainsString('PARA LLEVAR · MOSTRADOR', $contenido);
         $this->assertStringContainsString('1 x Limonada fresca', $contenido);

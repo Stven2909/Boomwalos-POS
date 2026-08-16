@@ -52,9 +52,9 @@
     >
         <header class="bw-kds-header">
             <div class="bw-kds-brand">
-                <img src="{{ asset('images/favicon.png') }}" alt="" class="bw-kds-logo">
+                <img src="{{ $posBranding->logoUrl() }}" alt="" class="bw-kds-logo">
                 <div>
-                    <strong>LOS BOOMWALOS</strong>
+                    <strong>{{ mb_strtoupper($posBranding->displayName()) }}</strong>
                     <span>COCINA · KDS</span>
                 </div>
             </div>

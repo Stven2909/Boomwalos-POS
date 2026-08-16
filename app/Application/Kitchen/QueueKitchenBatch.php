@@ -2,6 +2,7 @@
 
 namespace App\Application\Kitchen;
 
+use App\Contracts\KitchenDispatcherInterface;
 use App\Enums\EstadoImpresion;
 use App\Enums\TipoImpresora;
 use App\Enums\TipoTrabajoImpresion;
@@ -9,8 +10,13 @@ use App\Models\Impresora;
 use App\Models\TandaPedido;
 use App\Models\TrabajoImpresion;
 
-class QueueKitchenBatch
+class QueueKitchenBatch implements KitchenDispatcherInterface
 {
+    public function dispatch(TandaPedido $batch): ?TrabajoImpresion
+    {
+        return $this->handle($batch);
+    }
+
     public function handle(TandaPedido $batch): ?TrabajoImpresion
     {
         $printer = Impresora::query()
@@ -24,6 +30,7 @@ class QueueKitchenBatch
 
         $batch->load([
             'pedido.mesa',
+            'pedido.establecimiento',
             'detalles.producto',
             'detalles.combo',
             'detalles.detallePedidoNotas.notaCocina',
@@ -51,7 +58,7 @@ class QueueKitchenBatch
             : 'PARA LLEVAR · MOSTRADOR';
 
         $lines = [
-            'LOS BOOMWALOS',
+            mb_strtoupper((string) ($pedido->establecimiento?->nombre ?: 'POS')),
             'COMANDA · TANDA ' . $batch->numero_tanda,
             $destination,
             'PEDIDO ' . $pedido->numero_seguimiento,

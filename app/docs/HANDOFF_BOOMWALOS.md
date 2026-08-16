@@ -1,10 +1,10 @@
-# Entrega del proyecto Los Boomwalos POS
+# Entrega del producto POS
 
 ## Objetivo de este documento
 
 Este archivo es una guía para que otro integrante pueda recibir el proyecto, instalarlo en su computadora, entender lo que ya está construido y continuar el desarrollo sin subir credenciales ni archivos privados.
 
-La aplicación es un sistema POS para el restaurante Los Boomwalos. Actualmente cubre autenticación, administración del catálogo, mesas, pedidos, combos, cobro y el tablero operativo de cocina.
+La aplicación es un sistema POS multiempresa para negocios gastronómicos. Actualmente cubre autenticación, administración del catálogo, mesas, pedidos, combos, cobro y el tablero operativo de cocina.
 
 ## Importante antes de compartir
 
@@ -79,11 +79,11 @@ npm.cmd install
 Configurar en '.env' la conexión de base de datos y las credenciales locales de demostración:
 
 ~~~dotenv
-BOOMWALOS_ADMIN_EMAIL=correo-del-admin
-BOOMWALOS_ADMIN_PASSWORD=contrasena-local-del-admin
-BOOMWALOS_CASHIER_EMAIL=correo-del-cajero
-BOOMWALOS_CASHIER_CODE=codigo-del-cajero
-BOOMWALOS_CASHIER_PIN=pin-del-cajero
+POS_ADMIN_EMAIL=correo-del-admin
+POS_ADMIN_PASSWORD=contrasena-local-del-admin
+POS_CASHIER_EMAIL=correo-del-cajero
+POS_CASHIER_CODE=codigo-del-cajero
+POS_CASHIER_PIN=pin-del-cajero
 ~~~
 
 Después ejecutar:

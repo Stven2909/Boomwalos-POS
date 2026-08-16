@@ -18,7 +18,7 @@ class ConfiguracionServiceTest extends TestCase
         parent::setUp();
 
         $this->establishment = Establecimiento::create([
-            'nombre' => 'Los Boomwalos',
+            'nombre' => 'Pupusería Demo',
             'direccion' => 'Dirección de prueba',
         ]);
     }

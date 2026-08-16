@@ -31,6 +31,9 @@
         <env name="DB_CONNECTION" value="sqlite"/>
         <env name="DB_DATABASE" value=":memory:"/>
         <env name="DB_URL" value=""/>
+        <env name="APP_NAME" value="POS"/>
+        <env name="TENANT_DATABASE_MODE" value="single"/>
+        <env name="TENANT_DEFAULT_SLUG" value="demo"/>
         <env name="MAIL_MAILER" value="array"/>
         <env name="QUEUE_CONNECTION" value="sync"/>
         <env name="SESSION_DRIVER" value="array"/>
@@ -38,6 +41,7 @@
         <env name="TELESCOPE_ENABLED" value="false"/>
         <env name="NIGHTWATCH_ENABLED" value="false"/>
         <env name="FISCAL_MOCK_ENABLED" value="true"/>
+        <env name="FISCAL_GATEWAY" value="http"/>
         <env name="FISCAL_MOCK_SECRET" value="test-mock-secret"/>
     </php>
 </phpunit>

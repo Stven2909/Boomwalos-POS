@@ -3,5 +3,5 @@
 return [
     App\Providers\AppServiceProvider::class,
     App\Providers\Filament\AdminPanelProvider::class,
-    App\Providers\Filament\AmdinPanelProvider::class,
+    App\Providers\Filament\PlatformPanelProvider::class,
 ];

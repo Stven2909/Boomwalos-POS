@@ -61,7 +61,7 @@ class PointOfSaleFlowTest extends TestCase
         $this->cashier->assignRole('cajero');
 
         $this->establishment = Establecimiento::create([
-            'nombre' => 'Los Boomwalos',
+            'nombre' => 'Pupusería Demo',
             'direccion' => 'Dirección de prueba',
         ]);
 
@@ -150,7 +150,7 @@ class PointOfSaleFlowTest extends TestCase
     public function test_selecting_an_occupied_table_reuses_the_open_order(): void
     {
         $existing = Pedido::create([
-            'numero_seguimiento' => 'BW-TEST-0001',
+                'numero_seguimiento' => 'POS-TEST-0001',
             'tipo_pedido' => TipoPedido::MESA,
             'mesa_id' => $this->table->getKey(),
             'establecimiento_id' => $this->establishment->getKey(),

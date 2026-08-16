@@ -19,6 +19,8 @@ return [
 
     'timeout' => (int) env('FISCAL_API_TIMEOUT', 10),
 
+    'gateway' => env('FISCAL_GATEWAY', 'http'),
+
     'hmac' => [
         'header' => env('FISCAL_HMAC_HEADER', 'X-Fiscal-Hmac'),
         'timestamp_header' => env('FISCAL_HMAC_TIMESTAMP_HEADER', 'X-Fiscal-Timestamp'),

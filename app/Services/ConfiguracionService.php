@@ -2,11 +2,14 @@
 
 namespace App\Services;
 
+use App\Contracts\EstablishmentContextInterface;
 use App\Models\Configuracion;
 use Illuminate\Support\Facades\Cache;
 
 class ConfiguracionService
 {
+    public function __construct(private readonly EstablishmentContextInterface $establishmentContext) {}
+
     private const TIPOS = [
         'pos.montos_rapidos_efectivo' => 'array',
         'moneda.simbolo' => 'string',
@@ -91,12 +94,6 @@ class ConfiguracionService
 
     private function establishmentId(): int
     {
-        $id = \App\Models\Establecimiento::query()->orderBy('id')->value('id');
-
-        if (! $id) {
-            throw new \InvalidArgumentException('Configura un establecimiento antes de guardar opciones.');
-        }
-
-        return (int) $id;
+        return $this->establishmentContext->id();
     }
 }

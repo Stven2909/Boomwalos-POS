@@ -65,7 +65,7 @@ class FiscalDocumentoServiceTest extends TestCase
         $this->cashier->assignRole('cajero');
 
         $this->establishment = Establecimiento::create([
-            'nombre' => 'Los Boomwalos',
+            'nombre' => 'Pupusería Demo',
             'direccion' => 'Dirección de prueba',
         ]);
 
@@ -261,4 +261,3 @@ class FiscalDocumentoServiceTest extends TestCase
         $this->assertTrue(abs($renovado->expires_at->diffInMinutes($renovado->solicitado_at)) <= 2890);
     }
 }
-

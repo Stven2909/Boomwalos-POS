@@ -127,6 +127,6 @@ class EntregaDisplay extends Page
 
     private function establishmentId(): int
     {
-        return (int) (Establecimiento::query()->orderBy('id')->value('id') ?? 0);
+        return app(\App\Contracts\EstablishmentContextInterface::class)->id();
     }
 }

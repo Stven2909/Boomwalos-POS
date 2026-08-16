@@ -2,7 +2,9 @@
 
 namespace App\Services;
 
-use App\Application\Kitchen\QueueKitchenBatch;
+use App\Contracts\AuditLoggerInterface;
+use App\Contracts\EstablishmentContextInterface;
+use App\Contracts\KitchenDispatcherInterface;
 use App\Enums\DisponibilidadProducto;
 use App\Enums\EstadoCocina;
 use App\Enums\EstadoComercialPedido;
@@ -12,13 +14,14 @@ use App\Enums\OrigenPedido;
 use App\Enums\TipoPedido;
 use App\Models\Combo;
 use App\Models\DetallePedido;
-use App\Models\EventoAuditoria;
 use App\Models\Mesa;
 use App\Models\Pedido;
 use App\Models\Producto;
 use App\Models\SesionCaja;
 use App\Models\TandaPedido;
 use App\Models\User;
+use App\Services\Orders\ComboSelectionValidator;
+use App\Services\Orders\PedidoNumberService;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\DB;
@@ -26,6 +29,14 @@ use Illuminate\Validation\ValidationException;
 
 class PedidoService
 {
+    public function __construct(
+        private readonly EstablishmentContextInterface $establishmentContext,
+        private readonly KitchenDispatcherInterface $kitchenDispatcher,
+        private readonly AuditLoggerInterface $auditLogger,
+        private readonly ComboSelectionValidator $comboSelectionValidator,
+        private readonly PedidoNumberService $pedidoNumberService,
+    ) {}
+
     public function startOrder(TipoPedido $tipo, User $actor, ?int $mesaId = null, OrigenPedido $origen = OrigenPedido::CAJA): Pedido
     {
         return DB::transaction(function () use ($tipo, $actor, $mesaId, $origen): Pedido {
@@ -71,10 +82,10 @@ class PedidoService
                 }
             }
 
-            $codigoCorto = $this->nextCodigoCorto($establecimientoId);
+            $codigoCorto = $this->pedidoNumberService->nextShortCode($establecimientoId);
 
             $pedido = Pedido::create([
-                'numero_seguimiento' => $this->nextTrackingNumber(),
+                'numero_seguimiento' => $this->pedidoNumberService->nextTracking(),
                 'tipo_pedido' => $tipo,
                 'mesa_id' => $mesa?->id,
                 'establecimiento_id' => $establecimientoId,
@@ -161,7 +172,7 @@ class PedidoService
                 ]);
             }
 
-            $normalized = $this->normalizeComboSelection($combo, $selection);
+            $normalized = $this->comboSelectionValidator->normalize($combo, $selection);
             $sameLine = $pedido->detalles()
                 ->whereNull('tanda_id')
                 ->where('estado_linea', EstadoLineaPedido::ACTIVA->value)
@@ -169,7 +180,7 @@ class PedidoService
                 ->whereNull('producto_id')
                 ->lockForUpdate()
                 ->get()
-                ->first(fn (DetallePedido $line): bool => $this->sameSelection($line->seleccion_combo, $normalized));
+                ->first(fn (DetallePedido $line): bool => $this->comboSelectionValidator->same($line->seleccion_combo, $normalized));
 
             if ($sameLine) {
                 $sameLine->increment('cantidad');
@@ -211,7 +222,7 @@ class PedidoService
             }
 
             $combo = Combo::query()->with('opcionesCombo.productos')->lockForUpdate()->findOrFail($detail->combo_id);
-            $normalized = $this->normalizeComboSelection($combo, $selection);
+            $normalized = $this->comboSelectionValidator->normalize($combo, $selection);
 
             $otherLine = $pedido->detalles()
                 ->whereNull('tanda_id')
@@ -221,7 +232,7 @@ class PedidoService
                 ->where('id', '<>', $detail->getKey())
                 ->lockForUpdate()
                 ->get()
-                ->first(fn (DetallePedido $line): bool => $this->sameSelection($line->seleccion_combo, $normalized));
+                ->first(fn (DetallePedido $line): bool => $this->comboSelectionValidator->same($line->seleccion_combo, $normalized));
 
             if ($otherLine) {
                 $otherLine->increment('cantidad', $detail->cantidad);
@@ -248,7 +259,7 @@ class PedidoService
             $pedido = $this->lockPedido($pedido);
             $this->ensureEditable($pedido);
             $combo = Combo::query()->with('opcionesCombo.productos')->findOrFail($comboId);
-            $normalized = $this->normalizeComboSelection($combo, $selection);
+            $normalized = $this->comboSelectionValidator->normalize($combo, $selection);
 
             $sameLine = $pedido->detalles()
                 ->whereNull('tanda_id')
@@ -257,7 +268,7 @@ class PedidoService
                 ->whereNull('producto_id')
                 ->lockForUpdate()
                 ->get()
-                ->first(fn (DetallePedido $line): bool => $this->sameSelection($line->seleccion_combo, $normalized));
+                ->first(fn (DetallePedido $line): bool => $this->comboSelectionValidator->same($line->seleccion_combo, $normalized));
 
             if ($sameLine) {
                 $sameLine->increment('cantidad', $quantity);
@@ -374,7 +385,7 @@ class PedidoService
                 ->whereIn('id', $pendingLines->modelKeys())
                 ->update(['tanda_id' => $tanda->getKey()]);
 
-            $printJob = app(QueueKitchenBatch::class)->handle($tanda);
+            $printJob = $this->kitchenDispatcher->dispatch($tanda);
 
             $this->audit($pedido, $actor, $printJob ? 'comanda_en_cola' : 'comanda_sin_impresora', [
                 'tanda_id' => $tanda->getKey(),
@@ -580,15 +591,7 @@ class PedidoService
 
     private function establishmentId(): int
     {
-        $id = DB::table('establecimientos')->orderBy('id')->value('id');
-
-        if (! $id) {
-            throw ValidationException::withMessages([
-                'establecimiento' => 'Configura un establecimiento antes de usar el Punto de Venta.',
-            ]);
-        }
-
-        return (int) $id;
+        return $this->establishmentContext->id();
     }
 
     private function ensureActiveCashSession(int $establecimientoId): void
@@ -607,124 +610,8 @@ class PedidoService
         }
     }
 
-    private function nextCodigoCorto(int $establecimientoId): int
-    {
-        $fecha = now()->toDateString();
-
-        $secuencia = DB::table('secuencias_pedidos')
-            ->where('establecimiento_id', $establecimientoId)
-            ->where('fecha', $fecha)
-            ->lockForUpdate()
-            ->first();
-
-        if ($secuencia) {
-            DB::table('secuencias_pedidos')
-                ->where('id', $secuencia->id)
-                ->increment('ultimo_valor');
-
-            $secuencia = DB::table('secuencias_pedidos')->find($secuencia->id);
-        } else {
-            DB::table('secuencias_pedidos')->insert([
-                'establecimiento_id' => $establecimientoId,
-                'fecha' => $fecha,
-                'ultimo_valor' => 1,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-
-            $secuencia = DB::table('secuencias_pedidos')
-                ->where('establecimiento_id', $establecimientoId)
-                ->where('fecha', $fecha)
-                ->first();
-        }
-
-        return (int) $secuencia->ultimo_valor;
-    }
-
-    private function nextTrackingNumber(): string
-    {
-        do {
-            $tracking = 'BW-'.now()->format('ymdHis').'-'.strtoupper(substr(bin2hex(random_bytes(2)), 0, 4));
-        } while (Pedido::query()->where('numero_seguimiento', $tracking)->exists());
-
-        return $tracking;
-    }
-
-    private function normalizeComboSelection(Combo $combo, array $selection): array
-    {
-        $normalized = [];
-
-        foreach ($combo->opcionesCombo->sortBy('id') as $option) {
-            $rawItems = $selection[(string) $option->getKey()] ?? $selection[$option->getKey()] ?? [];
-            $rawItems = is_array($rawItems) ? $rawItems : [];
-            $allowedProducts = $option->productos->keyBy(fn (Producto $product): string => (string) $product->getKey());
-            $items = [];
-            $total = 0;
-
-            foreach ($rawItems as $productId => $quantity) {
-                $product = $allowedProducts->get((string) $productId);
-                $quantity = (int) $quantity;
-
-                if ($quantity < 1) {
-                    continue;
-                }
-
-                if (! $product) {
-                    throw ValidationException::withMessages([
-                        'combo' => 'La selección contiene un producto que no pertenece al combo.',
-                    ]);
-                }
-
-                if ($product->disponibilidad !== DisponibilidadProducto::DISPONIBLE) {
-                    throw ValidationException::withMessages([
-                        'combo' => "{$product->nombre} no está disponible para este combo.",
-                    ]);
-                }
-
-                $items[] = [
-                    'producto_id' => $product->getKey(),
-                    'nombre' => $product->nombre,
-                    'cantidad' => $quantity,
-                ];
-                $total += $quantity;
-            }
-
-            if ($option->es_obligatorio && $total !== (int) $option->cantidad_requerida) {
-                throw ValidationException::withMessages([
-                    'combo' => "El grupo {$option->nombre} debe tener exactamente {$option->cantidad_requerida} unidades.",
-                ]);
-            }
-
-            if (! $option->es_obligatorio && $total > 0 && $total !== (int) $option->cantidad_requerida) {
-                throw ValidationException::withMessages([
-                    'combo' => "El grupo {$option->nombre} debe tener exactamente {$option->cantidad_requerida} unidades.",
-                ]);
-            }
-
-            $normalized[] = [
-                'opcion_combo_id' => $option->getKey(),
-                'nombre' => $option->nombre,
-                'cantidad_requerida' => (int) $option->cantidad_requerida,
-                'items' => $items,
-            ];
-        }
-
-        return $normalized;
-    }
-
-    private function sameSelection(?array $left, array $right): bool
-    {
-        return json_encode($left ?? [], JSON_UNESCAPED_UNICODE) === json_encode($right, JSON_UNESCAPED_UNICODE);
-    }
-
     private function audit(Pedido $pedido, User $actor, string $type, array $payload = []): void
     {
-        EventoAuditoria::create([
-            'entidad_tipo' => Pedido::class,
-            'entidad_id' => $pedido->getKey(),
-            'usuario_id' => $actor->getKey(),
-            'tipo_evento' => $type,
-            'payload' => $payload,
-        ]);
+        $this->auditLogger->record($pedido, $actor, $type, $payload);
     }
 }

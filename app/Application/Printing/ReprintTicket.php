@@ -12,6 +12,8 @@ use App\Models\User;
 
 class ReprintTicket
 {
+    public function __construct(private readonly QueueCustomerTicket $customerTicket) {}
+
     public function handle(Pedido $pedido, User $actor, string $motivo = 'Reimpresión manual'): QueueTicketResult
     {
         $printer = Impresora::query()
@@ -39,7 +41,7 @@ class ReprintTicket
                 return QueueTicketResult::failed('No existe ticket original ni pago registrado para este pedido.');
             }
 
-            $contenido = app(QueueCustomerTicket::class)->renderContent($pedido, $pago, $actor);
+            $contenido = $this->customerTicket->renderContent($pedido, $pago, $actor);
         }
 
         $trabajo = TrabajoImpresion::create([

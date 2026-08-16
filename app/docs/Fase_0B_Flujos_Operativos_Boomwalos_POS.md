@@ -1,6 +1,6 @@
-# Fase 0B — Flujos Operativos de Boomwalos POS
+# Fase 0B — Flujos Operativos de POS
 
-Este documento especifica los flujos operativos oficiales de **Boomwalos POS** alineados estrictamente con la secuencia macro del Master Técnico Ejecutivo:
+Este documento especifica los flujos operativos oficiales de **POS** alineados estrictamente con la secuencia macro del Master Técnico Ejecutivo:
 
 > **Registro (Mesa o para llevar) → Preparación (Envío a cocina) → Cobro (Efectivo o tarjeta) → Ticket (Número y QR opcional) → Entrega (Pedido finalizado)**
 
@@ -10,7 +10,7 @@ Se detallan los tres flujos fundamentales del sistema, sus implicaciones de dise
 
 ## Secuencia Macro Oficial
 
-A diferencia de un modelo de restaurante tradicional (cobro al final tras consumir) o un modelo de comida rápida estricto (cobro previo a la comanda), **Boomwalos POS** opera en un modelo intermedio:
+A diferencia de un modelo de restaurante tradicional (cobro al final tras consumir) o un modelo de comida rápida estricto (cobro previo a la comanda), **POS** opera en un modelo intermedio:
 
 1. **Creación del pedido y envío inicial a cocina.**
 2. **Procesamiento de pago en paralelo** mientras la cocina prepara la comanda.
@@ -154,6 +154,6 @@ Representa el flujo de adición de productos a un pedido ya enviado.
 
 1. **Gestión Monetaria de Adiciones Post-Cobro:**
    * *Escenario:* Un cliente realiza un pedido, se envía la `Tanda 1`, el cajero procesa el **Cobro** (Estado comercial: `COBRADO`) y posteriormente el cliente solicita un producto adicional (`Tanda 2`).
-   * *Pregunta para Los Boomwalos:* ¿El sistema debe requerir un **segundo cobro independiente** inmediatamente al enviar la `Tanda 2`? ¿O se debe permitir la adición acumulada generando un saldo pendiente que fuerce un cobro complementario antes de cerrar el pedido?
+   * *Pregunta para el negocio:* ¿El sistema debe requerir un **segundo cobro independiente** inmediatamente al enviar la `Tanda 2`? ¿O se debe permitir la adición acumulada generando un saldo pendiente que fuerce un cobro complementario antes de cerrar el pedido?
 2. **Confirmación de Liberación de Mesa:**
    * Confirmar si el negocio aprueba que la mesa se mantenga como `Ocupada` hasta el momento de la entrega de la comida (Paso 7), o si prefieren liberarla inmediatamente tras el registro del cobro (Paso 4) aunque los clientes continúen sentados.

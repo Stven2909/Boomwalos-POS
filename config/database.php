@@ -114,6 +114,45 @@ return [
             // 'trust_server_certificate' => env('DB_TRUST_SERVER_CERTIFICATE', 'false'),
         ],
 
+        // The platform connection is deliberately separate from the tenant
+        // connection. In single-database mode the PlatformTenant model falls
+        // back to the test/default connection to keep SQLite :memory: usable.
+        'platform' => [
+            'driver' => env('PLATFORM_DB_CONNECTION', env('DB_CONNECTION', 'sqlite')),
+            'url' => env('PLATFORM_DB_URL', env('DB_URL')),
+            'host' => env('PLATFORM_DB_HOST', env('DB_HOST', '127.0.0.1')),
+            'port' => env('PLATFORM_DB_PORT', env('DB_PORT', '3306')),
+            'database' => env('PLATFORM_DB_DATABASE', env('DB_DATABASE', database_path('database.sqlite'))),
+            'username' => env('PLATFORM_DB_USERNAME', env('DB_USERNAME', 'root')),
+            'password' => env('PLATFORM_DB_PASSWORD', env('DB_PASSWORD', '')),
+            'unix_socket' => env('PLATFORM_DB_SOCKET', env('DB_SOCKET', '')),
+            'charset' => env('PLATFORM_DB_CHARSET', env('DB_CHARSET', 'utf8mb4')),
+            'collation' => env('PLATFORM_DB_COLLATION', env('DB_COLLATION', 'utf8mb4_unicode_ci')),
+            'prefix' => '',
+            'prefix_indexes' => true,
+            'strict' => true,
+            'engine' => null,
+        ],
+
+        // This is a safe baseline only. TenantConnectionResolver replaces it
+        // at runtime with the connection stored for the resolved company.
+        'tenant' => [
+            'driver' => env('TENANT_DB_CONNECTION', env('DB_CONNECTION', 'sqlite')),
+            'url' => env('TENANT_DB_URL', env('DB_URL')),
+            'host' => env('TENANT_DB_HOST', env('DB_HOST', '127.0.0.1')),
+            'port' => env('TENANT_DB_PORT', env('DB_PORT', '3306')),
+            'database' => env('TENANT_DB_DATABASE', env('DB_DATABASE', database_path('database.sqlite'))),
+            'username' => env('TENANT_DB_USERNAME', env('DB_USERNAME', 'root')),
+            'password' => env('TENANT_DB_PASSWORD', env('DB_PASSWORD', '')),
+            'unix_socket' => env('TENANT_DB_SOCKET', env('DB_SOCKET', '')),
+            'charset' => env('TENANT_DB_CHARSET', env('DB_CHARSET', 'utf8mb4')),
+            'collation' => env('TENANT_DB_COLLATION', env('DB_COLLATION', 'utf8mb4_unicode_ci')),
+            'prefix' => '',
+            'prefix_indexes' => true,
+            'strict' => true,
+            'engine' => null,
+        ],
+
     ],
 
     /*

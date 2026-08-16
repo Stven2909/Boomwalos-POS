@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
@@ -43,5 +44,15 @@ class Establecimiento extends Model
     public function ventasFiscalesPos(): HasMany
     {
         return $this->hasMany(VentaFiscalPos::class);
+    }
+
+    public function usuarios(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            User::class,
+            'establecimiento_usuario',
+            'establecimiento_id',
+            'usuario_id',
+        )->withTimestamps();
     }
 }

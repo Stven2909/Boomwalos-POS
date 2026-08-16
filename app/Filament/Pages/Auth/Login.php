@@ -4,8 +4,8 @@ namespace App\Filament\Pages\Auth;
 
 use App\Filament\Pages\Cash\CloseSession;
 use App\Filament\Pages\Cash\OpenSession;
+use App\Filament\Pages\EstablishmentSelection;
 use App\Filament\Pages\Pos\ServiceSelection;
-use App\Models\Establecimiento;
 use App\Models\SesionCaja;
 use App\Models\User;
 use DanHarrin\LivewireRateLimiting\Exceptions\TooManyRequestsException;
@@ -137,6 +137,12 @@ class Login extends BaseLogin
 
     private function routeAfterLogin(User $user): void
     {
+        if (app(\App\Contracts\EstablishmentContextInterface::class)->accessible()->count() > 1) {
+            session()->put('url.intended', EstablishmentSelection::getUrl());
+
+            return;
+        }
+
         $hasActiveSession = $this->hasActiveCashSession();
 
         if ($user->hasRole('cajero')) {
@@ -158,7 +164,7 @@ class Login extends BaseLogin
 
     private function hasActiveCashSession(): bool
     {
-        $establishmentId = Establecimiento::query()->orderBy('id')->value('id');
+        $establishmentId = app(\App\Contracts\EstablishmentContextInterface::class)->id();
 
         if (! $establishmentId) {
             return false;

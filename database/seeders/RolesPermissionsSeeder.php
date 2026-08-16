@@ -24,6 +24,8 @@ class RolesPermissionsSeeder extends Seeder
             'gestionar_mesas',
             'gestionar_notas_cocina',
             'gestionar_usuarios',
+            'gestionar_establecimientos',
+            'gestionar_marca',
             'abrir_caja',
             'cerrar_caja',
             'ver_reportes',
@@ -51,6 +53,8 @@ class RolesPermissionsSeeder extends Seeder
             'gestionar_mesas',
             'gestionar_notas_cocina',
             'gestionar_usuarios',
+            'gestionar_establecimientos',
+            'gestionar_marca',
             'abrir_caja',
             'cerrar_caja',
             'ver_reportes',
@@ -70,7 +74,7 @@ class RolesPermissionsSeeder extends Seeder
         ]);
 
         // aplicar_descuento queda creado como permiso existente pero SIN asignar,
-        // a la espera de la decisión de Los Boomwalos.
+        // a la espera de la decisión del negocio.
         // cancelar_pedido se asignó al administrador para anular pedidos completos.
     }
 }

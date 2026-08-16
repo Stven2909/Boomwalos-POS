@@ -1,4 +1,4 @@
-# Boomwalos documentation — ERD v2
+# POS documentation — ERD v2
 
 ## Changelog respecto a v1
 
@@ -356,7 +356,7 @@ ver_reportes, gestionar_solicitudes_fiscales
 
 > `cancelar_pedido`, `aplicar_descuento` y `gestionar_solicitudes_fiscales`
 > quedan sembrados como permisos existentes, pero **sin asignar a ningún rol
-> todavía** — su asignación depende de decisiones de Los Boomwalos que siguen
+> todavía** — su asignación depende de decisiones del negocio que siguen
 > pendientes (ver `docs/decisiones-pendientes.md`).
 
 ---

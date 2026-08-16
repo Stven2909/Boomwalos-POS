@@ -1,6 +1,6 @@
 # Contrato API Fiscal v1
 
-Contrato de integración del POS **Los Boomwalos** con la plataforma de emisión de
+Contrato de integración del producto **POS** con la plataforma de emisión de
 comprobantes (DTE) del proveedor fiscal.
 
 > **Fase 0+1 (esta entrega):** contrato + simulador `ENV-ONLY`.

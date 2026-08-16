@@ -2,6 +2,8 @@
 
 namespace App\Application\Fiscal;
 
+use App\Contracts\FiscalGatewayInterface;
+use App\Context\TenantContext;
 use App\Enums\EstadoColaVentaFiscal;
 use App\Enums\EstadoDocumentoFiscal;
 use App\Enums\EstadoVentaFiscal;
@@ -18,6 +20,11 @@ use Throwable;
 
 class FiscalOutboxService
 {
+    public function __construct(
+        private readonly FiscalGatewayInterface $fiscalGateway,
+        private readonly TenantContext $tenantContext,
+    ) {}
+
     public function registrarVenta(Pedido $pedido, Pago $pago, ConfiguracionFiscal $config): VentaFiscalPos
     {
         $establecimiento = $config->establecimiento;
@@ -47,7 +54,7 @@ class FiscalOutboxService
             'estado' => EstadoColaVentaFiscal::PENDIENTE->value,
         ]);
 
-        dispatch(new EnviarVentasFiscalesJob($venta->getKey()));
+        dispatch(new EnviarVentasFiscalesJob($venta->getKey(), $this->tenantContext->current()?->slug));
 
         return $venta;
     }
@@ -83,7 +90,7 @@ class FiscalOutboxService
 
         $cola->ventaFiscalPos()->update(['estado' => EstadoVentaFiscal::NO->value]);
 
-        dispatch(new EnviarVentasFiscalesJob($cola->venta_fiscal_pos_id));
+        dispatch(new EnviarVentasFiscalesJob($cola->venta_fiscal_pos_id, $this->tenantContext->current()?->slug));
     }
 
     private function enviar(ColaVentaFiscal $cola): bool
@@ -98,7 +105,7 @@ class FiscalOutboxService
         $cola->increment('intentos');
 
         try {
-            $respuesta = app(FiscalClient::class)->enviarVenta($config, $cola->payload_envio);
+            $respuesta = $this->fiscalGateway->enviarVenta($config, $cola->payload_envio);
 
             DB::transaction(function () use ($cola, $venta, $respuesta): void {
                 $venta->update([

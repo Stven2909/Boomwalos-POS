@@ -1,8 +1,8 @@
 <div class="bw-login-page">
     <header class="bw-login-header">
-        <div class="bw-login-brand" aria-label="Los Boomwalos">
-            <img src="{{ asset('images/favicon.png') }}" alt="" class="bw-login-logo">
-            <span class="bw-login-brand-name">LOS BOOMWALOS</span>
+        <div class="bw-login-brand" aria-label="{{ $posBranding->displayName() }}">
+            <img src="{{ $posBranding->logoUrl() }}" alt="" class="bw-login-logo">
+            <span class="bw-login-brand-name">{{ mb_strtoupper($posBranding->displayName()) }}</span>
         </div>
     </header>
 

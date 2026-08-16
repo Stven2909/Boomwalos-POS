@@ -1,6 +1,6 @@
 openapi: 3.1.0
 info:
-  title: API Fiscal v1 — Los Boomwalos POS
+  title: API Fiscal v1 — POS
   version: 1.0.0
   description: |
     Contrato de integración con la plataforma de emisión de DTE.

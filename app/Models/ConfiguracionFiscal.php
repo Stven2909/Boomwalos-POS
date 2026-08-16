@@ -11,6 +11,9 @@ class ConfiguracionFiscal extends Model
 
     protected $fillable = [
         'establecimiento_id',
+        'razon_social',
+        'nit',
+        'nrc',
         'fiscal_habilitada',
         'cliente_key',
         'cliente_secret',

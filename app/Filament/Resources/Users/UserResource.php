@@ -82,6 +82,15 @@ class UserResource extends Resource
                                     ->rules(fn (Get $get): array => $get('rol') === 'cajero'
                                         ? ['digits:4']
                                         : []),
+                                Select::make('establecimientos')
+                                    ->label('Sucursales asignadas')
+                                    ->relationship('establecimientos', 'nombre')
+                                    ->multiple()
+                                    ->searchable()
+                                    ->preload()
+                                    ->native(false)
+                                    ->helperText('El personal solo podrá operar en las sucursales seleccionadas.')
+                                    ->required(fn (Get $get): bool => $get('rol') === 'cajero'),
                             ]),
                     ]),
             ]);

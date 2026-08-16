@@ -1,5 +1,9 @@
 @php
-    $establishmentId = \App\Models\Establecimiento::query()->orderBy('id')->value('id');
+    try {
+        $establishmentId = app(\App\Contracts\EstablishmentContextInterface::class)->id();
+    } catch (\Throwable) {
+        $establishmentId = null;
+    }
     $hasActiveSession = $establishmentId && \App\Models\SesionCaja::query()
         ->where('establecimiento_id', $establishmentId)
         ->whereNull('fecha_cierre')

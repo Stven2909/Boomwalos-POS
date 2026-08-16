@@ -13,9 +13,9 @@
                 <span>{{ $backLabel }}</span>
             </a>
         @else
-            <div class="bw-pos-brand" aria-label="Los Boomwalos">
-                <img src="{{ asset('images/favicon.png') }}" alt="" class="bw-pos-logo">
-                <span>LOS BOOMWALOS</span>
+            <div class="bw-pos-brand" aria-label="{{ $posBranding->displayName() }}">
+                <img src="{{ $posBranding->logoUrl() }}" alt="" class="bw-pos-logo">
+                <span>{{ mb_strtoupper($posBranding->displayName()) }}</span>
             </div>
         @endif
     </div>

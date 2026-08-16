@@ -1,13 +1,13 @@
 @if (auth()->user()?->hasRole('cajero'))
     <div class="bw-cashier-dashboard" data-testid="cashier-dashboard">
         <header class="bw-cashier-header">
-            <div class="bw-cashier-brand" aria-label="Los Boomwalos">
+            <div class="bw-cashier-brand" aria-label="{{ $posBranding->displayName() }}">
                 <img
-                    src="{{ asset('images/favicon.png') }}"
+                    src="{{ $posBranding->logoUrl() }}"
                     alt=""
                     class="bw-cashier-logo"
                 >
-                <span class="bw-cashier-brand-name">LOS BOOMWALOS</span>
+                <span class="bw-cashier-brand-name">{{ mb_strtoupper($posBranding->displayName()) }}</span>
             </div>
 
             <div class="bw-cashier-session-group">

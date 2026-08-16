@@ -41,7 +41,7 @@ class CardPaymentTest extends TestCase
         $this->cashier->assignRole('cajero');
 
         $this->establishment = Establecimiento::create([
-            'nombre' => 'Los Boomwalos',
+            'nombre' => 'Pupusería Demo',
             'direccion' => 'Dirección de prueba',
         ]);
 

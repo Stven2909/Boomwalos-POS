@@ -2,27 +2,34 @@
 
 namespace App\Services;
 
-use App\Application\Fiscal\FiscalOutboxService;
-use App\Application\Kitchen\QueueKitchenBatch;
-use App\Application\Printing\QueueCustomerTicket;
+use App\Contracts\AuditLoggerInterface;
+use App\Contracts\CustomerTicketDispatcherInterface;
+use App\Contracts\EstablishmentContextInterface;
+use App\Contracts\KitchenDispatcherInterface;
 use App\Enums\EstadoComercialPedido;
 use App\Enums\EstadoCocina;
 use App\Enums\EstadoLineaPedido;
 use App\Enums\MetodoPago;
-use App\Models\ConfiguracionFiscal;
-use App\Models\EventoAuditoria;
 use App\Models\Pago;
 use App\Models\Pedido;
 use App\Models\SesionCaja;
 use App\Models\TandaPedido;
 use App\Models\User;
-use App\Models\VentaFiscalPos;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class CobroService
 {
+    public function __construct(
+        private readonly EstablishmentContextInterface $establishmentContext,
+        private readonly KitchenDispatcherInterface $kitchenDispatcher,
+        private readonly CustomerTicketDispatcherInterface $customerTicketDispatcher,
+        private readonly AuditLoggerInterface $auditLogger,
+        private readonly FiscalSaleRegistrar $fiscalSaleRegistrar,
+        private readonly KitchenService $kitchenService,
+    ) {}
+
     public function chargeAndSend(
         Pedido $pedido,
         MetodoPago $metodo,
@@ -151,7 +158,7 @@ class CobroService
                 ->whereIn('id', $pending->modelKeys())
                 ->update(['tanda_id' => $tanda->getKey()]);
 
-            $printJob = app(QueueKitchenBatch::class)->handle($tanda);
+            $printJob = $this->kitchenDispatcher->dispatch($tanda);
 
             $this->audit($pedido, $actor, $printJob ? 'comanda_en_cola' : 'comanda_sin_impresora', [
                 'tanda_id' => $tanda->getKey(),
@@ -171,32 +178,19 @@ class CobroService
 
         $ticketResult = $this->queueCustomerTicket($pedido, $pago, $actor);
 
-        app(KitchenService::class)->closeOrderIfReady($pedido, $actor);
+        $this->kitchenService->closeOrderIfReady($pedido, $actor);
 
         return [$pago->fresh(['pedido']), $tanda, $ticketResult];
     }
 
     private function registrarVentaFiscal(Pago $pago): void
     {
-        $configuracion = ConfiguracionFiscal::query()
-            ->where('establecimiento_id', $pago->pedido->establecimiento_id)
-            ->where('fiscal_habilitada', true)
-            ->first();
-
-        if (! $configuracion) {
-            return;
-        }
-
-        if (VentaFiscalPos::query()->where('pago_id', $pago->getKey())->exists()) {
-            return;
-        }
-
-        app(FiscalOutboxService::class)->registrarVenta($pago->pedido, $pago, $configuracion);
+        $this->fiscalSaleRegistrar->register($pago);
     }
 
     private function queueCustomerTicket(Pedido $pedido, Pago $pago, User $actor): \App\Application\Printing\QueueTicketResult
     {
-        $result = app(QueueCustomerTicket::class)->handle($pedido, $pago, $actor);
+        $result = $this->customerTicketDispatcher->dispatch($pedido, $pago, $actor);
 
         $event = match ($result->status) {
             \App\Application\Printing\QueueTicketResult::NO_PRINTER => 'ticket_sin_impresora',
@@ -254,15 +248,7 @@ class CobroService
 
     private function establishmentId(): int
     {
-        $id = DB::table('establecimientos')->orderBy('id')->value('id');
-
-        if (! $id) {
-            throw ValidationException::withMessages([
-                'establecimiento' => 'Configura un establecimiento antes de cobrar pedidos.',
-            ]);
-        }
-
-        return (int) $id;
+        return $this->establishmentContext->id();
     }
 
     private function activeCashSession(int $establecimientoId): SesionCaja
@@ -285,12 +271,6 @@ class CobroService
 
     private function audit(Pedido $pedido, User $actor, string $type, array $payload): void
     {
-        EventoAuditoria::create([
-            'entidad_tipo' => Pedido::class,
-            'entidad_id' => $pedido->getKey(),
-            'usuario_id' => $actor->getKey(),
-            'tipo_evento' => $type,
-            'payload' => $payload,
-        ]);
+        $this->auditLogger->record($pedido, $actor, $type, $payload);
     }
 }

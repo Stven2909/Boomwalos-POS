@@ -29,7 +29,7 @@ abstract class PosPage extends Page
 
     protected function activeCashSession(): ?SesionCaja
     {
-        $establishmentId = Establecimiento::query()->orderBy('id')->value('id');
+        $establishmentId = app(\App\Contracts\EstablishmentContextInterface::class)->id();
 
         if (! $establishmentId) {
             return null;
@@ -44,7 +44,7 @@ abstract class PosPage extends Page
 
     protected function establishment(): Establecimiento
     {
-        return Establecimiento::query()->orderBy('id')->firstOrFail();
+        return app(\App\Contracts\EstablishmentContextInterface::class)->current();
     }
 
     protected function actorName(): string

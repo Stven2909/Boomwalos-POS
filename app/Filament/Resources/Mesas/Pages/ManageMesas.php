@@ -4,7 +4,7 @@ namespace App\Filament\Resources\Mesas\Pages;
 
 use App\Enums\EstadoMesa;
 use App\Filament\Resources\Mesas\MesaResource;
-use App\Models\Establecimiento;
+use App\Contracts\EstablishmentContextInterface;
 use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ManageRecords;
 
@@ -20,7 +20,7 @@ class ManageMesas extends ManageRecords
                 ->mutateFormDataUsing(function (array $data): array {
                     return [
                         ...$data,
-                        'establecimiento_id' => Establecimiento::query()->orderBy('id')->value('id'),
+                        'establecimiento_id' => app(EstablishmentContextInterface::class)->id(),
                         'estado' => EstadoMesa::LIBRE,
                     ];
                 }),

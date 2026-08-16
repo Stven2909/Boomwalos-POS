@@ -7,6 +7,7 @@ use Filament\Models\Contracts\HasName;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -67,5 +68,28 @@ class User extends Authenticatable implements HasName, FilamentUser
     public function eventosAuditoria(): HasMany
     {
         return $this->hasMany(EventoAuditoria::class, 'usuario_id');
+    }
+
+    public function establecimientos(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            Establecimiento::class,
+            'establecimiento_usuario',
+            'usuario_id',
+            'establecimiento_id',
+        )->withTimestamps();
+    }
+
+    public function canAccessEstablishment(Establecimiento|int $establecimiento): bool
+    {
+        if ($this->hasRole('administrador')) {
+            return true;
+        }
+
+        $id = $establecimiento instanceof Establecimiento
+            ? $establecimiento->getKey()
+            : $establecimiento;
+
+        return $this->establecimientos()->whereKey($id)->exists();
     }
 }
