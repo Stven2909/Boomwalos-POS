@@ -5,6 +5,7 @@ namespace App\Filament\Pages\Pos;
 use App\Enums\EstadoComercialPedido;
 use App\Enums\OrigenPedido;
 use App\Enums\TipoPedido;
+use App\Filament\Pages\Cash\CloseSession;
 use App\Filament\Pages\Cash\OpenSession;
 use App\Models\Pago;
 use App\Models\Pedido;
@@ -69,6 +70,8 @@ class ServiceSelection extends PosPage
     public function openCashState(): void
     {
         if ($this->activeCashSession()) {
+            $this->redirect(CloseSession::getUrl());
+
             return;
         }
 
