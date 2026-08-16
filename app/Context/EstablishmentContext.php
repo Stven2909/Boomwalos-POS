@@ -17,6 +17,13 @@ class EstablishmentContext implements EstablishmentContextInterface
 
     public function id(): int
     {
+        return $this->idOrNull() ?? throw ValidationException::withMessages([
+            'establecimiento' => 'Selecciona la sucursal en la que deseas trabajar.',
+        ]);
+    }
+
+    public function idOrNull(): ?int
+    {
         if ($this->establishmentId !== null) {
             return $this->establishmentId;
         }
@@ -35,13 +42,7 @@ class EstablishmentContext implements EstablishmentContextInterface
             return $this->set((int) $available->first()->getKey())->getKey();
         }
 
-        if (! config('tenancy.require_explicit_establishment', false) && $available->isNotEmpty()) {
-            return $this->set((int) $available->first()->getKey())->getKey();
-        }
-
-        throw ValidationException::withMessages([
-            'establecimiento' => 'Selecciona la sucursal en la que deseas trabajar.',
-        ]);
+        return null;
     }
 
     public function current(): Establecimiento
@@ -51,6 +52,23 @@ class EstablishmentContext implements EstablishmentContextInterface
         }
 
         return $this->establishment = Establecimiento::query()->findOrFail($this->id());
+    }
+
+    public function currentOrNull(): ?Establecimiento
+    {
+        if ($this->establishment !== null && $this->establishment->getKey() === $this->idOrNull()) {
+            return $this->establishment;
+        }
+
+        $establishmentId = $this->idOrNull();
+
+        if ($establishmentId === null) {
+            $this->establishment = null;
+
+            return null;
+        }
+
+        return $this->establishment = Establecimiento::query()->find($establishmentId);
     }
 
     public function set(int $establishmentId): Establecimiento

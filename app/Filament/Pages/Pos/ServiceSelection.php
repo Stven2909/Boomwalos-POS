@@ -77,16 +77,28 @@ class ServiceSelection extends PosPage
 
     public function getPendingCountProperty(): int
     {
+        $establishment = $this->establishmentOrNull();
+
+        if (! $establishment) {
+            return 0;
+        }
+
         return (int) Pedido::query()
-            ->where('establecimiento_id', $this->establishment()->getKey())
+            ->where('establecimiento_id', $establishment->getKey())
             ->where('estado_comercial', EstadoComercialPedido::PENDIENTE_COBRO->value)
             ->count();
     }
 
     public function getOpenCountProperty(): int
     {
+        $establishment = $this->establishmentOrNull();
+
+        if (! $establishment) {
+            return 0;
+        }
+
         return (int) Pedido::query()
-            ->where('establecimiento_id', $this->establishment()->getKey())
+            ->where('establecimiento_id', $establishment->getKey())
             ->where('estado_comercial', EstadoComercialPedido::ABIERTO->value)
             ->count();
     }
@@ -117,9 +129,15 @@ class ServiceSelection extends PosPage
 
     public function getDaySalesProperty(): string
     {
+        $establishment = $this->establishmentOrNull();
+
+        if (! $establishment) {
+            return '0.00';
+        }
+
         return $this->netoSales(
             Pago::query()
-                ->whereHas('sesionCaja', fn ($query) => $query->where('establecimiento_id', $this->establishment()->getKey()))
+                ->whereHas('sesionCaja', fn ($query) => $query->where('establecimiento_id', $establishment->getKey()))
                 ->whereDate('created_at', now()->toDateString()),
         );
     }

@@ -8,6 +8,7 @@ use App\Filament\Pages\Kitchen\KitchenDisplay;
 use App\Filament\Pages\Pos\EntregaDisplay;
 use App\Filament\Pages\Pos\ServiceSelection;
 use App\Contracts\BrandingServiceInterface;
+use App\Http\Middleware\ResolveTenant;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -98,6 +99,7 @@ class AdminPanelProvider extends PanelProvider
                 SubstituteBindings::class,
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
+                ResolveTenant::class,
             ])
             ->authMiddleware([
                 Authenticate::class,

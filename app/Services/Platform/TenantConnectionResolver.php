@@ -6,6 +6,7 @@ use App\Context\TenantContext;
 use App\Contracts\TenantConnectionResolverInterface;
 use App\Models\Platform\PlatformTenant;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class TenantConnectionResolver implements TenantConnectionResolverInterface
 {
@@ -16,6 +17,14 @@ class TenantConnectionResolver implements TenantConnectionResolverInterface
         $slug = $this->slugFromHost($host);
 
         if ($slug === null) {
+            return null;
+        }
+
+        $connection = config('tenancy.mode') === 'single'
+            ? config('tenancy.fallback_connection', config('database.default'))
+            : 'platform';
+
+        if (! Schema::connection($connection)->hasTable('platform_tenants')) {
             return null;
         }
 

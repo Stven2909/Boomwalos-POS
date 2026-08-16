@@ -164,7 +164,7 @@ class Login extends BaseLogin
 
     private function hasActiveCashSession(): bool
     {
-        $establishmentId = app(\App\Contracts\EstablishmentContextInterface::class)->id();
+        $establishmentId = app(\App\Contracts\EstablishmentContextInterface::class)->idOrNull();
 
         if (! $establishmentId) {
             return false;

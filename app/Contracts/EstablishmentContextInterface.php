@@ -9,7 +9,11 @@ interface EstablishmentContextInterface
 {
     public function id(): int;
 
+    public function idOrNull(): ?int;
+
     public function current(): Establecimiento;
+
+    public function currentOrNull(): ?Establecimiento;
 
     public function set(int $establishmentId): Establecimiento;
 

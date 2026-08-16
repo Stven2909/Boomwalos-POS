@@ -43,7 +43,7 @@ class OpenSession extends Page
             'montoInicial.regex' => 'El monto inicial debe ser numérico con hasta dos decimales.',
         ]);
 
-        $establecimientoId = app(\App\Contracts\EstablishmentContextInterface::class)->id();
+        $establecimientoId = app(\App\Contracts\EstablishmentContextInterface::class)->idOrNull();
 
         if (! $establecimientoId) {
             throw ValidationException::withMessages([
@@ -90,7 +90,7 @@ class OpenSession extends Page
 
     private function activeSession(): ?SesionCaja
     {
-        $establishmentId = app(\App\Contracts\EstablishmentContextInterface::class)->id();
+        $establishmentId = app(\App\Contracts\EstablishmentContextInterface::class)->idOrNull();
 
         return $establishmentId
             ? SesionCaja::query()

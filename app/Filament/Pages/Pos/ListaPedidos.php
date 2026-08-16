@@ -90,7 +90,7 @@ class ListaPedidos extends PosPage
 
     public function getOrdersProperty(): \Illuminate\Support\Collection
     {
-        $establishment = $this->establishment();
+        $establishment = $this->establishmentOrNull();
 
         if (! $establishment) {
             return collect();

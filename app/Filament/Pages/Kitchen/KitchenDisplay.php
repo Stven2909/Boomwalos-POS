@@ -314,8 +314,8 @@ class KitchenDisplay extends Page
             ->all();
     }
 
-    private function establishmentId(): int
+    private function establishmentId(): ?int
     {
-        return app(\App\Contracts\EstablishmentContextInterface::class)->id();
+        return app(\App\Contracts\EstablishmentContextInterface::class)->idOrNull();
     }
 }
