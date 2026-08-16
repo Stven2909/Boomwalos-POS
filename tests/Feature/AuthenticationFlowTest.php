@@ -3,8 +3,9 @@
 namespace Tests\Feature;
 
 use App\Filament\Pages\Auth\Login;
-use App\Filament\Pages\Cash\CloseSession;
 use App\Filament\Pages\Cash\OpenSession;
+use App\Filament\Pages\Dashboard;
+use App\Filament\Pages\EstablishmentSelection;
 use App\Filament\Pages\Pos\ServiceSelection;
 use App\Filament\Resources\Mesas\MesaResource;
 use App\Models\Establecimiento;
@@ -187,7 +188,61 @@ class AuthenticationFlowTest extends TestCase
         $this->assertFalse(session()->has('turno_cerrado'));
     }
 
-    public function test_administrator_is_sent_to_the_cash_closing_page(): void
+    public function test_administrator_without_a_cash_session_is_sent_to_the_dashboard(): void
+    {
+        $this->seed(RolesPermissionsSeeder::class);
+
+        $admin = User::factory()->create([
+            'email' => 'admin@example.test',
+            'password' => 'admin-password',
+        ]);
+        $admin->assignRole('administrador');
+
+        Livewire::test(Login::class)
+            ->set('mode', 'admin')
+            ->set('email', 'admin@example.test')
+            ->set('password', 'admin-password')
+            ->call('authenticate')
+            ->assertHasNoErrors()
+            ->assertRedirect(Dashboard::getUrl());
+
+        $this->assertFalse(session()->has('turno_cerrado'));
+    }
+
+    public function test_administrator_with_an_active_cash_session_is_sent_to_the_dashboard(): void
+    {
+        $this->seed(RolesPermissionsSeeder::class);
+
+        $admin = User::factory()->create([
+            'email' => 'admin@example.test',
+            'password' => 'admin-password',
+        ]);
+        $admin->assignRole('administrador');
+
+        $establishment = Establecimiento::create([
+            'nombre' => 'Pupusería Demo',
+            'direccion' => 'Dirección de prueba',
+        ]);
+
+        SesionCaja::create([
+            'establecimiento_id' => $establishment->getKey(),
+            'usuario_apertura_id' => $admin->getKey(),
+            'monto_inicial' => 50,
+            'fecha_apertura' => now(),
+        ]);
+
+        Livewire::test(Login::class)
+            ->set('mode', 'admin')
+            ->set('email', 'admin@example.test')
+            ->set('password', 'admin-password')
+            ->call('authenticate')
+            ->assertHasNoErrors()
+            ->assertRedirect(Dashboard::getUrl());
+
+        $this->assertFalse(session()->has('turno_cerrado'));
+    }
+
+    public function test_administrator_with_several_establishments_is_sent_to_the_dashboard(): void
     {
         $this->seed(RolesPermissionsSeeder::class);
 
@@ -201,6 +256,10 @@ class AuthenticationFlowTest extends TestCase
             'nombre' => 'Pupusería Demo',
             'direccion' => 'Dirección de prueba',
         ]);
+        Establecimiento::create([
+            'nombre' => 'Pupusería Centro',
+            'direccion' => 'Otra dirección',
+        ]);
 
         Livewire::test(Login::class)
             ->set('mode', 'admin')
@@ -208,8 +267,85 @@ class AuthenticationFlowTest extends TestCase
             ->set('password', 'admin-password')
             ->call('authenticate')
             ->assertHasNoErrors()
-            ->assertRedirect(CloseSession::getUrl());
+            ->assertRedirect(Dashboard::getUrl());
 
-        $this->assertTrue(session()->has('turno_cerrado'));
+        $this->assertFalse(session()->has('turno_cerrado'));
+    }
+
+    public function test_administrator_entering_the_pos_after_login_is_redirected_to_establishment_selection(): void
+    {
+        $this->seed(RolesPermissionsSeeder::class);
+
+        $admin = User::factory()->create([
+            'email' => 'admin@example.test',
+            'password' => 'admin-password',
+        ]);
+        $admin->assignRole('administrador');
+
+        $first = Establecimiento::create([
+            'nombre' => 'Pupusería Demo',
+            'direccion' => 'Dirección de prueba',
+        ]);
+        Establecimiento::create([
+            'nombre' => 'Pupusería Centro',
+            'direccion' => 'Otra dirección',
+        ]);
+
+        $this->actingAs($admin);
+
+        Livewire::test(ServiceSelection::class)
+            ->assertRedirect(EstablishmentSelection::getUrl());
+
+        Livewire::test(EstablishmentSelection::class)
+            ->call('select', $first->getKey())
+            ->assertRedirect(OpenSession::getUrl());
+    }
+
+    public function test_dual_role_user_logging_in_as_admin_is_sent_to_the_dashboard(): void
+    {
+        $this->seed(RolesPermissionsSeeder::class);
+
+        $user = User::factory()->create([
+            'email' => 'dual@example.test',
+            'password' => '1234',
+            'usuario' => '98',
+        ]);
+        $user->assignRole(['administrador', 'cajero']);
+
+        Establecimiento::create([
+            'nombre' => 'Pupusería Demo',
+            'direccion' => 'Dirección de prueba',
+        ]);
+
+        Livewire::test(Login::class)
+            ->set('mode', 'admin')
+            ->set('email', 'dual@example.test')
+            ->set('password', '1234')
+            ->call('authenticate')
+            ->assertHasNoErrors()
+            ->assertRedirect(Dashboard::getUrl());
+    }
+
+    public function test_dual_role_user_logging_in_as_cashier_is_sent_to_open_session(): void
+    {
+        $this->seed(RolesPermissionsSeeder::class);
+
+        $user = User::factory()->create([
+            'email' => 'dual@example.test',
+            'password' => '1234',
+            'usuario' => '98',
+        ]);
+        $user->assignRole(['administrador', 'cajero']);
+
+        Establecimiento::create([
+            'nombre' => 'Pupusería Demo',
+            'direccion' => 'Dirección de prueba',
+        ]);
+
+        Livewire::test(Login::class)
+            ->set('mode', 'cashier')
+            ->call('authenticateCashier', '98', '1234')
+            ->assertHasNoErrors()
+            ->assertRedirect(OpenSession::getUrl());
     }
 }

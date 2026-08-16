@@ -2,8 +2,8 @@
 
 namespace App\Filament\Pages\Auth;
 
-use App\Filament\Pages\Cash\CloseSession;
 use App\Filament\Pages\Cash\OpenSession;
+use App\Filament\Pages\Dashboard;
 use App\Filament\Pages\EstablishmentSelection;
 use App\Filament\Pages\Pos\ServiceSelection;
 use App\Models\SesionCaja;
@@ -137,6 +137,13 @@ class Login extends BaseLogin
 
     private function routeAfterLogin(User $user): void
     {
+        if ($this->mode === 'admin' && $user->hasRole('administrador')) {
+            session()->forget('turno_cerrado');
+            session()->put('url.intended', Dashboard::getUrl());
+
+            return;
+        }
+
         if (app(\App\Contracts\EstablishmentContextInterface::class)->accessible()->count() > 1) {
             session()->put('url.intended', EstablishmentSelection::getUrl());
 
@@ -145,7 +152,7 @@ class Login extends BaseLogin
 
         $hasActiveSession = $this->hasActiveCashSession();
 
-        if ($user->hasRole('cajero')) {
+        if ($this->mode === 'cashier' && $user->hasRole('cajero')) {
             if (! $hasActiveSession) {
                 session()->flash('turno_cerrado', true);
                 session()->put('url.intended', OpenSession::getUrl());
@@ -154,12 +161,7 @@ class Login extends BaseLogin
             }
 
             session()->put('url.intended', ServiceSelection::getUrl());
-
-            return;
         }
-
-        session()->flash('turno_cerrado', ! $hasActiveSession);
-        session()->put('url.intended', CloseSession::getUrl());
     }
 
     private function hasActiveCashSession(): bool
