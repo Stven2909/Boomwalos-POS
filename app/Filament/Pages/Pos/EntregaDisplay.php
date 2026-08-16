@@ -7,6 +7,7 @@ use App\Application\Printing\ReprintTicket;
 use App\Enums\EstadoCocina;
 use App\Enums\EstadoLineaPedido;
 use App\Enums\TipoPedido;
+use App\Filament\Concerns\GuardsEstablishment;
 use App\Models\Establecimiento;
 use App\Models\Pedido;
 use App\Models\TandaPedido;
@@ -18,6 +19,8 @@ use Illuminate\Validation\ValidationException;
 
 class EntregaDisplay extends Page
 {
+    use GuardsEstablishment;
+
     protected static bool $shouldRegisterNavigation = false;
 
     protected static ?string $slug = 'entrega';
@@ -36,6 +39,10 @@ class EntregaDisplay extends Page
     public function mount(): void
     {
         abort_unless(static::canAccess(), 403);
+
+        if (! $this->ensureEstablishment()) {
+            return;
+        }
     }
 
     public function markDelivered(int $tandaId): void
@@ -56,7 +63,9 @@ class EntregaDisplay extends Page
     public function reimprimirTicket(int $pedidoId): void
     {
         try {
-            $pedido = Pedido::query()->findOrFail($pedidoId);
+            $pedido = Pedido::query()
+                ->where('establecimiento_id', $this->establishmentId())
+                ->findOrFail($pedidoId);
             $result = app(ReprintTicket::class)->handle($pedido, auth()->user());
 
             $this->feedback = match ($result->status) {

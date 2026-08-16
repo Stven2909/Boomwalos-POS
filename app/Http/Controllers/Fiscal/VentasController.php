@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Fiscal;
 
+use App\Context\TenantContext;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -32,7 +33,7 @@ class VentasController extends Controller
 
         $clave = $datos['clave_reintento'];
         $huella = hash('sha256', json_encode($datos, JSON_UNESCAPED_UNICODE));
-        $claveCache = 'fiscal.mock.venta.' . $clave;
+        $claveCache = 'fiscal.mock.venta.' . $this->tenantSlug() . '.' . $clave;
 
         $existente = Cache::get($claveCache);
 
@@ -53,6 +54,11 @@ class VentasController extends Controller
             'estado' => 'RECIBIDA',
             'qr_url' => null,
         ], 202);
+    }
+
+    private function tenantSlug(): string
+    {
+        return app(TenantContext::class)->current()?->slug ?? 'default';
     }
 
     /**

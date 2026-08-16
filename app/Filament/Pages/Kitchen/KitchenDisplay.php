@@ -6,6 +6,7 @@ use App\Enums\EstadoCocina;
 use App\Enums\EstadoLineaPedido;
 use App\Enums\TipoPedido;
 use App\Enums\ZonaMesa;
+use App\Filament\Concerns\GuardsEstablishment;
 use App\Models\Establecimiento;
 use App\Models\TandaPedido;
 use App\Services\KitchenService;
@@ -16,6 +17,8 @@ use Illuminate\Validation\ValidationException;
 
 class KitchenDisplay extends Page
 {
+    use GuardsEstablishment;
+
     private const ATTENTION_MINUTES = 10;
 
     private const LATE_MINUTES = 15;
@@ -47,6 +50,10 @@ class KitchenDisplay extends Page
     public function mount(): void
     {
         abort_unless(static::canAccess(), 403);
+
+        if (! $this->ensureEstablishment()) {
+            return;
+        }
 
         $this->lastUpdatedAt = now()->format('H:i:s');
         $this->knownPendingTandaIds = $this->pendingTandaIds();

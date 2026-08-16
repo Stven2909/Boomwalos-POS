@@ -15,7 +15,11 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->web(append: [ResolveTenant::class]);
+        // ResolveTenant debe correr antes de SubstituteBindings para que el
+        // route model binding (p. ej. `Establecimiento $establecimiento`) se
+        // resuelva sobre la conexión del tenant ya activa. Se usa `prepend`
+        // para que quede por delante del grupo `web` completo.
+        $middleware->web(prepend: [ResolveTenant::class]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

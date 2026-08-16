@@ -68,7 +68,9 @@ class ListaPedidos extends PosPage
     public function reimprimirTicket(int $pedidoId): void
     {
         try {
-            $pedido = Pedido::query()->findOrFail($pedidoId);
+            $pedido = Pedido::query()
+                ->where('establecimiento_id', $this->establishment()->getKey())
+                ->findOrFail($pedidoId);
             $result = app(ReprintTicket::class)->handle($pedido, auth()->user());
 
             $this->feedback = match ($result->status) {

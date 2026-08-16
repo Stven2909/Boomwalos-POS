@@ -2,6 +2,7 @@
 
 namespace App\Application\Printing;
 
+use App\Contracts\EstablishmentContextInterface;
 use App\Enums\EstadoImpresion;
 use App\Enums\TipoImpresora;
 use App\Enums\TipoTrabajoImpresion;
@@ -9,13 +10,23 @@ use App\Models\Impresora;
 use App\Models\Pedido;
 use App\Models\TrabajoImpresion;
 use App\Models\User;
+use Illuminate\Auth\Access\AuthorizationException;
 
 class ReprintTicket
 {
-    public function __construct(private readonly QueueCustomerTicket $customerTicket) {}
+    public function __construct(
+        private readonly QueueCustomerTicket $customerTicket,
+        private readonly EstablishmentContextInterface $establishmentContext,
+    ) {}
 
     public function handle(Pedido $pedido, User $actor, string $motivo = 'Reimpresión manual'): QueueTicketResult
     {
+        // Corrección de seguridad: un operador no puede reimprimir tickets de
+        // una sucursal distinta a la activa en el contexto.
+        if ($pedido->establecimiento_id !== $this->establishmentContext->id()) {
+            throw new AuthorizationException('No puedes reimprimir tickets de otra sucursal.');
+        }
+
         $printer = Impresora::query()
             ->where('tipo', TipoImpresora::TICKET->value)
             ->orderBy('id')

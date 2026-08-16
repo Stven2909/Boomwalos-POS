@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Fiscal\VentasController;
 use App\Http\Controllers\Fiscal\WebhooksController;
+use App\Http\Middleware\ResolveTenant;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -14,7 +15,7 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::prefix('fiscal/v1')->group(function (): void {
+Route::prefix('fiscal/v1')->middleware(ResolveTenant::class)->group(function (): void {
     Route::post('/ventas', [VentasController::class, 'store']);
     Route::post('/webhooks', [WebhooksController::class, 'store']);
 });

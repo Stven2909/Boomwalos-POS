@@ -167,6 +167,10 @@ class ServiceSelection extends PosPage
 
     public function getSimboloMonedaProperty(): string
     {
+        if ($this->establishmentOrNull() === null) {
+            return '$';
+        }
+
         return (string) app(ConfiguracionService::class)->get('moneda.simbolo', '$');
     }
 

@@ -96,10 +96,13 @@ class AdminPanelProvider extends PanelProvider
                 AuthenticateSession::class,
                 ShareErrorsFromSession::class,
                 PreventRequestForgery::class,
+                // ResolveTenant debe quedar antes de SubstituteBindings para que
+                // los route model bindings del panel consulten la conexión del
+                // tenant ya resuelta (mismo requisito que en el grupo `web`).
+                ResolveTenant::class,
                 SubstituteBindings::class,
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
-                ResolveTenant::class,
             ])
             ->authMiddleware([
                 Authenticate::class,
