@@ -10,7 +10,7 @@
     </a>
 
     <a
-        href="#"
+        href="{{ \App\Filament\Pages\BrandSettings::getUrl() }}"
         aria-label="Ajustes"
         title="Ajustes"
         class="inline-flex h-9 w-9 items-center justify-center rounded-lg text-gray-500 transition hover:bg-[#6B4E63]/5 hover:text-[#6B4E63]"

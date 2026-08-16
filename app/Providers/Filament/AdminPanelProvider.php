@@ -6,6 +6,7 @@ use App\Filament\Pages\Dashboard;
 use App\Filament\Pages\Auth\Login;
 use App\Filament\Pages\Kitchen\KitchenDisplay;
 use App\Filament\Pages\Pos\EntregaDisplay;
+use App\Filament\Pages\Pos\ListaPedidos;
 use App\Filament\Pages\Pos\ServiceSelection;
 use App\Contracts\BrandingServiceInterface;
 use App\Http\Middleware\ResolveTenant;
@@ -55,7 +56,7 @@ class AdminPanelProvider extends PanelProvider
                     ->isActiveWhen(fn (): bool => request()->routeIs('filament.admin.pages.pos.*')),
                 NavigationItem::make('Pedidos')
                     ->icon('heroicon-o-clipboard-document-list')
-                    ->url('#'),
+                    ->url(fn (): string => ListaPedidos::getUrl()),
                 NavigationItem::make('Cocina')
                     ->icon('heroicon-o-fire')
                     ->url(fn (): string => KitchenDisplay::getUrl())
@@ -69,9 +70,7 @@ class AdminPanelProvider extends PanelProvider
                 NavigationItem::make('Clientes')
                     ->icon('heroicon-o-users')
                     ->url('#'),
-                NavigationItem::make('Informes')
-                    ->icon('heroicon-o-chart-bar')
-                    ->url('#'),
+
             ])
             ->renderHook(
                 PanelsRenderHook::SIDEBAR_FOOTER,

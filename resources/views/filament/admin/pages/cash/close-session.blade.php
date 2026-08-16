@@ -44,7 +44,7 @@
                         <label for="efectivoContado">Efectivo contado</label>
                         <div class="bw-cash-amount-field">
                             <span>$</span>
-                            <input id="efectivoContado" type="number" min="0" step="0.01" wire:model="efectivoContado" inputmode="decimal" autocomplete="off">
+                            <input id="efectivoContado" type="number" min="0" step="0.01" wire:model.live="efectivoContado" inputmode="decimal" autocomplete="off">
                         </div>
                         @error('efectivoContado')
                             <span class="bw-pos-feedback is-error" role="alert">{{ $message }}</span>
