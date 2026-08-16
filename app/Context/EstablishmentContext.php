@@ -100,7 +100,13 @@ class EstablishmentContext implements EstablishmentContextInterface
             return Establecimiento::query()->orderBy('id')->get();
         }
 
-        return $user->establecimientos()->orderBy('establecimientos.id')->get();
+        $assigned = $user->establecimientos()->orderBy('establecimientos.id')->get();
+
+        if ($assigned->isEmpty() && ! config('tenancy.require_explicit_establishment', false) && Establecimiento::query()->count() === 1) {
+            return Establecimiento::query()->orderBy('id')->get();
+        }
+
+        return $assigned;
     }
 
     public function canAccess(int $establishmentId): bool

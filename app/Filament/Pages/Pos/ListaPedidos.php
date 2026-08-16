@@ -82,8 +82,20 @@ class ListaPedidos extends PosPage
         }
     }
 
-    public function getOrdersProperty()
+    #[\Livewire\Attributes\Computed]
+    public function orders(): \Illuminate\Support\Collection
     {
+        return $this->getOrdersProperty();
+    }
+
+    public function getOrdersProperty(): \Illuminate\Support\Collection
+    {
+        $establishment = $this->establishment();
+
+        if (! $establishment) {
+            return collect();
+        }
+
         $states = match ($this->filtro) {
             'abiertos' => [EstadoComercialPedido::ABIERTO->value],
             'pendientes' => [EstadoComercialPedido::PENDIENTE_COBRO->value],
@@ -98,7 +110,7 @@ class ListaPedidos extends PosPage
         $search = trim($this->search);
 
         return Pedido::query()
-            ->where('establecimiento_id', $this->establishment()->getKey())
+            ->where('establecimiento_id', $establishment->getKey())
             ->whereIn('estado_comercial', $states)
             ->when($code !== '', fn ($query) => $query->where('codigo_corto', (int) $code))
             ->when($code === '' && $search !== '', fn ($query) => $query->where(function ($inner) use ($search) {
