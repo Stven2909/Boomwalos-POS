@@ -1,3 +1,4 @@
+@include('filament.admin.components.brand-css')
 <div class="bw-login-page">
     <header class="bw-login-header">
         <div class="bw-login-brand" aria-label="{{ $posBranding->displayName() }}">

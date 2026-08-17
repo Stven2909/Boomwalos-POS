@@ -50,10 +50,12 @@
                             <span class="bw-pos-feedback is-error" role="alert">{{ $message }}</span>
                         @enderror
 
-                        <div class="bw-cash-summary-row bw-cash-summary-row--difference">
-                            <span>Diferencia</span>
-                            <strong>{{ $this->money($this->diferencia) }}</strong>
-                        </div>
+                        @if ($this->hasConteo)
+                            <div class="bw-cash-summary-row bw-cash-summary-row--difference">
+                                <span>Diferencia</span>
+                                <strong>{{ $this->money($this->diferencia) }}</strong>
+                            </div>
+                        @endif
 
                         <button
                             type="submit"

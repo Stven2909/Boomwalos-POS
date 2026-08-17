@@ -1,3 +1,4 @@
+@include('filament.admin.components.brand-css')
 @if (auth()->user()?->hasRole('cajero'))
     <div class="bw-cashier-dashboard" data-testid="cashier-dashboard">
         <header class="bw-cashier-header">
@@ -106,7 +107,7 @@
 @elseif (auth()->user()?->hasRole('administrador'))
     <div class="flex min-h-[calc(100dvh-6rem)] flex-col gap-8">
         <header class="text-center">
-            <p class="text-sm font-semibold uppercase tracking-[0.2em] text-[#6B4E63]">
+            <p class="text-sm font-semibold uppercase tracking-[0.2em] text-[var(--bw-primary)]">
                 Panel de control
             </p>
             <h1 class="mt-3 text-4xl font-bold leading-tight text-[#1D1B1E] md:text-5xl">
@@ -120,7 +121,7 @@
         <div class="grid flex-1 grid-cols-1 gap-5 md:grid-cols-3 md:grid-rows-3">
             <a
                 href="{{ \App\Filament\Pages\Pos\ServiceSelection::getUrl() }}"
-                class="bw-card-hover bw-btn group relative flex cursor-pointer flex-col justify-between rounded-lg bg-[#6B4E63] p-6 text-white shadow-[0_1px_2px_rgba(29,27,30,0.04),0_2px_6px_rgba(29,27,30,0.04)] md:col-span-2 md:row-span-2 md:p-8"
+                class="bw-card-hover bw-btn group relative flex cursor-pointer flex-col justify-between rounded-lg bg-[var(--bw-primary)] p-6 text-white shadow-[0_1px_2px_rgba(29,27,30,0.04),0_2px_6px_rgba(29,27,30,0.04)] md:col-span-2 md:row-span-2 md:p-8"
             >
                 <div class="flex items-start justify-between">
                     <span class="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-xs font-semibold uppercase tracking-wide">
@@ -139,7 +140,7 @@
                     </p>
                 </div>
 
-                <span class="inline-flex w-fit items-center gap-2 rounded-lg bg-white px-5 py-3 text-sm font-bold text-[#6B4E63] transition active:scale-[0.98]">
+                <span class="inline-flex w-fit items-center gap-2 rounded-lg bg-white px-5 py-3 text-sm font-bold text-[var(--bw-primary)] transition active:scale-[0.98]">
                     Abrir Caja
                     <x-heroicon-o-arrow-right class="h-4 w-4 transition group-hover:translate-x-0.5" />
                 </span>
@@ -147,10 +148,10 @@
 
             <a href="{{ \App\Filament\Pages\Kitchen\KitchenDisplay::getUrl() }}" class="bw-card bw-card-hover bw-btn group flex cursor-pointer flex-col p-6">
                 <div class="flex items-start justify-between">
-                    <span class="inline-flex h-12 w-12 items-center justify-center rounded-lg bg-[#6B4E63]/10">
-                        <x-heroicon-o-clipboard-document-list class="h-6 w-6 text-[#6B4E63]" />
+                    <span class="inline-flex h-12 w-12 items-center justify-center rounded-lg bg-[var(--bw-primary)]/10">
+                        <x-heroicon-o-clipboard-document-list class="h-6 w-6 text-[var(--bw-primary)]" />
                     </span>
-                    <span class="inline-flex items-center rounded-full bg-[#6B4E63]/5 px-2.5 py-1 text-xs font-semibold text-[#6B4E63]">
+                    <span class="inline-flex items-center rounded-full bg-[var(--bw-primary)]/5 px-2.5 py-1 text-xs font-semibold text-[var(--bw-primary)]">
                         12 Activos
                     </span>
                 </div>
@@ -162,10 +163,10 @@
 
             <a href="{{ \App\Filament\Resources\Mesas\MesaResource::getUrl() }}" class="bw-card bw-card-hover bw-btn group flex cursor-pointer flex-col p-6">
                 <div class="flex items-start justify-between">
-                    <span class="inline-flex h-12 w-12 items-center justify-center rounded-lg bg-[#6B4E63]/10">
-                        <x-heroicon-o-home-modern class="h-6 w-6 text-[#6B4E63]" />
+                    <span class="inline-flex h-12 w-12 items-center justify-center rounded-lg bg-[var(--bw-primary)]/10">
+                        <x-heroicon-o-home-modern class="h-6 w-6 text-[var(--bw-primary)]" />
                     </span>
-                    <span class="inline-flex items-center rounded-full bg-[#6B4E63]/5 px-2.5 py-1 text-xs font-semibold text-[#6B4E63]">
+                    <span class="inline-flex items-center rounded-full bg-[var(--bw-primary)]/5 px-2.5 py-1 text-xs font-semibold text-[var(--bw-primary)]">
                         8
                     </span>
                 </div>
@@ -177,10 +178,10 @@
 
             <a href="#" class="bw-card bw-card-hover bw-btn group flex cursor-pointer flex-col p-6">
                 <div class="flex items-start justify-between">
-                    <span class="inline-flex h-12 w-12 items-center justify-center rounded-lg bg-[#6B4E63]/10">
-                        <x-heroicon-o-fire class="h-6 w-6 text-[#6B4E63]" />
+                    <span class="inline-flex h-12 w-12 items-center justify-center rounded-lg bg-[var(--bw-primary)]/10">
+                        <x-heroicon-o-fire class="h-6 w-6 text-[var(--bw-primary)]" />
                     </span>
-                    <span class="inline-flex items-center rounded-full bg-[#6B4E63]/5 px-2.5 py-1 text-xs font-semibold text-[#6B4E63]">
+                    <span class="inline-flex items-center rounded-full bg-[var(--bw-primary)]/5 px-2.5 py-1 text-xs font-semibold text-[var(--bw-primary)]">
                         En línea
                     </span>
                 </div>
@@ -192,10 +193,10 @@
 
             <a href="#" class="bw-card bw-card-hover bw-btn group flex cursor-pointer flex-col p-6">
                 <div class="flex items-start justify-between">
-                    <span class="inline-flex h-12 w-12 items-center justify-center rounded-lg bg-[#6B4E63]/10">
-                        <x-heroicon-o-users class="h-6 w-6 text-[#6B4E63]" />
+                    <span class="inline-flex h-12 w-12 items-center justify-center rounded-lg bg-[var(--bw-primary)]/10">
+                        <x-heroicon-o-users class="h-6 w-6 text-[var(--bw-primary)]" />
                     </span>
-                    <span class="inline-flex items-center rounded-full bg-[#6B4E63]/5 px-2.5 py-1 text-xs font-semibold text-[#6B4E63]">
+                    <span class="inline-flex items-center rounded-full bg-[var(--bw-primary)]/5 px-2.5 py-1 text-xs font-semibold text-[var(--bw-primary)]">
                         +250
                     </span>
                 </div>
@@ -206,8 +207,8 @@
             </a>
 
             <a href="#" class="bw-card bw-card-hover bw-btn group flex cursor-pointer items-center gap-4 p-6 md:col-span-3">
-                <span class="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-[#6B4E63]/10">
-                    <x-heroicon-o-chart-bar class="h-6 w-6 text-[#6B4E63]" />
+                <span class="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-[var(--bw-primary)]/10">
+                    <x-heroicon-o-chart-bar class="h-6 w-6 text-[var(--bw-primary)]" />
                 </span>
                 <div class="flex-1">
                     <h2 class="text-lg font-bold text-[#1D1B1E]">Informes</h2>
@@ -215,7 +216,7 @@
                         Ventas, gastos y resúmenes del día en un vistazo.
                     </p>
                 </div>
-                <x-heroicon-o-arrow-right class="h-5 w-5 text-gray-300 transition group-hover:translate-x-0.5 group-hover:text-[#6B4E63]" />
+                <x-heroicon-o-arrow-right class="h-5 w-5 text-gray-300 transition group-hover:translate-x-0.5 group-hover:text-[var(--bw-primary)]" />
             </a>
         </div>
     </div>

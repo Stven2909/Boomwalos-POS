@@ -41,19 +41,45 @@ class DemoPosSeeder extends Seeder
             ['configuracion' => ['driver' => 'queue']],
         );
 
+        $groups = [];
+        foreach ([
+            ['nombre' => 'Pupusas', 'descripcion' => 'Pupusas de la casa.', 'icono' => '🫓'],
+            ['nombre' => 'Bebidas', 'descripcion' => 'Bebidas frías y calientes.', 'icono' => '🥤'],
+        ] as $data) {
+            $groups[$data['nombre']] = Categoria::firstOrCreate(
+                ['nombre' => $data['nombre']],
+                ['descripcion' => $data['descripcion'], 'activa' => true, 'icono' => $data['icono']],
+            );
+
+            if (is_null($groups[$data['nombre']]->icono)) {
+                $groups[$data['nombre']]->update(['icono' => $data['icono']]);
+            }
+        }
+
         $categories = [];
         foreach ([
-            ['nombre' => 'Pupusas Normales', 'descripcion' => 'Pupusas clásicas del menú.'],
-            ['nombre' => 'Pupusas Especiales', 'descripcion' => 'Sabores especiales.'],
-            ['nombre' => 'Combos', 'descripcion' => 'Combinaciones para compartir.'],
-            ['nombre' => 'Bebidas Frías', 'descripcion' => 'Bebidas frías y refrescos.'],
-            ['nombre' => 'Bebidas Calientes', 'descripcion' => 'Café e infusiones.'],
+            ['nombre' => 'Pupusas Normales', 'descripcion' => 'Pupusas clásicas del menú.', 'group' => 'Pupusas'],
+            ['nombre' => 'Pupusas Especiales', 'descripcion' => 'Sabores especiales.', 'group' => 'Pupusas'],
+            ['nombre' => 'Bebidas Frías', 'descripcion' => 'Bebidas frías y refrescos.', 'group' => 'Bebidas'],
+            ['nombre' => 'Bebidas Calientes', 'descripcion' => 'Café e infusiones.', 'group' => 'Bebidas'],
         ] as $data) {
-            $categories[$data['nombre']] = Categoria::firstOrCreate(
+            $cat = Categoria::firstOrCreate(
                 ['nombre' => $data['nombre']],
-                ['descripcion' => $data['descripcion']],
+                [
+                    'descripcion' => $data['descripcion'],
+                    'activa' => true,
+                    'parent_id' => $groups[$data['group']]->getKey(),
+                ],
             );
+
+            if (is_null($cat->parent_id)) {
+                $cat->update(['parent_id' => $groups[$data['group']]->getKey()]);
+            }
+
+            $categories[$data['nombre']] = $cat;
         }
+
+        Categoria::where('nombre', 'Combos')->update(['parent_id' => null, 'activa' => false]);
 
         $pupusaIds = Producto::query()
             ->whereIn('nombre', ['Pupusa de queso', 'Pupusa revuelta', 'Pupusa con chicharrón'])

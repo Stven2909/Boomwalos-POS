@@ -14,5 +14,7 @@ interface BrandingServiceInterface
 
     public function primaryColor(): string;
 
+    public function secondaryColor(): string;
+
     public function ticketFooter(): ?string;
 }

@@ -34,6 +34,11 @@ class BrandingService implements BrandingServiceInterface
         return $this->tenant()?->primary_color ?: '#6B4E63';
     }
 
+    public function secondaryColor(): string
+    {
+        return $this->tenant()?->secondary_color ?: '#F3EDF2';
+    }
+
     public function ticketFooter(): ?string
     {
         return $this->tenant()?->ticket_footer;

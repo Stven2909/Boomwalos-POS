@@ -15,6 +15,7 @@ use App\Models\Mesa;
 use App\Models\Pedido;
 use App\Models\Producto;
 use App\Services\PedidoService;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class OrderEntry extends PosPage
@@ -32,6 +33,8 @@ class OrderEntry extends PosPage
     public string $search = '';
 
     public string $category = 'all';
+
+    public ?string $selectedGroup = null;
 
     public ?array $undoLine = null;
 
@@ -65,6 +68,18 @@ class OrderEntry extends PosPage
     public function selectCategory(string $category): void
     {
         $this->category = $category;
+    }
+
+    public function selectGroup(?string $groupId): void
+    {
+        $this->selectedGroup = $groupId;
+        $this->category = 'all';
+    }
+
+    public function backToGroups(): void
+    {
+        $this->selectedGroup = null;
+        $this->category = 'all';
     }
 
     public function openCombo(int $comboId): void
@@ -373,15 +388,28 @@ class OrderEntry extends PosPage
 
     public function getCategoriesProperty()
     {
+        if ($this->selectedGroup === null) {
+            return Categoria::query()
+                ->groups()
+                ->where('activa', true)
+                ->orderBy('nombre')
+                ->get();
+        }
+
         return Categoria::query()
+            ->categories()
             ->where('activa', true)
-            ->whereRaw('LOWER(TRIM(nombre)) <> ?', [self::RESERVED_COMBO_CATEGORY_NAME])
+            ->where('parent_id', $this->selectedGroup)
             ->orderBy('nombre')
             ->get();
     }
 
     public function getProductsProperty()
     {
+        if ($this->selectedGroup === null) {
+            return collect();
+        }
+
         if ($this->category === 'combos') {
             return collect();
         }
@@ -389,16 +417,15 @@ class OrderEntry extends PosPage
         return Producto::query()
             ->with('categoria')
             ->where('disponibilidad', DisponibilidadProducto::DISPONIBLE->value)
-            ->whereHas('categoria', fn ($query) => $query->where('activa', true))
+            ->whereHas('categoria', fn ($query) => $query->where('activa', true)->where('parent_id', $this->selectedGroup))
             ->when($this->category !== 'all', fn ($query) => $query->where('categoria_id', $this->category))
-            ->when(trim($this->search) !== '', fn ($query) => $query->where('nombre', 'like', '%' . trim($this->search) . '%'))
             ->orderBy('nombre')
             ->get();
     }
 
     public function getCombosProperty()
     {
-        if ($this->category !== 'all' && $this->category !== 'combos') {
+        if ($this->selectedGroup !== null && $this->category !== 'combos') {
             return collect();
         }
 
@@ -479,6 +506,29 @@ class OrderEntry extends PosPage
             ->get();
     }
 
+    public function getGroupProductCountsProperty(): array
+    {
+        return Categoria::query()
+            ->categories()
+            ->where('activa', true)
+            ->join('productos', 'productos.categoria_id', '=', 'categorias.id')
+            ->where('productos.disponibilidad', DisponibilidadProducto::DISPONIBLE->value)
+            ->groupBy('categorias.parent_id')
+            ->pluck(DB::raw('COUNT(*)'), 'parent_id')
+            ->toArray();
+    }
+
+    public function getSelectedGroupNameProperty(): ?string
+    {
+        if ($this->selectedGroup === null) {
+            return null;
+        }
+
+        return Categoria::query()
+            ->where('id', $this->selectedGroup)
+            ->value('nombre');
+    }
+
     public function comboSelectionTotal(int $optionId): int
     {
         return collect($this->comboSelections[(string) $optionId] ?? [])->sum(fn ($quantity): int => (int) $quantity);
@@ -529,7 +579,6 @@ class OrderEntry extends PosPage
         return Combo::query()
             ->with('opcionesCombo.productos')
             ->where('disponibilidad', DisponibilidadProducto::DISPONIBLE->value)
-            ->when(trim($this->search) !== '', fn ($query) => $query->where('nombre', 'like', '%' . trim($this->search) . '%'))
             ->orderBy('nombre')
             ->get();
     }

@@ -62,15 +62,20 @@ class CloseSession extends Page
         return $this->resumen['efectivo_esperado'];
     }
 
-    public function getDiferenciaProperty(): string
+    public function getHasConteoProperty(): bool
     {
         $contado = trim($this->efectivoContado);
 
-        if ($contado === '' || ! preg_match('/^\d+(\.\d{1,2})?$/', $contado)) {
+        return $contado !== '' && preg_match('/^\d+(\.\d{1,2})?$/', $contado) > 0;
+    }
+
+    public function getDiferenciaProperty(): string
+    {
+        if (! $this->hasConteo) {
             return '0.00';
         }
 
-        return bcsub(bcadd($contado, '0', 2), $this->efectivoEsperado, 2);
+        return bcsub(bcadd(trim($this->efectivoContado), '0', 2), $this->efectivoEsperado, 2);
     }
 
     public function closeSession(): void
@@ -109,7 +114,13 @@ class CloseSession extends Page
 
     public function money(string $amount): string
     {
-        return '$'.number_format((float) $amount, 2, '.', ',');
+        $value = (float) $amount;
+
+        if ($value < 0) {
+            return '-$'.number_format(abs($value), 2, '.', ',');
+        }
+
+        return '$'.number_format($value, 2, '.', ',');
     }
 
     private function activeSession(): ?SesionCaja

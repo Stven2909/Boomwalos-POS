@@ -30,93 +30,126 @@
                 </div>
 
                 @if (! $this->isReadOnly)
-                <div id="pos-catalog-toolbar" class="bw-pos-catalog-toolbar">
-                <label class="bw-pos-search-field">
-                    <x-heroicon-o-magnifying-glass class="h-5 w-5" />
-                    <input type="search" wire:model.live.debounce.250ms="search" placeholder="Buscar producto o combo" aria-label="Buscar producto o combo">
-                </label>
 
-                <nav class="bw-pos-category-tabs" aria-label="Categorías de productos">
-                    <button type="button" wire:click="selectCategory('all')" x-on:click="$nextTick(() => document.getElementById('pos-catalog-toolbar')?.scrollIntoView({ behavior: 'smooth', block: 'start' }))" class="{{ $category === 'all' ? 'is-active' : '' }}">Todo</button>
-                    <button type="button" wire:click="selectCategory('combos')" x-on:click="$nextTick(() => document.getElementById('pos-catalog-toolbar')?.scrollIntoView({ behavior: 'smooth', block: 'start' }))" class="{{ $category === 'combos' ? 'is-active' : '' }}">Combos</button>
-                    @foreach ($this->categories as $categoria)
-                        <button type="button" wire:click="selectCategory('{{ $categoria->getKey() }}')" x-on:click="$nextTick(() => document.getElementById('pos-catalog-toolbar')?.scrollIntoView({ behavior: 'smooth', block: 'start' }))" class="{{ (string) $category === (string) $categoria->getKey() ? 'is-active' : '' }}">
-                            {{ $categoria->nombre }}
-                        </button>
-                    @endforeach
-                </nav>
-                </div>
-
-                @if ($category !== 'combos')
-                <section class="bw-pos-product-grid" aria-label="Productos disponibles">
-                    @forelse ($this->products as $producto)
-                        <article class="bw-pos-product-card">
-                            <span class="bw-pos-product-image" aria-hidden="true">
-                                @if ($producto->imageUrl())
-                                    <img src="{{ $producto->imageUrl() }}" alt="" onerror="this.hidden = true; this.nextElementSibling.hidden = false;">
-                                    <x-heroicon-o-shopping-bag class="h-9 w-9" hidden />
-                                @else
-                                    <x-heroicon-o-shopping-bag class="h-9 w-9" />
-                                @endif
-                            </span>
-                            <div class="bw-pos-product-copy">
-                                <strong>{{ $producto->nombre }}</strong>
-                                <span>{{ $producto->categoria?->nombre }}</span>
-                                <b>{{ $this->money($producto->precio) }}</b>
-                            </div>
-                            <button type="button" wire:click="addProduct({{ $producto->getKey() }})" class="bw-pos-add-button">
-                                <x-heroicon-o-plus class="h-4 w-4" /> Añadir
-                            </button>
-                        </article>
-                    @empty
-                        <div class="bw-pos-empty-state">
-                            <x-heroicon-o-magnifying-glass class="h-8 w-8" />
-                            <strong>No encontramos productos disponibles.</strong>
-                            <span>Prueba otra búsqueda o revisa el catálogo.</span>
-                        </div>
-                    @endforelse
-                </section>
-                @endif
-
-                @if ($this->combos->isNotEmpty())
-                    <section class="bw-pos-combo-section" aria-labelledby="combos-title">
-                        <div class="bw-pos-catalog-section-heading">
-                            <div>
-                                <span class="bw-pos-step-label">CONFIGURABLES</span>
-                                <h2 id="combos-title">Combos para compartir</h2>
-                            </div>
-                            <span>{{ $this->combos->count() }} disponibles</span>
-                        </div>
-
-                        <div class="bw-pos-combo-grid">
-                            @foreach ($this->combos as $combo)
-                                <article class="bw-pos-combo-card">
-                                    <span class="bw-pos-product-image bw-pos-combo-image" aria-hidden="true">
-                                        @if ($combo->imageUrl())
-                                            <img src="{{ $combo->imageUrl() }}" alt="" onerror="this.hidden = true; this.nextElementSibling.hidden = false;">
-                                            <x-heroicon-o-squares-2x2 class="h-9 w-9" hidden />
+                @if ($selectedGroup === null)
+                    <div id="pos-catalog-toolbar" class="bw-pos-catalog-toolbar">
+                        <nav class="bw-pos-group-grid" aria-label="Grupos de productos">
+                            @foreach ($this->categories as $grupo)
+                                <button type="button" wire:click="selectGroup('{{ $grupo->getKey() }}')" class="bw-pos-group-card">
+                                    <span class="group-icon">
+                                        @if ($grupo->iconoType() === 'image')
+                                            <img src="{{ $grupo->iconoUrl() }}" alt="{{ $grupo->nombre }}" class="h-10 w-10 object-contain">
                                         @else
-                                            <x-heroicon-o-squares-2x2 class="h-9 w-9" />
+                                            {{ $grupo->icono ?: '📂' }}
                                         @endif
                                     </span>
-                                    <div class="bw-pos-product-copy">
-                                        <strong>{{ $combo->nombre }}</strong>
-                                        <span>{{ $combo->opcionesCombo->map(fn ($option): string => $option->cantidad_requerida . ' ' . $option->nombre)->implode(' · ') }}</span>
-                                        <b>{{ $this->money($combo->precio_fijo) }}</b>
-                                    </div>
-                                    <button type="button" wire:click="openCombo({{ $combo->getKey() }})" class="bw-pos-add-button bw-pos-combo-button">
-                                        <x-heroicon-o-adjustments-horizontal class="h-4 w-4" /> Configurar
-                                    </button>
-                                </article>
+                                    <strong class="group-name">{{ $grupo->nombre }}</strong>
+                                    <span class="group-count">{{ $this->groupProductCounts[$grupo->getKey()] ?? 0 }} productos</span>
+                                </button>
                             @endforeach
-                        </div>
-                    </section>
-                @elseif ($category === 'combos')
-                    <div class="bw-pos-empty-state bw-pos-combo-empty-state">
-                        <x-heroicon-o-squares-2x2 class="h-8 w-8" />
-                        <strong>No hay combos disponibles.</strong>
-                        <span>El administrador puede crear o activar combos desde el catálogo.</span>
+
+                            @if ($this->combos->isNotEmpty())
+                                <button type="button" wire:click="selectGroup('combos')" class="bw-pos-group-card bw-pos-group-card--combos">
+                                    <span class="group-icon">🎉</span>
+                                    <strong class="group-name">Combos</strong>
+                                    <span class="group-count">{{ $this->combos->count() }} disponibles</span>
+                                </button>
+                            @endif
+                        </nav>
                     </div>
+
+                @elseif ($selectedGroup === 'combos')
+                    <div id="pos-catalog-toolbar" class="bw-pos-catalog-toolbar">
+                        <button type="button" wire:click="backToGroups" class="bw-pos-back-button">
+                            <x-heroicon-o-arrow-left class="h-4 w-4" /> Volver a grupos
+                        </button>
+                    </div>
+
+                    @if ($this->combos->isNotEmpty())
+                        <section class="bw-pos-combo-section" aria-labelledby="combos-title">
+                            <div class="bw-pos-catalog-section-heading">
+                                <div>
+                                    <span class="bw-pos-step-label">CONFIGURABLES</span>
+                                    <h2 id="combos-title">Combos para compartir</h2>
+                                </div>
+                                <span>{{ $this->combos->count() }} disponibles</span>
+                            </div>
+
+                            <div class="bw-pos-combo-grid">
+                                @foreach ($this->combos as $combo)
+                                    <article class="bw-pos-combo-card">
+                                        <span class="bw-pos-product-image bw-pos-combo-image" aria-hidden="true">
+                                            @if ($combo->imageUrl())
+                                                <img src="{{ $combo->imageUrl() }}" alt="" onerror="this.hidden = true; this.nextElementSibling.hidden = false;">
+                                                <x-heroicon-o-squares-2x2 class="h-9 w-9" hidden />
+                                            @else
+                                                <x-heroicon-o-squares-2x2 class="h-9 w-9" />
+                                            @endif
+                                        </span>
+                                        <div class="bw-pos-product-copy">
+                                            <strong>{{ $combo->nombre }}</strong>
+                                            <span>{{ $combo->opcionesCombo->map(fn ($option): string => $option->cantidad_requerida . ' ' . $option->nombre)->implode(' · ') }}</span>
+                                            <b>{{ $this->money($combo->precio_fijo) }}</b>
+                                        </div>
+                                        <button type="button" wire:click="openCombo({{ $combo->getKey() }})" class="bw-pos-add-button bw-pos-combo-button">
+                                            <x-heroicon-o-adjustments-horizontal class="h-4 w-4" /> Configurar
+                                        </button>
+                                    </article>
+                                @endforeach
+                            </div>
+                        </section>
+                    @else
+                        <div class="bw-pos-empty-state bw-pos-combo-empty-state">
+                            <x-heroicon-o-squares-2x2 class="h-8 w-8" />
+                            <strong>No hay combos disponibles.</strong>
+                            <span>El administrador puede crear o activar combos desde el catálogo.</span>
+                        </div>
+                    @endif
+
+                @else
+                    <div id="pos-catalog-toolbar" class="bw-pos-catalog-toolbar">
+                        <button type="button" wire:click="backToGroups" class="bw-pos-back-button">
+                            <x-heroicon-o-arrow-left class="h-4 w-4" /> Volver a grupos
+                        </button>
+
+                        <nav class="bw-pos-category-tabs" aria-label="Subcategorías">
+                            <button type="button" wire:click="selectCategory('all')" class="{{ $category === 'all' ? 'is-active' : '' }}">Todo</button>
+                            @foreach ($this->categories as $subcat)
+                                <button type="button" wire:click="selectCategory('{{ $subcat->getKey() }}')" class="{{ (string) $category === (string) $subcat->getKey() ? 'is-active' : '' }}">
+                                    {{ $subcat->nombre }}
+                                </button>
+                            @endforeach
+                        </nav>
+                    </div>
+
+                    <section class="bw-pos-product-grid" aria-label="Productos disponibles">
+                        @forelse ($this->products as $producto)
+                            <article class="bw-pos-product-card">
+                                <span class="bw-pos-product-image" aria-hidden="true">
+                                    @if ($producto->imageUrl())
+                                        <img src="{{ $producto->imageUrl() }}" alt="" onerror="this.hidden = true; this.nextElementSibling.hidden = false;">
+                                        <x-heroicon-o-shopping-bag class="h-9 w-9" hidden />
+                                    @else
+                                        <x-heroicon-o-shopping-bag class="h-9 w-9" />
+                                    @endif
+                                </span>
+                                <div class="bw-pos-product-copy">
+                                    <strong>{{ $producto->nombre }}</strong>
+                                    <span>{{ $producto->categoria?->nombre }}</span>
+                                    <b>{{ $this->money($producto->precio) }}</b>
+                                </div>
+                                <button type="button" wire:click="addProduct({{ $producto->getKey() }})" class="bw-pos-add-button">
+                                    <x-heroicon-o-plus class="h-4 w-4" /> Añadir
+                                </button>
+                            </article>
+                        @empty
+                            <div class="bw-pos-empty-state">
+                                <x-heroicon-o-shopping-bag class="h-8 w-8" />
+                                <strong>No hay productos disponibles.</strong>
+                                <span>Revisa el catálogo o selecciona otra subcategoría.</span>
+                            </div>
+                        @endforelse
+                    </section>
                 @endif
                 @else
                     <div class="bw-pos-read-only-state" role="status">

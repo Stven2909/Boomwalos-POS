@@ -64,8 +64,24 @@ class ReportesTestDataSeeder extends Seeder
         );
 
         // ── Categorías y Productos ─────────────────────────
-        $catComida = Categoria::firstOrCreate(['nombre' => 'Comida Test'], ['descripcion' => 'Platos de prueba']);
-        $catBebida = Categoria::firstOrCreate(['nombre' => 'Bebidas Test'], ['descripcion' => 'Bebidas de prueba']);
+        $grupoComida = Categoria::firstOrCreate(['nombre' => 'Comida Test Group'], ['descripcion' => 'Grupo de prueba', 'activa' => true]);
+        $grupoBebida = Categoria::firstOrCreate(['nombre' => 'Bebidas Test Group'], ['descripcion' => 'Grupo de prueba', 'activa' => true]);
+
+        $catComida = Categoria::firstOrCreate(
+            ['nombre' => 'Comida Test'],
+            ['descripcion' => 'Platos de prueba', 'activa' => true, 'parent_id' => $grupoComida->getKey()],
+        );
+        if (is_null($catComida->parent_id)) {
+            $catComida->update(['parent_id' => $grupoComida->getKey()]);
+        }
+
+        $catBebida = Categoria::firstOrCreate(
+            ['nombre' => 'Bebidas Test'],
+            ['descripcion' => 'Bebidas de prueba', 'activa' => true, 'parent_id' => $grupoBebida->getKey()],
+        );
+        if (is_null($catBebida->parent_id)) {
+            $catBebida->update(['parent_id' => $grupoBebida->getKey()]);
+        }
 
         $hamburguesa = Producto::firstOrCreate(
             ['nombre' => 'Hamburguesa Test', 'categoria_id' => $catComida->getKey()],

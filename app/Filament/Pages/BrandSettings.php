@@ -38,6 +38,8 @@ class BrandSettings extends Page
 
     public string $contactEmail = '';
 
+    public bool $editing = false;
+
     public static function canAccess(): bool
     {
         return auth()->user()?->can('gestionar_marca') ?? false;
@@ -45,7 +47,14 @@ class BrandSettings extends Page
 
     public function mount(): void
     {
-        $tenant = app(TenantContext::class)->require();
+        $tenant = app(TenantContext::class)->current();
+
+        if (! $tenant) {
+            $this->redirect(Dashboard::getUrl());
+
+            return;
+        }
+
         $this->displayName = (string) $tenant->display_name;
         $this->logoPath = (string) ($tenant->logo_path ?? '');
         $this->faviconPath = (string) ($tenant->favicon_path ?? '');
@@ -55,6 +64,19 @@ class BrandSettings extends Page
         $this->ticketFooter = (string) ($tenant->ticket_footer ?? '');
         $this->contactPhone = (string) ($tenant->contact_phone ?? '');
         $this->contactEmail = (string) ($tenant->contact_email ?? '');
+    }
+
+    public function startEditing(): void
+    {
+        $this->editing = true;
+        $this->resetValidation();
+    }
+
+    public function cancelEditing(): void
+    {
+        $this->editing = false;
+        $this->resetValidation();
+        $this->mount();
     }
 
     public function save(): void
@@ -84,5 +106,7 @@ class BrandSettings extends Page
         ]);
 
         Notification::make()->title('Marca actualizada')->success()->send();
+
+        $this->editing = false;
     }
 }

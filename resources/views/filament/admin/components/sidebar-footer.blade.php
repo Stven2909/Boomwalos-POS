@@ -1,7 +1,7 @@
 <div class="space-y-1 px-3 py-3">
     <a
         href="#"
-        class="flex items-center gap-x-3 rounded-lg px-3 py-2 text-sm font-medium text-gray-500 transition hover:bg-[#6B4E63]/5 hover:text-[#6B4E63]"
+        class="flex items-center gap-x-3 rounded-lg px-3 py-2 text-sm font-medium text-gray-500 transition hover:bg-[var(--bw-primary)]/5 hover:text-[var(--bw-primary)]"
     >
         <x-heroicon-o-lifebuoy class="h-5 w-5 shrink-0" />
         Soporte

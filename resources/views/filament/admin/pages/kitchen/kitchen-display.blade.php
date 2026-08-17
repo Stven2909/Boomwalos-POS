@@ -1,4 +1,5 @@
 <x-filament-panels::page>
+    @include('filament.admin.components.brand-css')
     <div
         class="bw-kds-page"
         wire:poll.5s="refreshBoard"

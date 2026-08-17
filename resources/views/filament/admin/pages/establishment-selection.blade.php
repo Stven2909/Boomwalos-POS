@@ -1,7 +1,8 @@
 <x-filament-panels::page>
+    @include('filament.admin.components.brand-css')
     <div class="mx-auto w-full max-w-3xl space-y-6">
         <header>
-            <p class="text-sm font-semibold uppercase tracking-[0.2em] text-[#6B4E63]">{{ $posBranding->displayName() }}</p>
+            <p class="text-sm font-semibold uppercase tracking-[0.2em] text-[var(--bw-primary)]">{{ $posBranding->displayName() }}</p>
             <h1 class="mt-2 text-3xl font-bold text-[#1D1B1E]">Selecciona una sucursal</h1>
             <p class="mt-2 text-sm text-gray-500">Trabajarás únicamente con los pedidos y la caja de la sucursal elegida.</p>
         </header>
@@ -14,7 +15,7 @@
                     wire:loading.attr="disabled"
                     class="bw-card bw-card-hover flex items-start gap-4 p-6 text-left"
                 >
-                    <span class="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-[#6B4E63]/10 text-[#6B4E63]">
+                    <span class="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-[var(--bw-primary)]/10 text-[var(--bw-primary)]">
                         <x-heroicon-o-building-storefront class="h-6 w-6" />
                     </span>
                     <span>

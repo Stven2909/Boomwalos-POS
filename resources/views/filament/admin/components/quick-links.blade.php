@@ -1,19 +1,19 @@
 <nav class="hidden items-center gap-1 lg:flex" aria-label="Accesos rápidos">
     <a
         href="{{ \App\Filament\Pages\Pos\ServiceSelection::getUrl() }}"
-        class="rounded-lg px-3 py-1.5 text-sm font-semibold text-gray-500 transition hover:bg-[#6B4E63]/5 hover:text-[#6B4E63]"
+        class="rounded-lg px-3 py-1.5 text-sm font-semibold text-gray-500 transition hover:bg-[var(--bw-primary)]/5 hover:text-[var(--bw-primary)]"
     >
         POS
     </a>
     <a
         href="{{ \App\Filament\Pages\Kitchen\KitchenDisplay::getUrl() }}"
-        class="rounded-lg px-3 py-1.5 text-sm font-semibold text-gray-500 transition hover:bg-[#6B4E63]/5 hover:text-[#6B4E63]"
+        class="rounded-lg px-3 py-1.5 text-sm font-semibold text-gray-500 transition hover:bg-[var(--bw-primary)]/5 hover:text-[var(--bw-primary)]"
     >
         Kitchen
     </a>
     <a
         href="{{ \App\Filament\Pages\Pos\TableSelection::getUrl() }}"
-        class="rounded-lg px-3 py-1.5 text-sm font-semibold text-gray-500 transition hover:bg-[#6B4E63]/5 hover:text-[#6B4E63]"
+        class="rounded-lg px-3 py-1.5 text-sm font-semibold text-gray-500 transition hover:bg-[var(--bw-primary)]/5 hover:text-[var(--bw-primary)]"
     >
         Tables
     </a>
