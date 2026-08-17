@@ -36,8 +36,6 @@ class OrderEntry extends PosPage
 
     public ?string $selectedGroup = null;
 
-    public ?array $undoLine = null;
-
     public ?string $feedback = null;
 
     public bool $comboModalOpen = false;
@@ -235,56 +233,9 @@ class OrderEntry extends PosPage
             return;
         }
 
-        $this->undoLine = $line->combo_id
-            ? [
-                'kind' => 'combo',
-                'combo_id' => (int) $line->combo_id,
-                'cantidad' => (int) $line->cantidad,
-                'precio_unitario' => (string) $line->precio_unitario,
-                'seleccion_combo' => $line->seleccion_combo ?? [],
-                'nombre' => $line->combo?->nombre ?? 'Combo',
-            ]
-            : [
-                'kind' => 'producto',
-                'producto_id' => (int) $line->producto_id,
-                'cantidad' => (int) $line->cantidad,
-                'precio_unitario' => (string) $line->precio_unitario,
-                'nombre' => $line->producto?->nombre ?? 'Producto',
-            ];
-
         try {
             app(PedidoService::class)->removePendingLine($this->pedido, $line);
             $this->feedback = null;
-            $this->refreshPedido();
-        } catch (ValidationException $exception) {
-            $this->feedback = collect($exception->errors())->flatten()->first();
-        }
-    }
-
-    public function undoRemove(): void
-    {
-        if (! $this->undoLine) {
-            return;
-        }
-
-        try {
-            if (($this->undoLine['kind'] ?? 'producto') === 'combo') {
-                app(PedidoService::class)->restorePendingCombo(
-                    $this->pedido,
-                    $this->undoLine['combo_id'],
-                    $this->undoLine['cantidad'],
-                    $this->undoLine['precio_unitario'],
-                    $this->selectionStateForService($this->undoLine['seleccion_combo']),
-                );
-            } else {
-                app(PedidoService::class)->restorePendingLine(
-                    $this->pedido,
-                    $this->undoLine['producto_id'],
-                    $this->undoLine['cantidad'],
-                    $this->undoLine['precio_unitario'],
-                );
-            }
-            $this->undoLine = null;
             $this->refreshPedido();
         } catch (ValidationException $exception) {
             $this->feedback = collect($exception->errors())->flatten()->first();
@@ -299,7 +250,6 @@ class OrderEntry extends PosPage
                 ? ' Comanda en cola de impresión.'
                 : ' No hay una impresora de comanda configurada.';
             session()->flash('pos_feedback', "Tanda {$tanda->numero_tanda} enviada a cocina.{$printMessage} La cuenta sigue abierta.");
-            $this->undoLine = null;
             $this->redirect(ServiceSelection::getUrl());
         } catch (ValidationException $exception) {
             $this->feedback = collect($exception->errors())->flatten()->first() ?? 'No se pudo enviar el pedido.';
@@ -311,7 +261,6 @@ class OrderEntry extends PosPage
         try {
             app(PedidoService::class)->sendToCashRegister($this->pedido, auth()->user());
             session()->flash('pos_feedback', 'La cuenta fue enviada a caja. Espera el cobro en el mostrador.');
-            $this->undoLine = null;
             $this->redirect(ServiceSelection::getUrl());
         } catch (ValidationException $exception) {
             $this->feedback = collect($exception->errors())->flatten()->first() ?? 'No se pudo enviar el pedido a caja.';

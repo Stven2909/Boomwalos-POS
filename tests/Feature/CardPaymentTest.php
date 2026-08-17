@@ -75,27 +75,7 @@ class CardPaymentTest extends TestCase
         $this->assertDatabaseCount('pagos', 0);
     }
 
-    public function test_card_payment_requires_referencia(): void
-    {
-        $pedido = $this->newOrder();
-
-        try {
-            app(CobroService::class)->chargeAndSend(
-                $pedido,
-                MetodoPago::TARJETA,
-                null,
-                $this->cashier,
-                ['aprobada' => true, 'referencia' => '   '],
-            );
-            $this->fail('El cobro con tarjeta sin referencia debía ser rechazado.');
-        } catch (ValidationException $exception) {
-            $this->assertStringContainsString('referencia', collect($exception->errors())->flatten()->first());
-        }
-
-        $this->assertDatabaseCount('pagos', 0);
-    }
-
-    public function test_approved_card_payment_stores_referencia_externa(): void
+    public function test_approved_card_payment_auto_generates_referencia(): void
     {
         $pedido = $this->newOrder();
 
@@ -104,10 +84,10 @@ class CardPaymentTest extends TestCase
             MetodoPago::TARJETA,
             null,
             $this->cashier,
-            ['aprobada' => true, 'referencia' => 'ABC-123456', 'terminal' => 'DAT-01'],
+            ['aprobada' => true],
         );
 
-        $this->assertSame('ABC-123456', $pago->referencia_externa);
+        $this->assertStringStartsWith('REF-', $pago->referencia_externa);
         $this->assertSame('COBRADO', $pedido->fresh()->estado_comercial->value);
     }
 
@@ -136,7 +116,7 @@ class CardPaymentTest extends TestCase
         $this->assertSame('1.50', $page->montoRecibido);
     }
 
-    public function test_charge_page_card_button_needs_approval_and_referencia(): void
+    public function test_charge_page_card_button_needs_approval(): void
     {
         $pedido = $this->newOrder();
 
@@ -145,15 +125,10 @@ class CardPaymentTest extends TestCase
         $page->pedido->load('detalles');
         $page->metodoPago = MetodoPago::TARJETA->value;
         $page->tarjetaAprobada = false;
-        $page->tarjetaReferencia = '';
 
         $this->assertFalse($page->canSubmitPayment);
 
         $page->tarjetaAprobada = true;
-        unset($page->canSubmitPayment);
-        $this->assertFalse($page->canSubmitPayment);
-
-        $page->tarjetaReferencia = 'ABC-1';
         unset($page->canSubmitPayment);
         $this->assertTrue($page->canSubmitPayment);
     }

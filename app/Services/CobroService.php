@@ -130,7 +130,7 @@ class CobroService
             'metodo_pago' => $metodo,
             'monto_recibido' => $recibido,
             'cambio_devuelto' => $cambio,
-            'referencia_externa' => $metodo === MetodoPago::TARJETA ? trim((string) ($tarjeta['referencia'] ?? '')) : null,
+            'referencia_externa' => $metodo === MetodoPago::TARJETA ? $this->generateInternalPaymentReference($pedido) : null,
         ]);
 
         $pedido->update(['estado_comercial' => EstadoComercialPedido::COBRADO]);
@@ -213,12 +213,6 @@ class CobroService
                 'tarjeta' => 'La aprobación del datáfono es obligatoria para cobrar con tarjeta.',
             ]);
         }
-
-        if (trim((string) ($tarjeta['referencia'] ?? '')) === '') {
-            throw ValidationException::withMessages([
-                'tarjeta' => 'Ingresa la referencia de la transacción del datáfono.',
-            ]);
-        }
     }
 
     private function resolveAmounts(MetodoPago $metodo, ?string $montoRecibido, float $total): array
@@ -272,5 +266,19 @@ class CobroService
     private function audit(Pedido $pedido, User $actor, string $type, array $payload): void
     {
         $this->auditLogger->record($pedido, $actor, $type, $payload);
+    }
+
+    /**
+     * Placeholder: genera un correlativo interno (REF-{YYMMDD}-{codigo_corto}).
+     * Si se integra datáfono/pasarela real en el futuro (pendiente de definir en
+     * spec), este método se reemplaza por la llamada al gateway — no requiere
+     * cambiar la firma ni el resto del flujo de cobro.
+     */
+    private function generateInternalPaymentReference(Pedido $pedido): string
+    {
+        $fecha = now()->format('ymd');
+        $codigo = $pedido->codigo_corto ?? rand(1000, 9999);
+
+        return "REF-{$fecha}-{$codigo}";
     }
 }

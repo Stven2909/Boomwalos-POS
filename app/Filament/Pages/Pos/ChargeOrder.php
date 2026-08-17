@@ -27,10 +27,6 @@ class ChargeOrder extends PosPage
 
     public bool $tarjetaAprobada = false;
 
-    public string $tarjetaReferencia = '';
-
-    public string $tarjetaTerminal = '';
-
     public ?string $feedback = null;
 
     public static function canAccess(): bool
@@ -128,11 +124,7 @@ class ChargeOrder extends PosPage
     {
         try {
             $tarjeta = $this->metodoPago === MetodoPago::TARJETA->value
-                ? [
-                    'aprobada' => $this->tarjetaAprobada,
-                    'referencia' => $this->tarjetaReferencia,
-                    'terminal' => $this->tarjetaTerminal,
-                ]
+                ? ['aprobada' => $this->tarjetaAprobada]
                 : null;
 
             [, , $ticketResult] = app(CobroService::class)->chargeAndSend(
@@ -193,7 +185,7 @@ class ChargeOrder extends PosPage
         }
 
         if ($this->metodoPago === MetodoPago::TARJETA->value) {
-            return $this->tarjetaAprobada && trim($this->tarjetaReferencia) !== '';
+            return $this->tarjetaAprobada;
         }
 
         return true;

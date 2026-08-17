@@ -59,11 +59,6 @@
             </section>
 
             <aside class="bw-pos-charge-panel" aria-labelledby="payment-title">
-                <div>
-                    <span class="bw-pos-step-label">RESUMEN DE PAGO</span>
-                    <h2 id="payment-title">Total a cobrar</h2>
-                </div>
-
                 <div class="bw-pos-charge-total">
                     <span>Total</span>
                     <strong>{{ $this->money($this->total) }}</strong>
@@ -91,40 +86,42 @@
                 </fieldset>
 
                 @if ($metodoPago === \App\Enums\MetodoPago::EFECTIVO->value)
-                    <div class="bw-pos-payment-field">
-                        <span>Monto recibido</span>
-                        <div class="bw-pos-amount-display">
-                            <span>{{ $this->simboloMoneda }}</span>
-                            <strong>{{ $montoRecibido === '' ? '0.00' : $montoRecibido }}</strong>
+                    <div class="bw-pos-cash-flow">
+                        <div class="bw-pos-payment-field">
+                            <span>Monto recibido</span>
+                            <div class="bw-pos-amount-display">
+                                <span>{{ $this->simboloMoneda }}</span>
+                                <strong>{{ $montoRecibido === '' ? '0.00' : $montoRecibido }}</strong>
+                            </div>
                         </div>
-                    </div>
 
-                    <div class="bw-pos-quick-amounts" aria-label="Montos rápidos">
-                        @foreach ($this->montosRapidos as $monto)
-                            <button type="button" wire:click="usarMontoRapido('{{ $monto }}')" class="bw-pos-quick-amount">
-                                {{ $this->simboloMoneda }}{{ number_format((float) $monto, 2) }}
+                        <div class="bw-pos-quick-amounts" aria-label="Montos rápidos">
+                            @foreach ($this->montosRapidos as $monto)
+                                <button type="button" wire:click="usarMontoRapido('{{ $monto }}')" class="bw-pos-quick-amount">
+                                    {{ $this->simboloMoneda }}{{ number_format((float) $monto, 2) }}
+                                </button>
+                            @endforeach
+                            <button type="button" wire:click="usarMontoExacto" class="bw-pos-quick-amount is-exacto">
+                                Exacto
                             </button>
-                        @endforeach
-                        <button type="button" wire:click="usarMontoExacto" class="bw-pos-quick-amount is-exacto">
-                            Exacto
-                        </button>
-                    </div>
+                        </div>
 
-                    <div class="bw-pos-numpad" aria-label="Teclado numérico">
-                        @foreach (['7','8','9','4','5','6','1','2','3'] as $digito)
-                            <button type="button" wire:click="ingresarDigito('{{ $digito }}')" class="bw-pos-numpad-key">{{ $digito }}</button>
-                        @endforeach
-                        <button type="button" wire:click="limpiarMonto" class="bw-pos-numpad-key is-utility">C</button>
-                        <button type="button" wire:click="ingresarDigito('0')" class="bw-pos-numpad-key">0</button>
-                        <button type="button" wire:click="ingresarDigito('.')" class="bw-pos-numpad-key">.</button>
-                        <button type="button" wire:click="borrarDigito" class="bw-pos-numpad-key is-utility" aria-label="Borrar último dígito">
-                            <x-heroicon-o-backspace class="h-5 w-5" />
-                        </button>
-                    </div>
+                        <div class="bw-pos-numpad" aria-label="Teclado numérico">
+                            @foreach (['7','8','9','4','5','6','1','2','3'] as $digito)
+                                <button type="button" wire:click="ingresarDigito('{{ $digito }}')" class="bw-pos-numpad-key">{{ $digito }}</button>
+                            @endforeach
+                            <button type="button" wire:click="limpiarMonto" class="bw-pos-numpad-key is-utility">C</button>
+                            <button type="button" wire:click="ingresarDigito('0')" class="bw-pos-numpad-key">0</button>
+                            <button type="button" wire:click="ingresarDigito('.')" class="bw-pos-numpad-key">.</button>
+                            <button type="button" wire:click="borrarDigito" class="bw-pos-numpad-key is-utility" aria-label="Borrar último dígito">
+                                <x-heroicon-o-backspace class="h-5 w-5" />
+                            </button>
+                        </div>
 
-                    <div class="bw-pos-change-row">
-                        <span>Cambio</span>
-                        <strong>{{ $this->money($this->change) }}</strong>
+                        <div class="bw-pos-change-row">
+                            <span>Cambio</span>
+                            <strong>{{ $this->money($this->change) }}</strong>
+                        </div>
                     </div>
                 @else
                     <div class="bw-pos-card-note">
@@ -137,21 +134,11 @@
                         <span class="bw-pos-toggle-track" aria-hidden="true"></span>
                         <span>El datáfono aprobó el pago</span>
                     </label>
-
-                    <label class="bw-pos-payment-field">
-                        <span>Referencia de la transacción</span>
-                        <input type="text" wire:model="tarjetaReferencia" maxlength="100" placeholder="Ej. 123456" inputmode="numeric">
-                    </label>
-
-                    <label class="bw-pos-payment-field">
-                        <span>Terminal (opcional)</span>
-                        <input type="text" wire:model="tarjetaTerminal" maxlength="100" placeholder="Ej. DAT-01">
-                    </label>
                 @endif
 
                 <button type="button" wire:click="charge" class="bw-pos-charge-button" @disabled(! $this->canSubmitPayment)>
                     <x-heroicon-o-check-circle class="h-5 w-5" />
-                    Cobrar y enviar a cocina
+                    Cobrar {{ $this->money($this->total) }}
                 </button>
 
                 <a href="{{ $this->backUrl() }}" class="bw-pos-secondary-button bw-pos-charge-back">

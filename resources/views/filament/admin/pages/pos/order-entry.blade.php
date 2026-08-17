@@ -32,31 +32,32 @@
                 @if (! $this->isReadOnly)
 
                 @if ($selectedGroup === null)
-                    <div id="pos-catalog-toolbar" class="bw-pos-catalog-toolbar">
-                        <nav class="bw-pos-group-grid" aria-label="Grupos de productos">
-                            @foreach ($this->categories as $grupo)
-                                <button type="button" wire:click="selectGroup('{{ $grupo->getKey() }}')" class="bw-pos-group-card">
-                                    <span class="group-icon">
-                                        @if ($grupo->iconoType() === 'image')
-                                            <img src="{{ $grupo->iconoUrl() }}" alt="{{ $grupo->nombre }}" class="h-10 w-10 object-contain">
-                                        @else
-                                            {{ $grupo->icono ?: '📂' }}
-                                        @endif
-                                    </span>
-                                    <strong class="group-name">{{ $grupo->nombre }}</strong>
-                                    <span class="group-count">{{ $this->groupProductCounts[$grupo->getKey()] ?? 0 }} productos</span>
-                                </button>
-                            @endforeach
-
-                            @if ($this->combos->isNotEmpty())
-                                <button type="button" wire:click="selectGroup('combos')" class="bw-pos-group-card bw-pos-group-card--combos">
-                                    <span class="group-icon">🎉</span>
-                                    <strong class="group-name">Combos</strong>
-                                    <span class="group-count">{{ $this->combos->count() }} disponibles</span>
-                                </button>
-                            @endif
-                        </nav>
+                    <div class="bw-pos-group-intro">
+                        <p>Selecciona una categoría para comenzar a agregar productos</p>
                     </div>
+                    <nav class="bw-pos-group-grid" aria-label="Grupos de productos">
+                        @foreach ($this->categories as $grupo)
+                            <button type="button" wire:click="selectGroup('{{ $grupo->getKey() }}')" class="bw-pos-group-card">
+                                <span class="group-icon">
+                                    @if ($grupo->iconoType() === 'image')
+                                        <img src="{{ $grupo->iconoUrl() }}" alt="{{ $grupo->nombre }}" class="h-10 w-10 object-contain">
+                                    @else
+                                        {{ $grupo->icono ?: '📂' }}
+                                    @endif
+                                </span>
+                                <strong class="group-name">{{ $grupo->nombre }}</strong>
+                                <span class="group-count">{{ $this->groupProductCounts[$grupo->getKey()] ?? 0 }} productos</span>
+                            </button>
+                        @endforeach
+
+                        @if ($this->combos->isNotEmpty())
+                            <button type="button" wire:click="selectGroup('combos')" class="bw-pos-group-card bw-pos-group-card--combos">
+                                <span class="group-icon">🎉</span>
+                                <strong class="group-name">Combos</strong>
+                                <span class="group-count">{{ $this->combos->count() }} disponibles</span>
+                            </button>
+                        @endif
+                    </nav>
 
                 @elseif ($selectedGroup === 'combos')
                     <div id="pos-catalog-toolbar" class="bw-pos-catalog-toolbar">
@@ -124,7 +125,7 @@
 
                     <section class="bw-pos-product-grid" aria-label="Productos disponibles">
                         @forelse ($this->products as $producto)
-                            <article class="bw-pos-product-card">
+                            <article class="bw-pos-product-card" wire:click="addProduct({{ $producto->getKey() }})" tabindex="0" role="button" aria-label="Agregar {{ $producto->nombre }}">
                                 <span class="bw-pos-product-image" aria-hidden="true">
                                     @if ($producto->imageUrl())
                                         <img src="{{ $producto->imageUrl() }}" alt="" onerror="this.hidden = true; this.nextElementSibling.hidden = false;">
@@ -138,9 +139,9 @@
                                     <span>{{ $producto->categoria?->nombre }}</span>
                                     <b>{{ $this->money($producto->precio) }}</b>
                                 </div>
-                                <button type="button" wire:click="addProduct({{ $producto->getKey() }})" class="bw-pos-add-button">
-                                    <x-heroicon-o-plus class="h-4 w-4" /> Añadir
-                                </button>
+                                <span class="bw-pos-product-add-indicator" aria-hidden="true">
+                                    <x-heroicon-o-plus class="h-5 w-5" />
+                                </span>
                             </article>
                         @empty
                             <div class="bw-pos-empty-state">
@@ -195,12 +196,7 @@
                     <div class="bw-pos-feedback" role="status">{{ $feedback }}</div>
                 @endif
 
-                @if ($undoLine)
-                    <div class="bw-pos-undo" role="status">
-                        <span>{{ $undoLine['nombre'] }} eliminado</span>
-                        <button type="button" wire:click="undoRemove">Deshacer</button>
-                    </div>
-                @endif
+
 
                 <div class="bw-pos-summary-lines">
                     @forelse ($this->pendingDetails as $line)
@@ -296,18 +292,6 @@
                     <button type="button" wire:click="openCharge" class="bw-pos-charge-button">
                         <x-heroicon-o-fire class="h-5 w-5" />
                         Cobrar y enviar a cocina
-                    </button>
-                @endif
-
-                @if (! $this->isReadOnly)
-                    <button
-                        type="button"
-                        wire:click="sendToKitchen"
-                        class="bw-pos-kitchen-button"
-                        @disabled($this->pendingDetails->isEmpty())
-                    >
-                        <x-heroicon-o-paper-airplane class="h-5 w-5" />
-                        {{ $this->sentDetails->isNotEmpty() ? 'Enviar nueva tanda' : 'Enviar a cocina' }}
                     </button>
                 @endif
             </aside>
