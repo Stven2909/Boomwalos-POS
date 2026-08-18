@@ -2,18 +2,23 @@
 
 namespace App\Services;
 
+use App\Application\Printing\RenderCustomerTicket;
+use App\Application\Printing\RenderKitchenComanda;
 use App\Contracts\AuditLoggerInterface;
-use App\Contracts\CustomerTicketDispatcherInterface;
 use App\Contracts\EstablishmentContextInterface;
-use App\Contracts\KitchenDispatcherInterface;
 use App\Enums\EstadoComercialPedido;
-use App\Enums\EstadoCocina;
+use App\Enums\EstadoImpresion;
 use App\Enums\EstadoLineaPedido;
+use App\Enums\EstadoMesa;
 use App\Enums\MetodoPago;
+use App\Enums\TipoImpresora;
+use App\Enums\TipoTrabajoImpresion;
+use App\Jobs\ProcessPrintJob;
+use App\Models\Impresora;
 use App\Models\Pago;
 use App\Models\Pedido;
 use App\Models\SesionCaja;
-use App\Models\TandaPedido;
+use App\Models\TrabajoImpresion;
 use App\Models\User;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\DB;
@@ -23,11 +28,10 @@ class CobroService
 {
     public function __construct(
         private readonly EstablishmentContextInterface $establishmentContext,
-        private readonly KitchenDispatcherInterface $kitchenDispatcher,
-        private readonly CustomerTicketDispatcherInterface $customerTicketDispatcher,
         private readonly AuditLoggerInterface $auditLogger,
         private readonly FiscalSaleRegistrar $fiscalSaleRegistrar,
-        private readonly KitchenService $kitchenService,
+        private readonly RenderKitchenComanda $comandaRenderer,
+        private readonly RenderCustomerTicket $ticketRenderer,
     ) {}
 
     public function chargeAndSend(
@@ -41,13 +45,21 @@ class CobroService
             throw new AuthorizationException('No tienes permiso para cobrar pedidos.');
         }
 
-        $resultado = DB::transaction(function () use ($pedido, $metodo, $montoRecibido, $actor, $tarjeta): array {
-            return $this->applyCharge($pedido, $metodo, $montoRecibido, $actor, sendPendingToKitchen: true, tarjeta: $tarjeta);
+        [$pago, $comandaJob, $ticketJob] = DB::transaction(function () use ($pedido, $metodo, $montoRecibido, $actor, $tarjeta): array {
+            return $this->applyCharge($pedido, $metodo, $montoRecibido, $actor, tarjeta: $tarjeta);
         });
 
-        $this->registrarVentaFiscal($resultado[0]);
+        $this->registrarVentaFiscal($pago);
 
-        return $resultado;
+        if ($comandaJob && $comandaJob->estado === EstadoImpresion::PENDIENTE) {
+            ProcessPrintJob::dispatch($comandaJob->getKey())->afterCommit();
+        }
+
+        if ($ticketJob && $ticketJob->estado === EstadoImpresion::PENDIENTE) {
+            ProcessPrintJob::dispatch($ticketJob->getKey())->afterCommit();
+        }
+
+        return [$pago, null, null];
     }
 
     public function charge(
@@ -61,10 +73,8 @@ class CobroService
             throw new AuthorizationException('No tienes permiso para cobrar pedidos.');
         }
 
-        $pago = DB::transaction(function () use ($pedido, $metodo, $montoRecibido, $actor, $tarjeta): Pago {
-            [$pago] = $this->applyCharge($pedido, $metodo, $montoRecibido, $actor, sendPendingToKitchen: false, tarjeta: $tarjeta);
-
-            return $pago;
+        [$pago] = DB::transaction(function () use ($pedido, $metodo, $montoRecibido, $actor, $tarjeta): array {
+            return $this->applyCharge($pedido, $metodo, $montoRecibido, $actor, tarjeta: $tarjeta);
         });
 
         $this->registrarVentaFiscal($pago);
@@ -77,7 +87,6 @@ class CobroService
         MetodoPago $metodo,
         ?string $montoRecibido,
         User $actor,
-        bool $sendPendingToKitchen,
         ?array $tarjeta = null,
     ): array {
         $establecimientoId = $this->establishmentId();
@@ -96,7 +105,7 @@ class CobroService
         }
 
         $detalles = $pedido->detalles()
-            ->where('estado_linea', EstadoLineaPedido::ACTIVA->value)
+            ->where('estado_linea', EstadoLineaPedido::ACTIVA)
             ->lockForUpdate()
             ->get();
 
@@ -106,21 +115,13 @@ class CobroService
             ]);
         }
 
-        $pending = $detalles->whereNull('tanda_id');
-
-        if (! $sendPendingToKitchen && $pending->isNotEmpty()) {
-            throw ValidationException::withMessages([
-                'pago' => 'Envía a cocina los productos pendientes antes de cobrar la cuenta.',
-            ]);
+        if ($metodo === MetodoPago::TARJETA) {
+            $this->validateCard($tarjeta);
         }
 
         $total = round((float) $detalles->sum(
             fn ($detalle): float => (float) $detalle->precio_unitario * (int) $detalle->cantidad,
         ), 2);
-
-        if ($metodo === MetodoPago::TARJETA) {
-            $this->validateCard($tarjeta);
-        }
 
         [$recibido, $cambio] = $this->resolveAmounts($metodo, $montoRecibido, $total);
 
@@ -145,42 +146,65 @@ class CobroService
             'codigo_corto' => $pedido->codigo_corto,
         ]);
 
-        $tanda = null;
+        $comandaJob = $this->createComandaJob($pedido);
+        $ticketJob = $this->createTicketJob($pedido, $pago, $actor);
 
-        if ($sendPendingToKitchen && $pending->isNotEmpty()) {
-            $numeroTanda = ((int) $pedido->tandas()->max('numero_tanda')) + 1;
-            $tanda = $pedido->tandas()->create([
-                'numero_tanda' => $numeroTanda,
-                'estado_cocina' => EstadoCocina::PENDIENTE,
-            ]);
+        $this->audit($pedido, $actor, 'comanda_en_cola', [
+            'trabajo_impresion_id' => $comandaJob?->getKey(),
+        ]);
+        $this->audit($pedido, $actor, 'ticket_en_cola', [
+            'trabajo_impresion_id' => $ticketJob?->getKey(),
+        ]);
 
-            $pedido->detalles()
-                ->whereIn('id', $pending->modelKeys())
-                ->update(['tanda_id' => $tanda->getKey()]);
+        $pedido->update(['estado_comercial' => EstadoComercialPedido::CERRADO]);
 
-            $printJob = $this->kitchenDispatcher->dispatch($tanda);
-
-            $this->audit($pedido, $actor, $printJob ? 'comanda_en_cola' : 'comanda_sin_impresora', [
-                'tanda_id' => $tanda->getKey(),
-                'trabajo_impresion_id' => $printJob?->getKey(),
-            ]);
-
-            $this->audit($pedido, $actor, 'pedido_enviado_cocina', [
-                'tanda_id' => $tanda->getKey(),
-                'numero_tanda' => $tanda->numero_tanda,
-                'detalles' => $pending->map(fn ($detalle): array => [
-                    'id' => $detalle->getKey(),
-                    'producto_id' => $detalle->producto_id,
-                    'cantidad' => $detalle->cantidad,
-                ])->values()->all(),
-            ]);
+        if ($pedido->mesa_id) {
+            $pedido->mesa()->update(['estado' => EstadoMesa::LIBRE]);
         }
 
-        $ticketResult = $this->queueCustomerTicket($pedido, $pago, $actor);
+        $this->audit($pedido, $actor, 'pedido_cerrado', [
+            'motivo' => 'Cobro completado. Mesa liberada.',
+        ]);
 
-        $this->kitchenService->closeOrderIfReady($pedido, $actor);
+        return [$pago->fresh(['pedido']), $comandaJob, $ticketJob];
+    }
 
-        return [$pago->fresh(['pedido']), $tanda, $ticketResult];
+    private function createComandaJob(Pedido $pedido): ?TrabajoImpresion
+    {
+        $printer = Impresora::buscar(TipoImpresora::COMANDA);
+        $contenido = $this->comandaRenderer->render($pedido);
+        $uid = hash('sha256', $pedido->getKey() . '|COMANDA');
+
+        return TrabajoImpresion::firstOrCreate(
+            ['original_uid' => $uid],
+            [
+                'impresora_id' => $printer?->getKey(),
+                'pedido_id' => $pedido->getKey(),
+                'tipo_trabajo' => TipoTrabajoImpresion::COMANDA,
+                'estado' => $printer ? EstadoImpresion::PENDIENTE : EstadoImpresion::ERROR,
+                'contenido' => $contenido,
+                'ultimo_error' => $printer ? null : 'No hay impresora de comanda configurada.',
+            ],
+        );
+    }
+
+    private function createTicketJob(Pedido $pedido, Pago $pago, User $actor): ?TrabajoImpresion
+    {
+        $printer = Impresora::buscar(TipoImpresora::TICKET);
+        $contenido = $this->ticketRenderer->render($pedido, $pago, $actor);
+        $uid = hash('sha256', $pedido->getKey() . '|TICKET');
+
+        return TrabajoImpresion::firstOrCreate(
+            ['original_uid' => $uid],
+            [
+                'impresora_id' => $printer?->getKey(),
+                'pedido_id' => $pedido->getKey(),
+                'tipo_trabajo' => TipoTrabajoImpresion::TICKET,
+                'estado' => $printer ? EstadoImpresion::PENDIENTE : EstadoImpresion::ERROR,
+                'contenido' => $contenido,
+                'ultimo_error' => $printer ? null : 'No hay impresora de ticket configurada.',
+            ],
+        );
     }
 
     private function registrarVentaFiscal(Pago $pago): void
@@ -188,24 +212,6 @@ class CobroService
         $this->fiscalSaleRegistrar->register($pago);
     }
 
-    private function queueCustomerTicket(Pedido $pedido, Pago $pago, User $actor): \App\Application\Printing\QueueTicketResult
-    {
-        $result = $this->customerTicketDispatcher->dispatch($pedido, $pago, $actor);
-
-        $event = match ($result->status) {
-            \App\Application\Printing\QueueTicketResult::NO_PRINTER => 'ticket_sin_impresora',
-            \App\Application\Printing\QueueTicketResult::FAILED => 'ticket_fallido',
-            default => 'ticket_en_cola',
-        };
-
-        $this->audit($pedido, $actor, $event, [
-            'trabajo_impresion_id' => $result->trabajo?->getKey(),
-            'tipo_trabajo' => $result->trabajo?->tipo_trabajo?->value ?? 'TICKET',
-            'mensaje' => $result->message,
-        ]);
-
-        return $result;
-    }
     private function validateCard(?array $tarjeta): void
     {
         if (($tarjeta['aprobada'] ?? false) !== true) {
@@ -268,12 +274,6 @@ class CobroService
         $this->auditLogger->record($pedido, $actor, $type, $payload);
     }
 
-    /**
-     * Placeholder: genera un correlativo interno (REF-{YYMMDD}-{codigo_corto}).
-     * Si se integra datáfono/pasarela real en el futuro (pendiente de definir en
-     * spec), este método se reemplaza por la llamada al gateway — no requiere
-     * cambiar la firma ni el resto del flujo de cobro.
-     */
     private function generateInternalPaymentReference(Pedido $pedido): string
     {
         $fecha = now()->format('ymd');

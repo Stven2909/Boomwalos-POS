@@ -245,11 +245,11 @@ class OrderEntry extends PosPage
     public function sendToKitchen(): void
     {
         try {
-            $tanda = app(PedidoService::class)->sendPendingBatch($this->pedido, auth()->user());
-            $printMessage = $tanda->trabajosImpresion()->exists()
+            $job = app(PedidoService::class)->sendPendingBatch($this->pedido, auth()->user());
+            $printMessage = $job->estado === \App\Enums\EstadoImpresion::PENDIENTE
                 ? ' Comanda en cola de impresión.'
                 : ' No hay una impresora de comanda configurada.';
-            session()->flash('pos_feedback', "Tanda {$tanda->numero_tanda} enviada a cocina.{$printMessage} La cuenta sigue abierta.");
+            session()->flash('pos_feedback', "Comanda enviada.{$printMessage} La cuenta sigue abierta.");
             $this->redirect(ServiceSelection::getUrl());
         } catch (ValidationException $exception) {
             $this->feedback = collect($exception->errors())->flatten()->first() ?? 'No se pudo enviar el pedido.';

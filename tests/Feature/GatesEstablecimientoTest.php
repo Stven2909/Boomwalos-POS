@@ -2,21 +2,18 @@
 
 namespace Tests\Feature;
 
-use App\Filament\Pages\EstablishmentSelection;
-use App\Filament\Pages\Kitchen\KitchenDisplay;
-use App\Filament\Pages\Pos\EntregaDisplay;
 use App\Filament\Pages\Pos\ServiceSelection;
+use App\Filament\Pages\Printing\PrintMonitor;
+use App\Filament\Resources\Impresoras\ImpresoraResource;
 use App\Models\Establecimiento;
 use App\Models\User;
 use Database\Seeders\RolesPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Livewire\Livewire;
-use Symfony\Component\HttpKernel\Exception\HttpException;
 use Tests\TestCase;
 
 /**
- * Los guardas de sucursal activa en cocina y entrega: sin sucursal activa y
- * con varias accesibles se redirige a la selección; sin ninguna se deniega.
+ * Los guardas de sucursal activa en módulos de ajustes: sin permisos se
+ * deniega; con permisos se permite el acceso.
  */
 class GatesEstablecimientoTest extends TestCase
 {
@@ -36,58 +33,40 @@ class GatesEstablecimientoTest extends TestCase
         return $user;
     }
 
-    public function test_kitchen_sin_sucursal_activa_y_con_varias_redirige_a_la_seleccion(): void
+    public function test_print_monitor_requires_ver_impresoras_permission(): void
     {
-        $first = Establecimiento::create(['nombre' => 'Centro', 'direccion' => 'Centro']);
-        $second = Establecimiento::create(['nombre' => 'Norte', 'direccion' => 'Norte']);
-        $user = $this->operador();
-        $user->establecimientos()->attach([$first, $second]);
+        $user = User::factory()->create();
 
-        $this->actingAs($user);
-
-        Livewire::test(KitchenDisplay::class)
-            ->assertRedirect(EstablishmentSelection::getUrl());
+        $this->actingAs($user)
+            ->get(PrintMonitor::getUrl())
+            ->assertForbidden();
     }
 
-    public function test_kitchen_sin_sucursales_accesibles_deniega_con_403(): void
+    public function test_print_monitor_is_accessible_with_permission(): void
     {
         $user = $this->operador();
 
-        $this->actingAs($user);
-
-        try {
-            (new KitchenDisplay())->mount();
-            $this->fail('Se esperaba un 403.');
-        } catch (HttpException $exception) {
-            $this->assertSame(403, $exception->getStatusCode());
-        }
+        $this->actingAs($user)
+            ->get(PrintMonitor::getUrl())
+            ->assertSuccessful();
     }
 
-    public function test_entrega_sin_sucursal_activa_y_con_varias_redirige_a_la_seleccion(): void
+    public function test_impresora_resource_requires_ver_impresoras_permission(): void
     {
-        $first = Establecimiento::create(['nombre' => 'Centro', 'direccion' => 'Centro']);
-        $second = Establecimiento::create(['nombre' => 'Norte', 'direccion' => 'Norte']);
-        $user = $this->operador();
-        $user->establecimientos()->attach([$first, $second]);
+        $user = User::factory()->create();
 
-        $this->actingAs($user);
-
-        Livewire::test(EntregaDisplay::class)
-            ->assertRedirect(EstablishmentSelection::getUrl());
+        $this->actingAs($user)
+            ->get(ImpresoraResource::getUrl('index'))
+            ->assertForbidden();
     }
 
-    public function test_entrega_sin_sucursales_accesibles_deniega_con_403(): void
+    public function test_impresora_resource_is_accessible_with_permission(): void
     {
         $user = $this->operador();
 
-        $this->actingAs($user);
-
-        try {
-            (new EntregaDisplay())->mount();
-            $this->fail('Se esperaba un 403.');
-        } catch (HttpException $exception) {
-            $this->assertSame(403, $exception->getStatusCode());
-        }
+        $this->actingAs($user)
+            ->get(ImpresoraResource::getUrl('index'))
+            ->assertSuccessful();
     }
 
     public function test_simbolo_moneda_sin_sucursal_devuelve_dolar(): void

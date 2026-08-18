@@ -112,7 +112,10 @@ class CierreCajaService
     {
         $openOrders = Pedido::query()
             ->where('establecimiento_id', $sesion->establecimiento_id)
-            ->where('estado_comercial', EstadoComercialPedido::ABIERTO->value)
+            ->whereIn('estado_comercial', [
+                EstadoComercialPedido::ABIERTO->value,
+                EstadoComercialPedido::PENDIENTE_COBRO->value,
+            ])
             ->count();
 
         if ($openOrders > 0) {

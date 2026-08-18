@@ -6,6 +6,7 @@ use App\Contracts\EstablishmentContextInterface;
 use App\Enums\EstadoImpresion;
 use App\Enums\TipoImpresora;
 use App\Enums\TipoTrabajoImpresion;
+use App\Jobs\ProcessPrintJob;
 use App\Models\Impresora;
 use App\Models\Pedido;
 use App\Models\TrabajoImpresion;
@@ -15,22 +16,17 @@ use Illuminate\Auth\Access\AuthorizationException;
 class ReprintTicket
 {
     public function __construct(
-        private readonly QueueCustomerTicket $customerTicket,
+        private readonly RenderCustomerTicket $ticketRenderer,
         private readonly EstablishmentContextInterface $establishmentContext,
     ) {}
 
     public function handle(Pedido $pedido, User $actor, string $motivo = 'Reimpresión manual'): QueueTicketResult
     {
-        // Corrección de seguridad: un operador no puede reimprimir tickets de
-        // una sucursal distinta a la activa en el contexto.
         if ($pedido->establecimiento_id !== $this->establishmentContext->id()) {
             throw new AuthorizationException('No puedes reimprimir tickets de otra sucursal.');
         }
 
-        $printer = Impresora::query()
-            ->where('tipo', TipoImpresora::TICKET->value)
-            ->orderBy('id')
-            ->first();
+        $printer = Impresora::buscar(TipoImpresora::TICKET);
 
         if (! $printer) {
             return QueueTicketResult::noPrinter();
@@ -52,7 +48,7 @@ class ReprintTicket
                 return QueueTicketResult::failed('No existe ticket original ni pago registrado para este pedido.');
             }
 
-            $contenido = $this->customerTicket->renderContent($pedido, $pago, $actor);
+            $contenido = $this->ticketRenderer->render($pedido, $pago, $actor);
         }
 
         $trabajo = TrabajoImpresion::create([
@@ -65,7 +61,10 @@ class ReprintTicket
             'usuario_reimpresion_id' => $actor->getKey(),
             'estado' => EstadoImpresion::PENDIENTE,
             'contenido' => $contenido,
+            'original_uid' => hash('sha256', $pedido->getKey() . '|TICKET_REIMPRESION|' . now()->timestamp),
         ]);
+
+        ProcessPrintJob::dispatch($trabajo->getKey())->afterCommit();
 
         return QueueTicketResult::created($trabajo);
     }

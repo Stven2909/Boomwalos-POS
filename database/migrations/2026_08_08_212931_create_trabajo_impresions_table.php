@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('trabajo_impresion', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('impresora_id')->constrained('impresoras')->restrictOnDelete();
+            $table->foreignId('impresora_id')->nullable()->constrained('impresoras')->restrictOnDelete();
             $table->foreignId('tanda_id')->nullable()->constrained('tandas_pedido')->cascadeOnDelete(); // set si es comanda
             $table->foreignId('pedido_id')->nullable()->constrained('pedidos')->cascadeOnDelete(); // set si es ticket
             $table->enum('estado', ['PENDIENTE', 'IMPRESO', 'ERROR'])->default('PENDIENTE');

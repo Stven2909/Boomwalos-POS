@@ -5,7 +5,7 @@ namespace Tests\Feature;
 use App\Enums\EstadoComercialPedido;
 use App\Enums\EstadoLineaPedido;
 use App\Enums\EstadoMesa;
-use App\Enums\EstadoCocina;
+use App\Enums\TipoImpresion;
 use App\Enums\MetodoPago;
 use App\Enums\OrigenPedido;
 use App\Enums\TipoPedido;
@@ -21,11 +21,11 @@ use App\Models\Mesa;
 use App\Models\Pedido;
 use App\Models\Producto;
 use App\Models\SesionCaja;
+use App\Models\TrabajoImpresion;
 use App\Models\User;
 use App\Enums\TipoImpresora;
 use App\Services\PedidoService;
 use App\Services\CobroService;
-use App\Services\KitchenService;
 use Database\Seeders\RolesPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -120,7 +120,19 @@ class PointOfSaleFlowTest extends TestCase
         Impresora::create([
             'nombre' => 'Cocina',
             'tipo' => TipoImpresora::COMANDA,
-            'configuracion' => ['driver' => 'queue'],
+            'conexion' => 'RED',
+            'ip' => '192.168.1.100',
+            'puerto' => 9100,
+            'activa' => true,
+        ]);
+
+        Impresora::create([
+            'nombre' => 'Cajero',
+            'tipo' => TipoImpresora::TICKET,
+            'conexion' => 'RED',
+            'ip' => '192.168.1.101',
+            'puerto' => 9100,
+            'activa' => true,
         ]);
     }
 
@@ -129,10 +141,10 @@ class PointOfSaleFlowTest extends TestCase
         $service = app(PedidoService::class);
         $pedido = $service->startOrder(TipoPedido::MESA, $this->cashier, $this->table->getKey());
         $detail = $service->addProduct($pedido, $this->product, $this->cashier);
-        $batch = $service->sendPendingBatch($pedido, $this->cashier);
+        $job = $service->sendPendingBatch($pedido, $this->cashier);
 
-        $this->assertSame(1, $batch->numero_tanda);
-        $this->assertSame($batch->getKey(), $detail->fresh()->tanda_id);
+        $this->assertInstanceOf(TrabajoImpresion::class, $job);
+        $this->assertSame($job->getKey(), $detail->fresh()->tanda_id);
         $this->assertDatabaseHas('mesas', [
             'id' => $this->table->getKey(),
             'estado' => EstadoMesa::OCUPADA->value,
@@ -141,16 +153,13 @@ class PointOfSaleFlowTest extends TestCase
             'entidad_id' => $pedido->getKey(),
             'tipo_evento' => 'pedido_enviado_cocina',
         ]);
-        $printJob = $batch->fresh()->trabajosImpresion()->first();
-        $this->assertNotNull($printJob);
-        $this->assertSame('PENDIENTE', $printJob->estado->value);
-        $this->assertStringContainsString('Limonada fresca', $printJob->contenido);
+        $this->assertStringContainsString('Limonada fresca', $job->contenido);
     }
 
     public function test_selecting_an_occupied_table_reuses_the_open_order(): void
     {
         $existing = Pedido::create([
-                'numero_seguimiento' => 'POS-TEST-0001',
+            'numero_seguimiento' => 'POS-TEST-0001',
             'tipo_pedido' => TipoPedido::MESA,
             'mesa_id' => $this->table->getKey(),
             'establecimiento_id' => $this->establishment->getKey(),
@@ -233,17 +242,15 @@ class PointOfSaleFlowTest extends TestCase
         ], $this->cashier);
     }
 
-    public function test_resending_without_new_lines_returns_the_existing_batch(): void
+    public function test_resending_without_new_lines_throws_validation(): void
     {
         $service = app(PedidoService::class);
         $pedido = $service->startOrder(TipoPedido::MESA, $this->cashier, $this->table->getKey());
         $service->addProduct($pedido, $this->product, $this->cashier);
+        $service->sendPendingBatch($pedido, $this->cashier);
 
-        $firstBatch = $service->sendPendingBatch($pedido, $this->cashier);
-        $sameBatch = $service->sendPendingBatch($pedido, $this->cashier);
-
-        $this->assertSame($firstBatch->getKey(), $sameBatch->getKey());
-        $this->assertDatabaseCount('tandas_pedido', 1);
+        $this->expectException(\Illuminate\Validation\ValidationException::class);
+        $service->sendPendingBatch($pedido, $this->cashier);
     }
 
     public function test_new_pending_lines_after_a_first_send_create_a_second_batch(): void
@@ -252,18 +259,17 @@ class PointOfSaleFlowTest extends TestCase
         $pedido = $service->startOrder(TipoPedido::MESA, $this->cashier, $this->table->getKey());
 
         $firstDetail = $service->addProduct($pedido, $this->product, $this->cashier);
-        $firstBatch = $service->sendPendingBatch($pedido, $this->cashier);
-        $secondDetail = $service->addProduct($pedido, $this->product, $this->cashier);
-        $secondBatch = $service->sendPendingBatch($pedido, $this->cashier);
+        $firstJob = $service->sendPendingBatch($pedido, $this->cashier);
+        $secondDetail = $service->addProduct($pedido, $this->secondProduct, $this->cashier);
+        $secondJob = $service->sendPendingBatch($pedido, $this->cashier);
 
-        $this->assertNotSame($firstBatch->getKey(), $secondBatch->getKey());
-        $this->assertSame(2, $secondBatch->numero_tanda);
-        $this->assertSame($firstBatch->getKey(), $firstDetail->fresh()->tanda_id);
-        $this->assertSame($secondBatch->getKey(), $secondDetail->fresh()->tanda_id);
-        $this->assertDatabaseCount('tandas_pedido', 2);
+        $this->assertNotSame($firstJob->getKey(), $secondJob->getKey());
+        $this->assertSame($firstJob->getKey(), $firstDetail->fresh()->tanda_id);
+        $this->assertSame($secondJob->getKey(), $secondDetail->fresh()->tanda_id);
+        $this->assertDatabaseCount('trabajo_impresion', 2);
     }
 
-    public function test_cash_payment_registers_change_and_keeps_the_table_occupied(): void
+    public function test_cash_payment_registers_change_and_frees_the_table(): void
     {
         $service = app(PedidoService::class);
         $pedido = $service->startOrder(TipoPedido::MESA, $this->cashier, $this->table->getKey());
@@ -282,11 +288,11 @@ class PointOfSaleFlowTest extends TestCase
         $this->assertEquals('6.00', $payment->cambio_devuelto);
         $this->assertDatabaseHas('pedidos', [
             'id' => $pedido->getKey(),
-            'estado_comercial' => EstadoComercialPedido::COBRADO->value,
+            'estado_comercial' => EstadoComercialPedido::CERRADO->value,
         ]);
         $this->assertDatabaseHas('mesas', [
             'id' => $this->table->getKey(),
-            'estado' => EstadoMesa::OCUPADA->value,
+            'estado' => EstadoMesa::LIBRE->value,
         ]);
         $this->assertDatabaseHas('evento_auditorias', [
             'entidad_id' => $pedido->getKey(),
@@ -313,15 +319,27 @@ class PointOfSaleFlowTest extends TestCase
         $this->assertEquals('0.00', $payment->cambio_devuelto);
     }
 
-    public function test_pending_lines_block_payment(): void
+    public function test_charge_without_sending_to_kitchen_first_creates_print_jobs(): void
     {
         $service = app(PedidoService::class);
-        $pedido = $service->startOrder(TipoPedido::MESA, $this->cashier, $this->table->getKey());
+        $pedido = $service->startOrder(TipoPedido::PARA_LLEVAR, $this->cashier);
         $service->addProduct($pedido, $this->product, $this->cashier);
 
-        $this->expectException(\Illuminate\Validation\ValidationException::class);
+        $payment = app(CobroService::class)->charge(
+            $pedido,
+            MetodoPago::EFECTIVO,
+            '10.00',
+            $this->cashier,
+        );
 
-        app(CobroService::class)->charge($pedido, MetodoPago::EFECTIVO, '4.00', $this->cashier);
+        $this->assertSame($pedido->getKey(), $payment->pedido_id);
+        $this->assertDatabaseHas('pedidos', [
+            'id' => $pedido->getKey(),
+            'estado_comercial' => EstadoComercialPedido::CERRADO->value,
+        ]);
+
+        $printJobs = TrabajoImpresion::where('pedido_id', $pedido->getKey())->get();
+        $this->assertCount(2, $printJobs);
     }
 
     public function test_second_payment_is_rejected_and_does_not_duplicate_payment(): void
@@ -336,7 +354,6 @@ class PointOfSaleFlowTest extends TestCase
             app(CobroService::class)->charge($pedido, MetodoPago::TARJETA, null, $this->cashier, ['aprobada' => true, 'referencia' => 'TEST-REF']);
             $this->fail('El segundo cobro debía ser rechazado.');
         } catch (\Illuminate\Validation\ValidationException) {
-            // La cuenta debe permanecer con un solo pago.
         }
 
         $this->assertDatabaseCount('pagos', 1);
@@ -386,7 +403,7 @@ class PointOfSaleFlowTest extends TestCase
         ]);
     }
 
-    public function test_device_order_sends_to_cash_register_without_kitchen_batch(): void
+    public function test_device_order_sends_to_cash_register_without_print_jobs(): void
     {
         $service = app(PedidoService::class);
         $pedido = $service->startOrder(TipoPedido::PARA_LLEVAR, $this->cashier, null, OrigenPedido::DISPOSITIVO);
@@ -397,7 +414,7 @@ class PointOfSaleFlowTest extends TestCase
         $pedido->refresh();
         $this->assertSame(OrigenPedido::DISPOSITIVO, $pedido->origen_pedido);
         $this->assertSame(EstadoComercialPedido::PENDIENTE_COBRO, $pedido->estado_comercial);
-        $this->assertDatabaseCount('tandas_pedido', 0);
+        $this->assertDatabaseCount('trabajo_impresion', 0);
         $this->assertDatabaseCount('pagos', 0);
         $this->assertDatabaseMissing('evento_auditorias', [
             'entidad_id' => $pedido->getKey(),
@@ -438,7 +455,7 @@ class PointOfSaleFlowTest extends TestCase
         $service->addProduct($pedido, $this->product, $this->cashier);
         $service->sendToCashRegister($pedido, $this->cashier);
 
-        [$payment, $tanda] = app(CobroService::class)->chargeAndSend(
+        $payment = app(CobroService::class)->charge(
             $pedido,
             MetodoPago::TARJETA,
             null,
@@ -447,15 +464,9 @@ class PointOfSaleFlowTest extends TestCase
         );
 
         $this->assertSame($pedido->getKey(), $payment->pedido_id);
-        $this->assertNotNull($tanda);
-        $this->assertSame(1, $tanda->numero_tanda);
         $this->assertDatabaseHas('pedidos', [
             'id' => $pedido->getKey(),
-            'estado_comercial' => EstadoComercialPedido::COBRADO->value,
-        ]);
-        $this->assertDatabaseHas('tandas_pedido', [
-            'id' => $tanda->getKey(),
-            'estado_cocina' => EstadoCocina::PENDIENTE->value,
+            'estado_comercial' => EstadoComercialPedido::CERRADO->value,
         ]);
     }
 
@@ -499,13 +510,13 @@ class PointOfSaleFlowTest extends TestCase
         $this->assertSame(4.00, $page->orderTotal($deviceOrder->fresh(['detalles'])));
     }
 
-    public function test_charge_and_send_creates_one_payment_and_one_batch(): void
+    public function test_charge_and_send_creates_payment_and_print_jobs(): void
     {
         $service = app(PedidoService::class);
         $pedido = $service->startOrder(TipoPedido::PARA_LLEVAR, $this->cashier);
         $detail = $service->addProduct($pedido, $this->product, $this->cashier);
 
-        [$payment, $tanda] = app(CobroService::class)->chargeAndSend(
+        [$payment] = app(CobroService::class)->chargeAndSend(
             $pedido,
             MetodoPago::EFECTIVO,
             '10.00',
@@ -513,21 +524,16 @@ class PointOfSaleFlowTest extends TestCase
         );
 
         $this->assertSame($pedido->getKey(), $payment->pedido_id);
-        $this->assertNotNull($tanda);
-        $this->assertSame(1, $tanda->numero_tanda);
-        $this->assertSame($tanda->getKey(), $detail->fresh()->tanda_id);
         $this->assertDatabaseCount('pagos', 1);
-        $this->assertDatabaseCount('tandas_pedido', 1);
         $this->assertDatabaseHas('pedidos', [
             'id' => $pedido->getKey(),
-            'estado_comercial' => EstadoComercialPedido::COBRADO->value,
+            'estado_comercial' => EstadoComercialPedido::CERRADO->value,
         ]);
-        $this->assertDatabaseHas('evento_auditorias', [
-            'entidad_id' => $pedido->getKey(),
-            'tipo_evento' => 'pedido_enviado_cocina',
-        ]);
-        $printJob = $tanda->fresh()->trabajosImpresion()->first();
-        $this->assertNotNull($printJob);
+
+        $printJobs = TrabajoImpresion::where('pedido_id', $pedido->getKey())->get();
+        $this->assertCount(2, $printJobs);
+        $this->assertTrue($printJobs->contains('tipo_trabajo', 'COMANDA'));
+        $this->assertTrue($printJobs->contains('tipo_trabajo', 'TICKET'));
     }
 
     public function test_charge_and_send_rejects_second_attempt_without_duplicating(): void
@@ -542,14 +548,12 @@ class PointOfSaleFlowTest extends TestCase
             app(CobroService::class)->chargeAndSend($pedido, MetodoPago::TARJETA, null, $this->cashier, ['aprobada' => true, 'referencia' => 'TEST-REF']);
             $this->fail('El segundo cobro debía ser rechazado.');
         } catch (\Illuminate\Validation\ValidationException) {
-            // El pedido cobrado no puede volver a cobrarse.
         }
 
         $this->assertDatabaseCount('pagos', 1);
-        $this->assertDatabaseCount('tandas_pedido', 1);
     }
 
-    public function test_pending_device_order_generates_no_payment_and_no_comanda(): void
+    public function test_pending_device_order_generates_no_payment_and_no_print_jobs(): void
     {
         $service = app(PedidoService::class);
         $pedido = $service->startOrder(TipoPedido::PARA_LLEVAR, $this->cashier, null, OrigenPedido::DISPOSITIVO);
@@ -557,7 +561,6 @@ class PointOfSaleFlowTest extends TestCase
         $service->sendToCashRegister($pedido, $this->cashier);
 
         $this->assertDatabaseCount('pagos', 0);
-        $this->assertDatabaseCount('tandas_pedido', 0);
         $this->assertDatabaseCount('trabajo_impresion', 0);
         $this->assertSame(EstadoComercialPedido::PENDIENTE_COBRO, $pedido->fresh()->estado_comercial);
     }
@@ -592,46 +595,33 @@ class PointOfSaleFlowTest extends TestCase
             $service->assignTable($second, $this->table, $this->cashier);
             $this->fail('No debía permitirse ocupar una mesa con cuenta abierta.');
         } catch (\Illuminate\Validation\ValidationException) {
-            // La mesa sigue ocupada por la primera cuenta.
         }
 
         $this->assertSame($first->getKey(), $this->table->fresh()->pedidos()->latest('id')->first()->getKey());
     }
 
-    public function test_ready_batch_appears_on_delivery_board(): void
+    public function test_charge_creates_comanda_and_ticket_print_jobs(): void
     {
         $service = app(PedidoService::class);
         $pedido = $service->startOrder(TipoPedido::PARA_LLEVAR, $this->cashier);
         $service->addProduct($pedido, $this->product, $this->cashier);
-        [, $tanda] = app(CobroService::class)->chargeAndSend($pedido, MetodoPago::TARJETA, null, $this->cashier, ['aprobada' => true, 'referencia' => 'TEST-REF']);
 
-        app(KitchenService::class)->transition($tanda, EstadoCocina::EN_PREPARACION, $this->cashier);
-        app(KitchenService::class)->transition($tanda, EstadoCocina::LISTA, $this->cashier);
+        app(CobroService::class)->charge($pedido, MetodoPago::TARJETA, null, $this->cashier, ['aprobada' => true, 'referencia' => 'TEST-REF']);
 
-        $page = app(\App\Filament\Pages\Pos\EntregaDisplay::class);
-        $this->assertTrue($page->readyBatches->contains('id', $tanda->getKey()));
-        $this->assertSame('Para llevar · Mostrador', $page->locationLabel($tanda->fresh(['pedido'])));
-
-        $this->actingAs($this->cashier)
-            ->get(\App\Filament\Pages\Pos\EntregaDisplay::getUrl())
-            ->assertSuccessful();
+        $printJobs = TrabajoImpresion::where('pedido_id', $pedido->getKey())->get();
+        $this->assertCount(2, $printJobs);
+        $this->assertTrue($printJobs->contains('tipo_trabajo', 'COMANDA'));
+        $this->assertTrue($printJobs->contains('tipo_trabajo', 'TICKET'));
     }
 
-    public function test_table_is_freed_after_delivery_of_last_batch(): void
+    public function test_paid_order_is_closed_and_table_freed_immediately(): void
     {
         $service = app(PedidoService::class);
         $pedido = $service->startOrder(TipoPedido::MESA, $this->cashier, $this->table->getKey());
         $service->addProduct($pedido, $this->product, $this->cashier);
-        [, $tanda] = app(CobroService::class)->chargeAndSend($pedido, MetodoPago::TARJETA, null, $this->cashier, ['aprobada' => true, 'referencia' => 'TEST-REF']);
+        $service->sendPendingBatch($pedido, $this->cashier);
 
-        $this->assertDatabaseHas('mesas', [
-            'id' => $this->table->getKey(),
-            'estado' => EstadoMesa::OCUPADA->value,
-        ]);
-
-        app(KitchenService::class)->transition($tanda, EstadoCocina::EN_PREPARACION, $this->cashier);
-        app(KitchenService::class)->transition($tanda, EstadoCocina::LISTA, $this->cashier);
-        app(KitchenService::class)->transition($tanda, EstadoCocina::ENTREGADA, $this->cashier);
+        app(CobroService::class)->charge($pedido, MetodoPago::TARJETA, null, $this->cashier, ['aprobada' => true, 'referencia' => 'TEST-REF']);
 
         $this->assertDatabaseHas('pedidos', [
             'id' => $pedido->getKey(),
@@ -688,10 +678,8 @@ class PointOfSaleFlowTest extends TestCase
             app(CobroService::class)->chargeAndSend($pedido, MetodoPago::TARJETA, null, $admin, ['aprobada' => true, 'referencia' => 'TEST-REF']);
             $this->fail('Un pedido cancelado no puede cobrarse.');
         } catch (\Illuminate\Validation\ValidationException) {
-            // Rechazado: el estado CANCELADO no es cobrable.
         }
 
         $this->assertDatabaseCount('pagos', 0);
-        $this->assertDatabaseCount('tandas_pedido', 0);
     }
 }

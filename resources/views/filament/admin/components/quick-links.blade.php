@@ -6,12 +6,6 @@
         POS
     </a>
     <a
-        href="{{ \App\Filament\Pages\Kitchen\KitchenDisplay::getUrl() }}"
-        class="rounded-lg px-3 py-1.5 text-sm font-semibold text-gray-500 transition hover:bg-[var(--bw-primary)]/5 hover:text-[var(--bw-primary)]"
-    >
-        Kitchen
-    </a>
-    <a
         href="{{ \App\Filament\Pages\Pos\TableSelection::getUrl() }}"
         class="rounded-lg px-3 py-1.5 text-sm font-semibold text-gray-500 transition hover:bg-[var(--bw-primary)]/5 hover:text-[var(--bw-primary)]"
     >

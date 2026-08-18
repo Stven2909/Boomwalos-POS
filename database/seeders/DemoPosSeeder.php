@@ -38,7 +38,24 @@ class DemoPosSeeder extends Seeder
 
         Impresora::firstOrCreate(
             ['nombre' => 'Cocina', 'tipo' => TipoImpresora::COMANDA],
-            ['configuracion' => ['driver' => 'queue']],
+            [
+                'conexion' => \App\Enums\TipoConexionImpresora::RED->value,
+                'ip' => '192.168.1.100',
+                'puerto' => 9100,
+                'activa' => true,
+                'establecimiento_id' => $establecimiento->getKey(),
+            ],
+        );
+
+        Impresora::firstOrCreate(
+            ['nombre' => 'Cajero', 'tipo' => TipoImpresora::TICKET],
+            [
+                'conexion' => \App\Enums\TipoConexionImpresora::RED->value,
+                'ip' => '192.168.1.101',
+                'puerto' => 9100,
+                'activa' => true,
+                'establecimiento_id' => $establecimiento->getKey(),
+            ],
         );
 
         $groups = [];

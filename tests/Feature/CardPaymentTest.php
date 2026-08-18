@@ -88,7 +88,7 @@ class CardPaymentTest extends TestCase
         );
 
         $this->assertStringStartsWith('REF-', $pago->referencia_externa);
-        $this->assertSame('COBRADO', $pedido->fresh()->estado_comercial->value);
+        $this->assertSame('CERRADO', $pedido->fresh()->estado_comercial->value);
     }
 
     public function test_charge_page_builds_cash_amount_with_numpad(): void

@@ -36,11 +36,11 @@
                 class="bw-cashier-modules"
                 aria-label="Módulos disponibles"
                 x-data="{
-                    active: ['punto-de-venta', 'pedidos', 'mesas', 'cocina', 'clientes', 'informes'].includes(window.location.hash.slice(1))
+                    active: ['punto-de-venta', 'pedidos', 'mesas', 'clientes', 'informes'].includes(window.location.hash.slice(1))
                         ? window.location.hash.slice(1)
                         : 'punto-de-venta'
                 }"
-                @hashchange.window="active = ['punto-de-venta', 'pedidos', 'mesas', 'cocina', 'clientes', 'informes'].includes(window.location.hash.slice(1)) ? window.location.hash.slice(1) : 'punto-de-venta'"
+                @hashchange.window="active = ['punto-de-venta', 'pedidos', 'mesas', 'clientes', 'informes'].includes(window.location.hash.slice(1)) ? window.location.hash.slice(1) : 'punto-de-venta'"
             >
                 <a href="{{ \App\Filament\Pages\Pos\ServiceSelection::getUrl() }}" @click="active = 'punto-de-venta'" :class="{ 'bw-cashier-module-primary': active === 'punto-de-venta' }" :aria-current="active === 'punto-de-venta' ? 'page' : null" class="bw-cashier-module" data-module="punto-de-venta">
                     <span class="bw-cashier-module-icon" aria-hidden="true">
@@ -69,16 +69,6 @@
                     <span class="bw-cashier-module-copy">
                         <span class="bw-cashier-module-title">Mesas</span>
                         <span class="bw-cashier-module-description">Sala y terraza</span>
-                    </span>
-                </a>
-
-                <a href="{{ \App\Filament\Pages\Kitchen\KitchenDisplay::getUrl() }}" @click="active = 'cocina'" :class="{ 'bw-cashier-module-primary': active === 'cocina' }" :aria-current="active === 'cocina' ? 'page' : null" class="bw-cashier-module" data-module="cocina">
-                    <span class="bw-cashier-module-icon" aria-hidden="true">
-                        <x-heroicon-o-fire class="h-7 w-7" />
-                    </span>
-                    <span class="bw-cashier-module-copy">
-                        <span class="bw-cashier-module-title">Cocina</span>
-                        <span class="bw-cashier-module-description">Preparación en vivo</span>
                     </span>
                 </a>
 
@@ -146,7 +136,7 @@
                 </span>
             </a>
 
-            <a href="{{ \App\Filament\Pages\Kitchen\KitchenDisplay::getUrl() }}" class="bw-card bw-card-hover bw-btn group flex cursor-pointer flex-col p-6">
+            <a href="{{ \App\Filament\Pages\Pos\ListaPedidos::getUrl() }}" class="bw-card bw-card-hover bw-btn group flex cursor-pointer flex-col p-6">
                 <div class="flex items-start justify-between">
                     <span class="inline-flex h-12 w-12 items-center justify-center rounded-lg bg-[var(--bw-primary)]/10">
                         <x-heroicon-o-clipboard-document-list class="h-6 w-6 text-[var(--bw-primary)]" />
@@ -173,21 +163,6 @@
                 <h2 class="mt-5 text-lg font-bold text-[#1D1B1E]">Mesas</h2>
                 <p class="mt-1 text-sm leading-relaxed text-gray-500">
                     Asigna, abre y cierra mesas en el salón.
-                </p>
-            </a>
-
-            <a href="#" class="bw-card bw-card-hover bw-btn group flex cursor-pointer flex-col p-6">
-                <div class="flex items-start justify-between">
-                    <span class="inline-flex h-12 w-12 items-center justify-center rounded-lg bg-[var(--bw-primary)]/10">
-                        <x-heroicon-o-fire class="h-6 w-6 text-[var(--bw-primary)]" />
-                    </span>
-                    <span class="inline-flex items-center rounded-full bg-[var(--bw-primary)]/5 px-2.5 py-1 text-xs font-semibold text-[var(--bw-primary)]">
-                        En línea
-                    </span>
-                </div>
-                <h2 class="mt-5 text-lg font-bold text-[#1D1B1E]">Cocina</h2>
-                <p class="mt-1 text-sm leading-relaxed text-gray-500">
-                    Visualiza los pedidos en cola y su preparación.
                 </p>
             </a>
 

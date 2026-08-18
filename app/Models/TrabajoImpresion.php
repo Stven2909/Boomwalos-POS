@@ -23,6 +23,9 @@ class TrabajoImpresion extends Model
         'original_uid',
         'estado',
         'contenido',
+        'intentos',
+        'ultimo_error',
+        'impreso_at',
     ];
 
     protected function casts(): array
@@ -31,6 +34,8 @@ class TrabajoImpresion extends Model
             'es_reimpresion' => 'boolean',
             'tipo_trabajo' => TipoTrabajoImpresion::class,
             'estado' => EstadoImpresion::class,
+            'intentos' => 'integer',
+            'impreso_at' => 'datetime',
         ];
     }
 
@@ -62,5 +67,15 @@ class TrabajoImpresion extends Model
     public function isTicket(): bool
     {
         return $this->tipo_trabajo === TipoTrabajoImpresion::TICKET;
+    }
+
+    public function isPending(): bool
+    {
+        return $this->estado === EstadoImpresion::PENDIENTE;
+    }
+
+    public function isFailed(): bool
+    {
+        return $this->estado === EstadoImpresion::ERROR;
     }
 }

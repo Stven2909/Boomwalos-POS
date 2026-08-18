@@ -4,8 +4,6 @@ namespace App\Providers\Filament;
 
 use App\Filament\Pages\Dashboard;
 use App\Filament\Pages\Auth\Login;
-use App\Filament\Pages\Kitchen\KitchenDisplay;
-use App\Filament\Pages\Pos\EntregaDisplay;
 use App\Filament\Pages\Pos\ListaPedidos;
 use App\Filament\Pages\Pos\ServiceSelection;
 use App\Contracts\BrandingServiceInterface;
@@ -57,16 +55,6 @@ class AdminPanelProvider extends PanelProvider
                 NavigationItem::make('Pedidos')
                     ->icon('heroicon-o-clipboard-document-list')
                     ->url(fn (): string => ListaPedidos::getUrl()),
-                NavigationItem::make('Cocina')
-                    ->icon('heroicon-o-fire')
-                    ->url(fn (): string => KitchenDisplay::getUrl())
-                    ->visible(fn (): bool => auth()->user()?->can('operar_cocina') ?? false)
-                    ->isActiveWhen(fn (): bool => request()->routeIs('filament.admin.pages.cocina')),
-                NavigationItem::make('Entrega')
-                    ->icon('heroicon-o-shopping-bag')
-                    ->url(fn (): string => EntregaDisplay::getUrl())
-                    ->visible(fn (): bool => auth()->user()?->can('operar_cocina') ?? false)
-                    ->isActiveWhen(fn (): bool => request()->routeIs('filament.admin.pages.entrega')),
                 NavigationItem::make('Clientes')
                     ->icon('heroicon-o-users')
                     ->url('#'),

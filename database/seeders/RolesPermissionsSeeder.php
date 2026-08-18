@@ -16,7 +16,6 @@ class RolesPermissionsSeeder extends Seeder
         $permissions = [
             'crear_pedido',
             'cobrar_pedido',
-            'operar_cocina',
             'cancelar_pedido',
             'aplicar_descuento',
             'gestionar_productos',
@@ -29,6 +28,8 @@ class RolesPermissionsSeeder extends Seeder
             'abrir_caja',
             'cerrar_caja',
             'ver_reportes',
+            'ver_impresoras',
+            'gestionar_impresoras',
             'gestionar_solicitudes_fiscales',
             'gestionar_configuracion_fiscal',
             'ver_ventas_fiscales',
@@ -46,7 +47,6 @@ class RolesPermissionsSeeder extends Seeder
         $administrador->syncPermissions([
             'crear_pedido',
             'cobrar_pedido',
-            'operar_cocina',
             'cancelar_pedido',
             'gestionar_productos',
             'gestionar_combos',
@@ -58,6 +58,8 @@ class RolesPermissionsSeeder extends Seeder
             'abrir_caja',
             'cerrar_caja',
             'ver_reportes',
+            'ver_impresoras',
+            'gestionar_impresoras',
             'gestionar_solicitudes_fiscales',
             'gestionar_configuracion_fiscal',
             'ver_ventas_fiscales',
@@ -68,9 +70,9 @@ class RolesPermissionsSeeder extends Seeder
         $cajero->syncPermissions([
             'crear_pedido',
             'cobrar_pedido',
-            'operar_cocina',
             'abrir_caja',
             'cerrar_caja',
+            'ver_impresoras',
         ]);
 
         // aplicar_descuento queda creado como permiso existente pero SIN asignar,

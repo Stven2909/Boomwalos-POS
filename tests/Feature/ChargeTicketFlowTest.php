@@ -69,7 +69,7 @@ class ChargeTicketFlowTest extends TestCase
         ]);
     }
 
-    public function test_charge_and_send_creates_ticket_and_comanda_inside_transaction(): void
+    public function test_charge_creates_comanda_and_ticket_jobs_with_printers(): void
     {
         Impresora::create([
             'nombre' => 'Ticket',
@@ -77,7 +77,7 @@ class ChargeTicketFlowTest extends TestCase
             'configuracion' => ['driver' => 'queue'],
         ]);
 
-        [$payment, $tanda, $ticketResult] = app(CobroService::class)->chargeAndSend(
+        $pago = app(CobroService::class)->charge(
             $this->newOrder(),
             MetodoPago::TARJETA,
             null,
@@ -85,25 +85,25 @@ class ChargeTicketFlowTest extends TestCase
             ['aprobada' => true, 'referencia' => 'TEST-REF'],
         );
 
-        $this->assertNotNull($ticketResult->trabajo);
-        $this->assertSame('TICKET', $ticketResult->trabajo->tipo_trabajo->value);
         $this->assertDatabaseHas('trabajo_impresion', [
-            'id' => $ticketResult->trabajo->getKey(),
-            'tipo_trabajo' => 'TICKET',
-            'es_reimpresion' => 0,
+            'pedido_id' => $pago->pedido_id,
+            'tipo_trabajo' => 'COMANDA',
+            'estado' => 'PENDIENTE',
         ]);
-        $this->assertDatabaseHas('tandas_pedido', [
-            'id' => $tanda->getKey(),
+        $this->assertDatabaseHas('trabajo_impresion', [
+            'pedido_id' => $pago->pedido_id,
+            'tipo_trabajo' => 'TICKET',
+            'estado' => 'PENDIENTE',
         ]);
         $this->assertDatabaseHas('evento_auditorias', [
-            'entidad_id' => $payment->pedido_id,
+            'entidad_id' => $pago->pedido_id,
             'tipo_evento' => 'ticket_en_cola',
         ]);
     }
 
-    public function test_charge_without_ticket_printer_succeeds_and_audits(): void
+    public function test_charge_without_ticket_printer_creates_error_job(): void
     {
-        [$payment] = app(CobroService::class)->chargeAndSend(
+        $pago = app(CobroService::class)->charge(
             $this->newOrder(),
             MetodoPago::TARJETA,
             null,
@@ -112,11 +112,16 @@ class ChargeTicketFlowTest extends TestCase
         );
 
         $this->assertDatabaseCount('pagos', 1);
-        $this->assertDatabaseHas('evento_auditorias', [
-            'entidad_id' => $payment->pedido_id,
-            'tipo_evento' => 'ticket_sin_impresora',
+        $this->assertDatabaseHas('trabajo_impresion', [
+            'pedido_id' => $pago->pedido_id,
+            'tipo_trabajo' => 'COMANDA',
+            'estado' => 'PENDIENTE',
         ]);
-        $this->assertDatabaseMissing('trabajo_impresion', ['tipo_trabajo' => 'TICKET']);
+        $this->assertDatabaseHas('trabajo_impresion', [
+            'pedido_id' => $pago->pedido_id,
+            'tipo_trabajo' => 'TICKET',
+            'estado' => 'ERROR',
+        ]);
     }
 
     public function test_lista_pedidos_reprint_action_queues_a_reprint(): void
@@ -128,7 +133,7 @@ class ChargeTicketFlowTest extends TestCase
         ]);
 
         $pedido = $this->newOrder();
-        app(CobroService::class)->chargeAndSend($pedido, MetodoPago::TARJETA, null, $this->cashier, ['aprobada' => true, 'referencia' => 'TEST-REF']);
+        app(CobroService::class)->charge($pedido, MetodoPago::TARJETA, null, $this->cashier, ['aprobada' => true, 'referencia' => 'TEST-REF']);
 
         $this->actingAs($this->cashier);
 

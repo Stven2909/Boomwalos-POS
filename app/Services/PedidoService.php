@@ -2,23 +2,27 @@
 
 namespace App\Services;
 
+use App\Application\Printing\RenderKitchenComanda;
 use App\Contracts\AuditLoggerInterface;
 use App\Contracts\EstablishmentContextInterface;
-use App\Contracts\KitchenDispatcherInterface;
 use App\Enums\DisponibilidadProducto;
-use App\Enums\EstadoCocina;
 use App\Enums\EstadoComercialPedido;
+use App\Enums\EstadoImpresion;
 use App\Enums\EstadoLineaPedido;
 use App\Enums\EstadoMesa;
 use App\Enums\OrigenPedido;
+use App\Enums\TipoImpresora;
 use App\Enums\TipoPedido;
+use App\Enums\TipoTrabajoImpresion;
+use App\Jobs\ProcessPrintJob;
 use App\Models\Combo;
 use App\Models\DetallePedido;
+use App\Models\Impresora;
 use App\Models\Mesa;
 use App\Models\Pedido;
 use App\Models\Producto;
 use App\Models\SesionCaja;
-use App\Models\TandaPedido;
+use App\Models\TrabajoImpresion;
 use App\Models\User;
 use App\Services\Orders\ComboSelectionValidator;
 use App\Services\Orders\PedidoNumberService;
@@ -31,10 +35,10 @@ class PedidoService
 {
     public function __construct(
         private readonly EstablishmentContextInterface $establishmentContext,
-        private readonly KitchenDispatcherInterface $kitchenDispatcher,
         private readonly AuditLoggerInterface $auditLogger,
         private readonly ComboSelectionValidator $comboSelectionValidator,
         private readonly PedidoNumberService $pedidoNumberService,
+        private readonly RenderKitchenComanda $comandaRenderer,
     ) {}
 
     public function startOrder(TipoPedido $tipo, User $actor, ?int $mesaId = null, OrigenPedido $origen = OrigenPedido::CAJA): Pedido
@@ -351,9 +355,9 @@ class PedidoService
         });
     }
 
-    public function sendPendingBatch(Pedido $pedido, User $actor): TandaPedido
+    public function sendPendingBatch(Pedido $pedido, User $actor): TrabajoImpresion
     {
-        return DB::transaction(function () use ($pedido, $actor): TandaPedido {
+        return DB::transaction(function () use ($pedido, $actor): TrabajoImpresion {
             $pedido = $this->lockPedido($pedido);
             $this->ensureEditable($pedido);
 
@@ -364,37 +368,33 @@ class PedidoService
                 ->get();
 
             if ($pendingLines->isEmpty()) {
-                $latestBatch = $pedido->tandas()->latest('id')->first();
-
-                if ($latestBatch) {
-                    return $latestBatch->load('detalles.producto');
-                }
-
                 throw ValidationException::withMessages([
                     'pedido' => 'Agrega al menos un producto nuevo antes de enviar a cocina.',
                 ]);
             }
 
-            $numeroTanda = ((int) $pedido->tandas()->max('numero_tanda')) + 1;
-            $tanda = $pedido->tandas()->create([
-                'numero_tanda' => $numeroTanda,
-                'estado_cocina' => EstadoCocina::PENDIENTE,
+            $printer = Impresora::buscar(TipoImpresora::COMANDA);
+            $contenido = $this->comandaRenderer->render($pedido);
+            $uid = hash('sha256', $pedido->getKey() . '|COMANDA|' . now()->timestamp . '|' . uniqid('', true));
+
+            $job = TrabajoImpresion::create([
+                'impresora_id' => $printer?->getKey(),
+                'pedido_id' => $pedido->getKey(),
+                'tipo_trabajo' => TipoTrabajoImpresion::COMANDA,
+                'estado' => $printer ? EstadoImpresion::PENDIENTE : EstadoImpresion::ERROR,
+                'contenido' => $contenido,
+                'original_uid' => $uid,
+                'ultimo_error' => $printer ? null : 'No hay impresora de comanda configurada.',
             ]);
 
-            $pedido->detalles()
-                ->whereIn('id', $pendingLines->modelKeys())
-                ->update(['tanda_id' => $tanda->getKey()]);
+            $pendingLines->each(fn (DetallePedido $detalle): bool => $detalle->update(['tanda_id' => $job->getKey()]));
 
-            $printJob = $this->kitchenDispatcher->dispatch($tanda);
-
-            $this->audit($pedido, $actor, $printJob ? 'comanda_en_cola' : 'comanda_sin_impresora', [
-                'tanda_id' => $tanda->getKey(),
-                'trabajo_impresion_id' => $printJob?->getKey(),
+            $this->audit($pedido, $actor, $printer ? 'comanda_en_cola' : 'comanda_sin_impresora', [
+                'trabajo_impresion_id' => $job->getKey(),
             ]);
 
             $this->audit($pedido, $actor, 'pedido_enviado_cocina', [
-                'tanda_id' => $tanda->getKey(),
-                'numero_tanda' => $tanda->numero_tanda,
+                'trabajo_impresion_id' => $job->getKey(),
                 'detalles' => $pendingLines->map(fn (DetallePedido $detalle): array => [
                     'id' => $detalle->getKey(),
                     'producto_id' => $detalle->producto_id,
@@ -402,7 +402,11 @@ class PedidoService
                 ])->values()->all(),
             ]);
 
-            return $tanda->load('detalles.producto');
+            if ($printer) {
+                ProcessPrintJob::dispatch($job->getKey())->afterCommit();
+            }
+
+            return $job;
         });
     }
 
