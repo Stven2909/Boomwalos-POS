@@ -14,15 +14,23 @@ class TicketPdfController extends Controller
         private readonly PdfTicketService $pdfTicketService,
     ) {}
 
-    public function verTrabajoPdf(TrabajoImpresion $trabajo): Response
+    public function verTrabajoPdf(TrabajoImpresion|int|string $trabajo): Response
     {
-        return $this->pdfTicketService->streamJobPdf($trabajo);
+        $job = $trabajo instanceof TrabajoImpresion
+            ? $trabajo
+            : TrabajoImpresion::query()->findOrFail($trabajo);
+
+        return $this->pdfTicketService->streamJobPdf($job);
     }
 
-    public function verPruebaPdf(Impresora $impresora): Response
+    public function verPruebaPdf(Impresora|int|string $impresora): Response
     {
-        $pdf = $this->pdfTicketService->generateTestPdf($impresora->nombre, $impresora->tipo->label());
+        $printer = $impresora instanceof Impresora
+            ? $impresora
+            : Impresora::query()->findOrFail($impresora);
 
-        return $pdf->stream("Prueba-{$impresora->nombre}.pdf");
+        $pdf = $this->pdfTicketService->generateTestPdf($printer->nombre, $printer->tipo->label());
+
+        return $pdf->stream("Prueba-{$printer->nombre}.pdf");
     }
 }

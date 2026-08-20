@@ -9,7 +9,7 @@
             size: 80mm {{ $altoMm ?? 200 }}mm;
         }
         body {
-            font-family: 'Courier New', Courier, 'DejaVu Sans Mono', monospace;
+            font-family: Courier, monospace;
             font-size: 11.5px;
             line-height: 1.3;
             color: #000;

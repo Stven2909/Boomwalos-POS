@@ -5,12 +5,18 @@ namespace App\Services\Printing;
 use App\Models\TrabajoImpresion;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Barryvdh\DomPDF\PDF as DomPdfWrapper;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Storage;
 
 class PdfTicketService
 {
     public function renderToPdf(string $contenido, string $titulo = 'Ticket'): DomPdfWrapper
     {
+        $fontDir = storage_path('fonts');
+        if (! is_dir($fontDir)) {
+            @mkdir($fontDir, 0775, true);
+        }
+
         $lineas = explode("\n", $contenido);
         $totalLineas = max(count($lineas), 15);
         $altoMm = max(120, (int) ($totalLineas * 5.5) + 30);
@@ -23,8 +29,15 @@ class PdfTicketService
             'altoMm' => $altoMm,
         ])
             ->setPaper([0, 0, $anchoPt, $altoPt], 'portrait')
-            ->setOption('isHtml5ParserEnabled', true)
-            ->setOption('isRemoteEnabled', true);
+            ->setOptions([
+                'font_dir' => $fontDir,
+                'font_cache' => $fontDir,
+                'temp_dir' => sys_get_temp_dir(),
+                'chroot' => base_path(),
+                'enable_remote' => true,
+                'default_font' => 'Courier',
+                'isHtml5ParserEnabled' => true,
+            ]);
     }
 
     public function saveForJob(TrabajoImpresion $job): string
@@ -38,7 +51,7 @@ class PdfTicketService
         return $fileName;
     }
 
-    public function streamJobPdf(TrabajoImpresion $job): \Illuminate\Http\Response
+    public function streamJobPdf(TrabajoImpresion $job): Response
     {
         $titulo = ($job->isTicket() ? 'Ticket #' : 'Comanda #') . $job->getKey();
         $pdf = $this->renderToPdf($job->contenido ?? '', $titulo);
@@ -46,7 +59,7 @@ class PdfTicketService
         return $pdf->stream("{$titulo}.pdf");
     }
 
-    public function generateTestPdf(string $nombreImpresora, string $tipo): \Barryvdh\DomPDF\PDF
+    public function generateTestPdf(string $nombreImpresora, string $tipo): DomPdfWrapper
     {
         $fecha = now()->setTimezone('America/El_Salvador')->format('d/m/Y H:i:s');
         $contenido = implode("\n", [
