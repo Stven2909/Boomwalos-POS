@@ -3,12 +3,14 @@
 namespace Tests\Feature\Portal;
 
 use App\Contracts\FiscalGatewayInterface;
+use App\Enums\DisponibilidadProducto;
 use App\Enums\EstadoComercialPedido;
 use App\Enums\EstadoDocumentoFiscal;
 use App\Enums\EstadoLineaPedido;
 use App\Enums\OrigenPedido;
 use App\Enums\TipoDocumento;
 use App\Enums\TipoPedido;
+use App\Models\Categoria;
 use App\Models\DocumentoFiscal;
 use App\Models\Establecimiento;
 use App\Models\Pago;
@@ -44,10 +46,17 @@ class PortalQrTest extends TestCase
             'direccion' => 'Calle Principal #123',
         ]);
 
+        $categoria = Categoria::create([
+            'nombre' => 'Pupusas',
+            'establecimiento_id' => $this->establecimiento->getKey(),
+        ]);
+
         $producto = Producto::create([
             'nombre' => 'Pupusa Suprema',
             'precio' => 2.50,
-            'disponibilidad' => 'disponible',
+            'categoria_id' => $categoria->getKey(),
+            'establecimiento_id' => $this->establecimiento->getKey(),
+            'disponibilidad' => DisponibilidadProducto::DISPONIBLE,
         ]);
 
         $this->pedido = Pedido::create([

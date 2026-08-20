@@ -90,3 +90,25 @@ protected function casts(): array
 }
 ```
 Incluso si la base de datos es extraída, el secreto permanece inaccesible sin la `APP_KEY`.
+
+---
+
+## 5. Onboarding y Aprovisionamiento Automático (`FiscalOnboardingService.php`)
+
+Para registrar un nuevo restaurante en la API Fiscal sin intervención manual, el sistema implementa el flujo de **Onboarding Automático**:
+
+1. **Endpoint de la API Fiscal:** `POST /api/v1/onboarding/emisor`
+2. **Cabeceras de Aprovisionamiento:**
+   - `X-Provisioning-Token: <PROVISIONING_TOKEN>` (token maestro definido en `.env`).
+   - `Accept: application/json`
+3. **Payload Enviado:**
+   - `ambiente`: `'00'` (Pruebas / Homologación) o `'01'` (Producción Oficial MH).
+   - `emisor`: `nit`, `nrc`, `nombre` (razón social), `giro`.
+   - `establecimiento`: `codigo_mh` (ej. `'0001'`), `nombre`.
+   - `punto_venta`: `codigo_mh` (ej. `'001'`), `nombre`.
+   - `credencial`: `p12_base64` (certificado del MH codificado en Base64), `password` (clave del certificado).
+4. **Respuesta y Guardado:**
+   - La API Fiscal valida el certificado, inicializa la sucursal, correlativos fiscales y devuelve `client_id` y `secret`.
+   - El POS guarda automáticamente las llaves en `configuraciones_fiscales` y activa `fiscal_habilitada = true`.
+5. **Selección Segura de Ambiente:**
+   - Permite al restaurante operar en **`00` (Pruebas)** durante la certificación y cambiar a **`01` (Producción)** cuando Hacienda autorice la emisión real en vivo.

@@ -37,14 +37,15 @@ Para resolver esto, se implementó una **Impresora Virtual con Renderizador Tér
 
 ---
 
-## 4. Especificaciones del PDF Térmico ([`PdfTicketService.php`](file:///f:/POSYSTEM/Boomwalos-POS/app/Services/Printing/PdfTicketService.php))
+## 4. Especificaciones del PDF Térmico y QR Gráfico ([`PdfTicketService.php`](file:///f:/POSYSTEM/Boomwalos-POS/app/Services/Printing/PdfTicketService.php))
 
 - **Ancho del Rollo:** `80 mm` (`226.77 pt`).
 - **Altura:** Dinámica calculada según la cantidad de líneas del ticket o comanda.
 - **Tipografía:** Monoespaciada (`Courier New`, `DejaVu Sans Mono`).
 - **Estilo:** Márgenes térmicos compactos (4mm), divisores punteados (`---`), totales destacados en negrita y encabezados centrados.
+- **Código QR Gráfico:** Generado localmente en Base64 con `chillerlan/php-qrcode` apuntando a `https://boomwalos.vercel.app/?tracking={id}`.
 - **Visualizador Web:** Disponible en `/admin/impresion/trabajo/{id}/pdf` y `/admin/impresion/prueba/{id}/pdf`.
-- **Compatibilidad:** Se puede previsualizar en cualquier navegador e imprimir en cualquier impresora convencional usando `Ctrl + P`.
+- **Blindaje y Fallback Automático:** Si el servidor en producción (ej. Cloudways) tiene problemas de permisos de escritura o librerías de fuentes de Dompdf, el sistema conmuta inmediatamente a [`ticket-fallback.blade.php`](file:///f:/POSYSTEM/Boomwalos-POS/resources/views/printing/ticket-fallback.blade.php), una vista HTML 80mm de alta fidelidad con disparo automático de `window.print()`.
 
 ---
 

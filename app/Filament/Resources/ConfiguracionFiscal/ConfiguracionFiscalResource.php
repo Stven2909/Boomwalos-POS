@@ -60,28 +60,51 @@ class ConfiguracionFiscalResource extends Resource
                                     ->label('Fiscal habilitada')
                                     ->helperText('Al activarlo, cada cobro generará una venta fiscal en la cola de envío.')
                                     ->default(false),
+                                Select::make('ambiente')
+                                    ->label('Ambiente de facturación')
+                                    ->options([
+                                        '00' => '🟡 Modo Pruebas / Homologación (00)',
+                                        '01' => '🟢 Modo Producción (01) - Oficial MH',
+                                    ])
+                                    ->default('00')
+                                    ->helperText('En "01 Producción", todos los comprobantes emitidos tienen validez legal y generan débito fiscal.')
+                                    ->required(),
                                 TextInput::make('razon_social')
-                                    ->label('Razón social')
+                                    ->label('Razón social / Nombre comercial')
                                     ->maxLength(200),
                                 TextInput::make('nit')
                                     ->label('NIT')
+                                    ->placeholder('0614-010190-101-1')
                                     ->maxLength(30),
                                 TextInput::make('nrc')
                                     ->label('NRC')
+                                    ->placeholder('123456-7')
                                     ->maxLength(30),
+                                TextInput::make('giro')
+                                    ->label('Giro comercial')
+                                    ->placeholder('Venta de comidas y bebidas')
+                                    ->maxLength(250),
+                                TextInput::make('codigo_establecimiento')
+                                    ->label('Código Establecimiento MH')
+                                    ->default('0001')
+                                    ->maxLength(10),
+                                TextInput::make('codigo_punto_venta')
+                                    ->label('Código Punto de Venta MH')
+                                    ->default('001')
+                                    ->maxLength(10),
                                 TextInput::make('cliente_key')
-                                    ->label('Clave del cliente')
+                                    ->label('Clave del cliente (Client-ID)')
                                     ->required()
                                     ->maxLength(100),
                                 TextInput::make('cliente_secret')
-                                    ->label('Secreto del cliente')
+                                    ->label('Secreto del cliente (Client Secret)')
                                     ->password()
                                     ->revealable()
-                                    ->helperText('Se guarda cifrado. En edición, déjalo vacío para conservarlo.')
+                                    ->helperText('Se guarda cifrado con AES-256. En edición, déjalo vacío para conservarlo.')
                                     ->required(fn (string $operation): bool => $operation === 'create')
                                     ->dehydrated(fn (?string $state): bool => filled($state)),
                                 TextInput::make('intentos_maximos')
-                                    ->label('Intentos máximos')
+                                    ->label('Intentos máximos de envío')
                                     ->numeric()
                                     ->required()
                                     ->default(3)
@@ -97,9 +120,16 @@ class ConfiguracionFiscalResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('establecimiento.nombre')->label('Establecimiento')->searchable()->sortable(),
-                IconColumn::make('fiscal_habilitada')->label('Habilitada')->boolean(),
-                TextColumn::make('cliente_key')->label('Clave del cliente')->searchable(),
-                TextColumn::make('intentos_maximos')->label('Intentos máximos')->alignCenter(),
+                TextColumn::make('ambiente')
+                    ->label('Ambiente')
+                    ->badge()
+                    ->color(fn (?string $state): string => $state === '01' ? 'success' : 'warning')
+                    ->formatStateUsing(fn (?string $state): string => $state === '01' ? '🟢 01 Producción' : '🟡 00 Pruebas')
+                    ->alignCenter(),
+                IconColumn::make('fiscal_habilitada')->label('Habilitada')->boolean()->alignCenter(),
+                TextColumn::make('razon_social')->label('Razón Social')->searchable(),
+                TextColumn::make('cliente_key')->label('Client ID')->searchable(),
+                TextColumn::make('intentos_maximos')->label('Intentos')->alignCenter(),
             ])
             ->recordActions([
                 EditAction::make()->label('Editar'),

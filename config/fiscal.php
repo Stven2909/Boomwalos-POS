@@ -17,9 +17,13 @@ return [
 
     'prefix' => env('FISCAL_API_PREFIX', '/api/fiscal/v1'),
 
-    'timeout' => (int) env('FISCAL_API_TIMEOUT', 10),
+    'timeout' => (int) env('FISCAL_API_TIMEOUT', 15),
 
     'gateway' => env('FISCAL_GATEWAY', 'http'),
+
+    'provisioning_token' => env('PROVISIONING_TOKEN', env('FISCAL_PROVISIONING_TOKEN')),
+
+    'onboarding_url' => env('FISCAL_ONBOARDING_URL', rtrim((string) env('FISCAL_API_URL', 'https://phplaravel-1581457-6620216.cloudwaysapps.com'), '/') . '/api/v1/onboarding/emisor'),
 
     'hmac' => [
         'header' => env('FISCAL_HMAC_HEADER', 'X-Signature'),

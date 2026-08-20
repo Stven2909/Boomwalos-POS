@@ -37,10 +37,41 @@ Permite al restaurante emitir un ticket de venta tradicional con un **código QR
 
 ---
 
-## 4. Estructura de Datos del Token QR
+## 4. Arquitectura de Endpoints WebFact (API REST)
 
-Para evitar que un comensal altere la URL o acceda a pedidos de otras mesas, el token QR se construye mediante un **hash opaco firmado**:
+El sistema expone dos capas de endpoints dedicados bajo `routes/api.php`:
 
-$$\text{Token QR} = \text{hash('sha256', tenant\_id + '|' + pedido\_id + '|' + total + '|' + secret)}$$
+### A. Endpoints Públicos para Clientes (`/api/v1/portal-qr`)
+- **`GET /api/v1/portal-qr/orden/{tracking}`:** Consulta el desglose de pupusas, combos, notas de cocina, montos y estado de solicitud por número de seguimiento o código corto.
+- **`GET /api/v1/portal-qr/estado?trackingPOS={tracking}`:** Consulta rápida compatible con WebFact retornando `estadoDTE`, `codigoGeneracion` y `selloRecepcion`.
+- **`POST /api/v1/portal-qr/solicitar`:** Recibe la petición del cliente (Factura 01 o CCF 03 con NIT, NRC, Razón Social, Giro, Dirección, Teléfono, Correo).
 
-Cuando el cliente escanea el QR, el sistema valida la firma del token, asegurando que el pedido exista, pertenezca al restaurante correcto y corresponda al monto cobrado.
+### B. Endpoints Administrativos Protegidos (`/api/v1/portal-admin`)
+Protegidos mediante Bearer Token (`AuthenticatePortalAdmin`):
+- **`POST /api/v1/portal-admin/login`:** Login con usuario/email y password de administrador. Retorna Bearer Token válido por 24 horas.
+- **`GET /api/v1/portal-admin/solicitudes`:** Listado paginado con filtros por estado (`PENDIENTE`, `EMITIDO`, `RECHAZADO`), buscador y conteo estadístico.
+- **`PUT /api/v1/portal-admin/solicitudes/{id}`:** Modificación de datos de facturación antes de la emisión.
+- **`POST /api/v1/portal-admin/solicitudes/{id}/generar`:** Disparo manual de emisión del DTE hacia el Ministerio de Hacienda.
+- **`POST /api/v1/portal-admin/solicitudes/{id}/rechazar`:** Rechazo con registro de motivo.
+- **`GET /api/v1/portal-admin/configuracion` & `PUT /api/v1/portal-admin/configuracion`:** Consulta y guardado del modo de emisión activo.
+
+---
+
+## 5. Modos de Emisión Fiscal Configurables
+
+Configurables en `Configuracion` (`clave: modo_emision_portal`):
+
+| Modo | Comportamiento |
+|---|---|
+| **`AUTOMATICO`** | Todas las solicitudes enviadas por clientes se emiten y transmiten al instante al Ministerio de Hacienda. |
+| **`MANUAL`** | Todas las solicitudes quedan en estado `PENDIENTE` para que un administrador las revise y apruebe manualmente. |
+| **`HIBRIDO` *(Por defecto / Recomendado)*** | **Facturas de Consumidor Final (01)** se emiten al instante de forma automática; **Comprobantes de Crédito Fiscal (03 / CCF)** pasan a validación manual para verificar NRC y Giro. |
+
+---
+
+## 6. Generación Gráfica del QR y Dominio WebFact
+
+- **URL de Producción:** `https://boomwalos.vercel.app/?tracking={NUMERO_SEGUIMIENTO}` (configurable vía `WEBFACT_URL` o `FRONTEND_URL` en `.env`).
+- **Generación Local Offline:** Motor `chillerlan/php-qrcode` produciendo imágenes Base64 PNG a escala 4x incrustadas directamente en los PDFs térmicos.
+- **Fallback Automático:** Si la extensión gráfica local no está disponible, el sistema conmuta automáticamente a la API de contingencia `api.qrserver.com`.
+- **Impresoras Físicas:** Comando ESC/POS nativo `Printer::qrCode()` para impresión instantánea en rollos de 80mm.
