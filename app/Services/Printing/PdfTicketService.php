@@ -14,7 +14,10 @@ class PdfTicketService
     {
         $fontDir = storage_path('fonts');
         if (! is_dir($fontDir)) {
-            @mkdir($fontDir, 0775, true);
+            @mkdir($fontDir, 0777, true);
+        }
+        if (! is_writable($fontDir)) {
+            $fontDir = sys_get_temp_dir();
         }
 
         $lineas = explode("\n", $contenido);
