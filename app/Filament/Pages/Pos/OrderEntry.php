@@ -374,7 +374,7 @@ class OrderEntry extends PosPage
 
     public function getCombosProperty()
     {
-        if ($this->selectedGroup !== null && $this->category !== 'combos') {
+        if ($this->selectedGroup !== null && $this->selectedGroup !== 'combos') {
             return collect();
         }
 
