@@ -72,21 +72,22 @@ class ImpresoraResource extends Resource
                     Select::make('conexion')
                         ->label('Tipo de conexión')
                         ->options(TipoConexionImpresora::class)
+                        ->default(TipoConexionImpresora::PDF)
                         ->required()
                         ->reactive(),
                     TextInput::make('ip')
                         ->label('Dirección IP')
                         ->placeholder('192.168.1.100')
-                        ->visible(fn ($state) => ($state['conexion'] ?? null) === TipoConexionImpresora::RED->value),
+                        ->visible(fn ($get) => ($get('conexion') instanceof TipoConexionImpresora ? $get('conexion')->value : $get('conexion')) === TipoConexionImpresora::RED->value),
                     TextInput::make('puerto')
                         ->label('Puerto')
                         ->default(9100)
                         ->numeric()
-                        ->visible(fn ($state) => ($state['conexion'] ?? null) === TipoConexionImpresora::RED->value),
+                        ->visible(fn ($get) => ($get('conexion') instanceof TipoConexionImpresora ? $get('conexion')->value : $get('conexion')) === TipoConexionImpresora::RED->value),
                     TextInput::make('dispositivo_usb')
                         ->label('Dispositivo USB')
                         ->placeholder('/dev/usb/lp0 o nombre de impresora')
-                        ->visible(fn ($state) => ($state['conexion'] ?? null) === TipoConexionImpresora::USB->value),
+                        ->visible(fn ($get) => ($get('conexion') instanceof TipoConexionImpresora ? $get('conexion')->value : $get('conexion')) === TipoConexionImpresora::USB->value),
                     Toggle::make('activa')
                         ->label('Activa')
                         ->default(true),
@@ -109,7 +110,11 @@ class ImpresoraResource extends Resource
                 TextColumn::make('conexion')
                     ->label('Conexión')
                     ->badge()
-                    ->color(fn (TipoConexionImpresora $state): string => $state === TipoConexionImpresora::RED ? 'success' : 'gray'),
+                    ->color(fn (TipoConexionImpresora $state): string => match ($state) {
+                        TipoConexionImpresora::RED => 'success',
+                        TipoConexionImpresora::USB => 'gray',
+                        TipoConexionImpresora::PDF => 'primary',
+                    }),
                 TextColumn::make('direccion')
                     ->label('Dirección')
                     ->getStateUsing(fn ($record): string => $record->direccionConexion()),
@@ -134,15 +139,33 @@ class ImpresoraResource extends Resource
                     ->color('success')
                     ->requiresConfirmation()
                     ->modalHeading('Probar impresora')
-                    ->modalDescription('Se enviará un ticket de prueba a esta impresora.')
-                    ->action(function ($record): void {
+                    ->modalDescription(fn ($record) => $record->conexion === TipoConexionImpresora::PDF
+                        ? 'Se generará y abrirá un ticket de prueba en PDF para verificar el formato.'
+                        : 'Se enviará un ticket de prueba físico a esta impresora.')
+                    ->action(function ($record, $livewire): void {
                         try {
-                            app(PrinterTestService::class)->probar($record);
-                            Notification::make()
-                                ->title('Prueba exitosa')
-                                ->body("Conexión verificada: {$record->direccionConexion()}")
-                                ->success()
-                                ->send();
+                            $pdfUrl = app(PrinterTestService::class)->probar($record);
+                            if ($pdfUrl) {
+                                Notification::make()
+                                    ->title('Prueba de PDF Generada')
+                                    ->body('El documento PDF fue generado correctamente.')
+                                    ->success()
+                                    ->actions([
+                                        \Filament\Notifications\Actions\Action::make('abrir_pdf')
+                                            ->label('Abrir PDF')
+                                            ->url($pdfUrl, shouldOpenInNewTab: true)
+                                            ->button(),
+                                    ])
+                                    ->send();
+
+                                $livewire->js("window.open('{$pdfUrl}', '_blank')");
+                            } else {
+                                Notification::make()
+                                    ->title('Prueba exitosa')
+                                    ->body("Conexión física verificada: {$record->direccionConexion()}")
+                                    ->success()
+                                    ->send();
+                            }
                         } catch (\Throwable $e) {
                             Notification::make()
                                 ->title('Error de conexión')

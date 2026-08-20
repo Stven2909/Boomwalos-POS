@@ -21,6 +21,7 @@ class PrinterConnectorFactory
             TipoConexionImpresora::USB => new FilePrintConnector(
                 $impresora->dispositivo_usb,
             ),
+            TipoConexionImpresora::PDF => new MemoryPrintConnector(),
         };
     }
 

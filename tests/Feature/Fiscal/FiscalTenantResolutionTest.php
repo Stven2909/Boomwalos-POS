@@ -47,27 +47,39 @@ class FiscalTenantResolutionTest extends TestCase
     private function postWebhook(string $host, array $datos): TestResponse
     {
         $content = json_encode($datos);
+        $path = '/api/fiscal/v1/webhooks';
+        $timestamp = time();
+        $nonce = 'test-nonce-res-wh';
+        $secret = (string) config('fiscal.mock.secret');
+
         $server = [
             'CONTENT_TYPE' => 'application/json',
-            'HTTP_X_FISCAL_KEY' => 'est-test',
-            'HTTP_X_FISCAL_TIMESTAMP' => (string) time(),
-            'HTTP_X_FISCAL_HMAC' => HmacSigner::sign((string) $content, (string) config('fiscal.mock.secret')),
+            'HTTP_X_CLIENT_ID' => 'est-test',
+            'HTTP_X_TIMESTAMP' => (string) $timestamp,
+            'HTTP_X_NONCE' => $nonce,
+            'HTTP_X_SIGNATURE' => HmacSigner::sign('POST', $path, (int) $timestamp, $nonce, (string) $content, $secret),
         ];
 
-        return $this->call('POST', 'http://'.$host.'/api/fiscal/v1/webhooks', [], [], [], $server, $content);
+        return $this->call('POST', 'http://'.$host.$path, [], [], [], $server, $content);
     }
 
     private function postVenta(string $host, array $payload): TestResponse
     {
         $content = json_encode($payload);
+        $path = '/api/fiscal/v1/ventas';
+        $timestamp = time();
+        $nonce = 'test-nonce-res-v';
+        $secret = (string) config('fiscal.mock.secret');
+
         $server = [
             'CONTENT_TYPE' => 'application/json',
-            'HTTP_X_FISCAL_KEY' => 'est-test',
-            'HTTP_X_FISCAL_TIMESTAMP' => (string) time(),
-            'HTTP_X_FISCAL_HMAC' => HmacSigner::sign((string) $content, (string) config('fiscal.mock.secret')),
+            'HTTP_X_CLIENT_ID' => 'est-test',
+            'HTTP_X_TIMESTAMP' => (string) $timestamp,
+            'HTTP_X_NONCE' => $nonce,
+            'HTTP_X_SIGNATURE' => HmacSigner::sign('POST', $path, (int) $timestamp, $nonce, (string) $content, $secret),
         ];
 
-        return $this->call('POST', 'http://'.$host.'/api/fiscal/v1/ventas', [], [], [], $server, $content);
+        return $this->call('POST', 'http://'.$host.$path, [], [], [], $server, $content);
     }
 
     public function test_host_acme_resuelve_el_tenant_acme(): void

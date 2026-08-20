@@ -26,10 +26,6 @@ class BrandSettings extends Page
 
     public string $faviconPath = '';
 
-    public string $primaryColor = '#6B4E63';
-
-    public string $secondaryColor = '#F6F1EE';
-
     public string $ticketHeader = '';
 
     public string $ticketFooter = '';
@@ -58,8 +54,6 @@ class BrandSettings extends Page
         $this->displayName = (string) $tenant->display_name;
         $this->logoPath = (string) ($tenant->logo_path ?? '');
         $this->faviconPath = (string) ($tenant->favicon_path ?? '');
-        $this->primaryColor = (string) ($tenant->primary_color ?: '#6B4E63');
-        $this->secondaryColor = (string) ($tenant->secondary_color ?: '#F6F1EE');
         $this->ticketHeader = (string) ($tenant->ticket_header ?? '');
         $this->ticketFooter = (string) ($tenant->ticket_footer ?? '');
         $this->contactPhone = (string) ($tenant->contact_phone ?? '');
@@ -85,8 +79,6 @@ class BrandSettings extends Page
             'displayName' => ['required', 'string', 'max:150'],
             'logoPath' => ['nullable', 'string', 'max:255'],
             'faviconPath' => ['nullable', 'string', 'max:255'],
-            'primaryColor' => ['required', 'regex:/^#[0-9A-Fa-f]{6}$/'],
-            'secondaryColor' => ['required', 'regex:/^#[0-9A-Fa-f]{6}$/'],
             'ticketHeader' => ['nullable', 'string', 'max:150'],
             'ticketFooter' => ['nullable', 'string', 'max:1000'],
             'contactPhone' => ['nullable', 'string', 'max:40'],
@@ -97,15 +89,13 @@ class BrandSettings extends Page
             'display_name' => $this->displayName,
             'logo_path' => $this->logoPath ?: null,
             'favicon_path' => $this->faviconPath ?: null,
-            'primary_color' => $this->primaryColor,
-            'secondary_color' => $this->secondaryColor,
             'ticket_header' => $this->ticketHeader ?: null,
             'ticket_footer' => $this->ticketFooter ?: null,
             'contact_phone' => $this->contactPhone ?: null,
             'contact_email' => $this->contactEmail ?: null,
         ]);
 
-        Notification::make()->title('Marca actualizada')->success()->send();
+        Notification::make()->title('Datos de empresa actualizados')->success()->send();
 
         $this->editing = false;
     }

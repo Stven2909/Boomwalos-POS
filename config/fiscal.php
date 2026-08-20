@@ -22,9 +22,10 @@ return [
     'gateway' => env('FISCAL_GATEWAY', 'http'),
 
     'hmac' => [
-        'header' => env('FISCAL_HMAC_HEADER', 'X-Fiscal-Hmac'),
-        'timestamp_header' => env('FISCAL_HMAC_TIMESTAMP_HEADER', 'X-Fiscal-Timestamp'),
-        'key_header' => env('FISCAL_KEY_HEADER', 'X-Fiscal-Key'),
+        'header' => env('FISCAL_HMAC_HEADER', 'X-Signature'),
+        'timestamp_header' => env('FISCAL_HMAC_TIMESTAMP_HEADER', 'X-Timestamp'),
+        'key_header' => env('FISCAL_KEY_HEADER', 'X-Client-Id'),
+        'nonce_header' => env('FISCAL_NONCE_HEADER', 'X-Nonce'),
         'scheme' => env('FISCAL_HMAC_SCHEME', 'sha256'),
         // Tolerancia (en segundos) para la antigüedad del sello de tiempo.
         'clock_skew' => (int) env('FISCAL_CLOCK_SKEW', 300),

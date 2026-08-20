@@ -35,6 +35,8 @@ class AdminPanelProvider extends PanelProvider
             ->viteTheme('resources/css/filament/admin/theme.css')
             ->login(Login::class)
             ->brandName(fn (): string => app(BrandingServiceInterface::class)->displayName())
+            ->brandLogo(fn (): ?string => app(BrandingServiceInterface::class)->logoUrl())
+            ->brandLogoHeight('2.25rem')
             ->favicon(fn (): string => app(BrandingServiceInterface::class)->faviconUrl())
             ->colors([
                 'primary' => '#6B4E63',

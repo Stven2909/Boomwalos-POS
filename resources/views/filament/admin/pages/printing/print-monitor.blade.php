@@ -87,20 +87,29 @@
                             {{ $job->ultimo_error ?? '—' }}
                         </td>
                         <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-500 dark:text-gray-400">{{ $job->created_at?->diffForHumans() ?? '—' }}</td>
-                        <td class="whitespace-nowrap px-4 py-3 text-sm">
+                        <td class="whitespace-nowrap px-4 py-3 text-sm flex items-center gap-2">
+                            <a
+                                href="{{ route('impresion.trabajo.pdf', ['trabajo' => $job->getKey()]) }}"
+                                target="_blank"
+                                class="inline-flex items-center gap-1 rounded bg-gray-100 px-2 py-1 text-xs font-medium text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600"
+                                title="Ver / Descargar PDF del ticket o comanda"
+                            >
+                                📄 PDF
+                            </a>
+
                             @if ($job->estado === \App\Enums\EstadoImpresion::ERROR)
                                 <button
                                     wire:click="retryJob({{ $job->getKey() }})"
-                                    class="text-sm font-semibold text-primary-600 transition hover:text-primary-800 dark:text-primary-400"
+                                    class="text-xs font-semibold text-primary-600 transition hover:text-primary-800 dark:text-primary-400"
                                 >
                                     Reintentar
                                 </button>
                             @elseif ($job->estado === \App\Enums\EstadoImpresion::IMPRESO)
-                                <span class="text-sm text-green-600 dark:text-green-400">
-                                    {{ $job->impreso_at?->format('H:i') ?? '—' }}
+                                <span class="text-xs text-green-600 dark:text-green-400 font-medium">
+                                    ✓ {{ $job->impreso_at?->format('H:i') ?? 'Listo' }}
                                 </span>
                             @else
-                                <span class="text-sm text-gray-400">—</span>
+                                <span class="text-xs text-gray-400">—</span>
                             @endif
                         </td>
                     </tr>

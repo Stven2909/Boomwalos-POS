@@ -68,8 +68,7 @@ class BrandSettingsTest extends TestCase
 
         Livewire::test(BrandSettings::class)
             ->set('displayName', 'Pupusería Central')
-            ->set('primaryColor', '#123456')
-            ->set('secondaryColor', '#654321')
+            ->set('ticketHeader', 'Sucursal Central')
             ->set('contactEmail', 'hola@example.test')
             ->call('save')
             ->assertHasNoErrors();
@@ -77,8 +76,7 @@ class BrandSettingsTest extends TestCase
         $this->assertDatabaseHas('platform_tenants', [
             'slug' => config('tenancy.default_slug', 'demo'),
             'display_name' => 'Pupusería Central',
-            'primary_color' => '#123456',
-            'secondary_color' => '#654321',
+            'ticket_header' => 'Sucursal Central',
             'contact_email' => 'hola@example.test',
         ]);
     }

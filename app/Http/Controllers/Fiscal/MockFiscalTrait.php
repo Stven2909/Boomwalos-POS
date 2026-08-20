@@ -22,6 +22,7 @@ trait MockFiscalTrait
 
         $firma = $request->header(config('fiscal.hmac.header'));
         $timestamp = $request->header(config('fiscal.hmac.timestamp_header'));
+        $nonce = (string) ($request->header(config('fiscal.hmac.nonce_header', 'X-Nonce')) ?? '');
 
         if (! is_string($firma) || $firma === '') {
             abort(401, 'FIRMA_REQUERIDA');
@@ -31,7 +32,9 @@ trait MockFiscalTrait
             abort(401, 'MARCA_TIEMPO_VENCIDA');
         }
 
-        if (! HmacSigner::verify($request->getContent(), $secret, $firma)) {
+        $path = '/' . ltrim($request->path(), '/');
+
+        if (! HmacSigner::verify($request->method(), $path, (int) $timestamp, $nonce, $request->getContent(), $secret, $firma)) {
             abort(401, 'FIRMA_INVALIDA');
         }
     }

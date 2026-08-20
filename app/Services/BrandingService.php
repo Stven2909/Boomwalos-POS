@@ -7,6 +7,9 @@ use App\Context\TenantContext;
 
 class BrandingService implements BrandingServiceInterface
 {
+    public const PRIMARY_COLOR = '#6B4E63';
+    public const SECONDARY_COLOR = '#F6F1EE';
+
     public function __construct(private readonly TenantContext $tenantContext) {}
 
     public function displayName(): string
@@ -31,12 +34,12 @@ class BrandingService implements BrandingServiceInterface
 
     public function primaryColor(): string
     {
-        return $this->tenant()?->primary_color ?: '#6B4E63';
+        return self::PRIMARY_COLOR;
     }
 
     public function secondaryColor(): string
     {
-        return $this->tenant()?->secondary_color ?: '#F3EDF2';
+        return self::SECONDARY_COLOR;
     }
 
     public function ticketFooter(): ?string
@@ -51,6 +54,18 @@ class BrandingService implements BrandingServiceInterface
 
     private function assetOrDefault(?string $path, string $fallback): string
     {
-        return asset($path ?: $fallback);
+        if (empty($path)) {
+            return asset($fallback);
+        }
+
+        if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
+            return $path;
+        }
+
+        if (str_starts_with($path, 'storage/') || str_starts_with($path, '/storage/')) {
+            return asset(ltrim($path, '/'));
+        }
+
+        return asset($path);
     }
 }

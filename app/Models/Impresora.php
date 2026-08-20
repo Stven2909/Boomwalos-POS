@@ -22,6 +22,7 @@ class Impresora extends Model
         'dispositivo_usb',
         'activa',
         'configuracion',
+        'ultima_conexion_exitosa_at',
     ];
 
     protected function casts(): array
@@ -79,8 +80,11 @@ class Impresora extends Model
 
     public function direccionConexion(): string
     {
-        return $this->conexion === TipoConexionImpresora::RED
-            ? "{$this->ip}:{$this->puerto}"
-            : ($this->dispositivo_usb ?? 'No configurado');
+        return match ($this->conexion) {
+            TipoConexionImpresora::RED => "{$this->ip}:{$this->puerto}",
+            TipoConexionImpresora::USB => ($this->dispositivo_usb ?? 'No configurado'),
+            TipoConexionImpresora::PDF => 'Simulador Virtual (PDF)',
+            default => 'No configurado',
+        };
     }
 }

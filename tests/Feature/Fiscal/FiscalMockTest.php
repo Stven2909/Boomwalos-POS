@@ -15,16 +15,21 @@ class FiscalMockTest extends TestCase
     {
         $secret = $opciones['secret'] ?? (string) config('fiscal.mock.secret');
         $timestamp = $opciones['timestamp'] ?? time();
+        $nonce = $opciones['nonce'] ?? 'test-nonce-123';
         $content = json_encode($payload);
+        $path = '/api/fiscal/v1/ventas';
+
+        $firma = $opciones['firma'] ?? HmacSigner::sign('POST', $path, (int) $timestamp, $nonce, $content, $secret);
 
         $server = [
             'CONTENT_TYPE' => 'application/json',
-            'HTTP_X_FISCAL_KEY' => $opciones['key'] ?? 'est-test',
-            'HTTP_X_FISCAL_TIMESTAMP' => (string) $timestamp,
-            'HTTP_X_FISCAL_HMAC' => $opciones['firma'] ?? HmacSigner::sign($content, $secret),
+            'HTTP_X_CLIENT_ID' => $opciones['key'] ?? 'est-test',
+            'HTTP_X_TIMESTAMP' => (string) $timestamp,
+            'HTTP_X_NONCE' => $nonce,
+            'HTTP_X_SIGNATURE' => $firma,
         ];
 
-        return $this->call('POST', '/api/fiscal/v1/ventas', [], [], [], $server, $content);
+        return $this->call('POST', $path, [], [], [], $server, $content);
     }
 
     private function payload(array $extra = []): array

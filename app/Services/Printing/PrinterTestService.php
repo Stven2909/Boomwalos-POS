@@ -2,17 +2,30 @@
 
 namespace App\Services\Printing;
 
+use App\Enums\TipoConexionImpresora;
 use App\Models\Impresora;
+use Illuminate\Support\Facades\Storage;
 use Mike42\Escpos\Printer;
 
 class PrinterTestService
 {
     public function __construct(
         private readonly PrinterConnectorFactory $connectorFactory,
+        private readonly PdfTicketService $pdfTicketService,
     ) {}
 
-    public function probar(Impresora $impresora): void
+    public function probar(Impresora $impresora): ?string
     {
+        if ($impresora->conexion === TipoConexionImpresora::PDF) {
+            $pdf = $this->pdfTicketService->generateTestPdf($impresora->nombre, $impresora->tipo->label());
+            $filePath = "impresiones/prueba-{$impresora->getKey()}.pdf";
+            Storage::disk('public')->put($filePath, $pdf->output());
+
+            $impresora->update(['ultima_conexion_exitosa_at' => now()]);
+
+            return route('impresion.prueba.pdf', ['impresora' => $impresora->getKey()]);
+        }
+
         $printer = new Printer($this->connectorFactory->create($impresora));
 
         $printer->selectPrintMode(Printer::MODE_EMPHASIZED | Printer::MODE_DOUBLE_HEIGHT);
@@ -32,5 +45,7 @@ class PrinterTestService
         $printer->close();
 
         $impresora->update(['ultima_conexion_exitosa_at' => now()]);
+
+        return null;
     }
 }

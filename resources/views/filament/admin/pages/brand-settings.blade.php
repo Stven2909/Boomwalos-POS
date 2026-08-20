@@ -3,8 +3,8 @@
     <div class="mx-auto w-full max-w-4xl space-y-6">
         <div class="bw-card grid gap-5 p-6 md:grid-cols-2">
             <div class="md:col-span-2">
-                <h2 class="text-lg font-bold text-[#1D1B1E]">Identidad visible</h2>
-                <p class="mt-1 text-sm text-gray-500">Estos datos cambian el nombre, logo y colores que verá tu equipo y tus clientes.</p>
+                <h2 class="text-lg font-bold text-[#1D1B1E]">Identidad y Datos del Negocio</h2>
+                <p class="mt-1 text-sm text-gray-500">Estos datos personalizan el nombre comercial, logotipo y la información impresa en los tickets y comandas.</p>
             </div>
 
             @if (! $this->editing)
@@ -19,29 +19,15 @@
                 <div class="text-sm text-gray-900">{{ $this->ticketHeader ?: '—' }}</div>
 
                 <div class="flex items-center justify-between">
-                    <span class="text-sm font-semibold text-gray-700">Ruta del logo</span>
+                    <span class="text-sm font-semibold text-gray-700">Ruta o URL del logo</span>
                 </div>
-                <div class="text-sm text-gray-900">{{ $this->logoPath ?: '—' }}</div>
-
-                <div class="flex items-center justify-between">
-                    <span class="text-sm font-semibold text-gray-700">Ruta del favicon</span>
-                </div>
-                <div class="text-sm text-gray-900">{{ $this->faviconPath ?: '—' }}</div>
-
-                <div class="flex items-center justify-between">
-                    <span class="text-sm font-semibold text-gray-700">Color principal</span>
-                </div>
-                <div class="flex items-center gap-2">
-                    <span class="inline-block h-5 w-5 rounded-full border border-gray-200" style="background: {{ $this->primaryColor }}"></span>
-                    <span class="text-sm text-gray-900">{{ $this->primaryColor }}</span>
-                </div>
-
-                <div class="flex items-center justify-between">
-                    <span class="text-sm font-semibold text-gray-700">Color secundario</span>
-                </div>
-                <div class="flex items-center gap-2">
-                    <span class="inline-block h-5 w-5 rounded-full border border-gray-200" style="background: {{ $this->secondaryColor }}"></span>
-                    <span class="text-sm text-gray-900">{{ $this->secondaryColor }}</span>
+                <div class="text-sm text-gray-900 flex items-center gap-2">
+                    @if ($this->logoPath)
+                        <img src="{{ asset($this->logoPath) }}" alt="" class="h-6 w-auto object-contain">
+                        <span>{{ $this->logoPath }}</span>
+                    @else
+                        <span class="text-gray-400">Por defecto (Boomwalos POS)</span>
+                    @endif
                 </div>
 
                 <div class="flex items-center justify-between">
@@ -58,6 +44,11 @@
                     <span class="text-sm font-semibold text-gray-700">Pie del ticket</span>
                 </div>
                 <div class="text-sm text-gray-900 md:col-span-2 whitespace-pre-line">{{ $this->ticketFooter ?: '—' }}</div>
+
+                <div class="md:col-span-2 mt-3 rounded-lg bg-gray-50 p-4 border border-gray-200 text-xs text-gray-600 flex items-center gap-3">
+                    <span class="inline-block h-4 w-4 rounded-full" style="background: #6B4E63;"></span>
+                    <span><strong>Paleta Visual Institucional:</strong> Fija y optimizada para contraste y rapidez operativa (#6B4E63 / #FF7338).</span>
+                </div>
             @else
                 <form wire:submit="save" class="contents">
                     <label class="block text-sm font-semibold text-gray-700">Nombre comercial
@@ -65,30 +56,22 @@
                         @error('displayName') <span class="mt-1 block text-xs text-red-600">{{ $message }}</span> @enderror
                     </label>
                     <label class="block text-sm font-semibold text-gray-700">Encabezado del ticket
-                        <input wire:model="ticketHeader" type="text" class="mt-2 w-full rounded-lg border-gray-300">
+                        <input wire:model="ticketHeader" type="text" class="mt-2 w-full rounded-lg border-gray-300" placeholder="Ej: Pupusería La Tradición - San Salvador">
                     </label>
-                    <label class="block text-sm font-semibold text-gray-700">Ruta del logo
-                        <input wire:model="logoPath" type="text" class="mt-2 w-full rounded-lg border-gray-300" placeholder="images/mi-logo.png">
+                    <label class="block text-sm font-semibold text-gray-700">Ruta o URL del logo
+                        <input wire:model="logoPath" type="text" class="mt-2 w-full rounded-lg border-gray-300" placeholder="images/mi-logo.png o https://...">
                     </label>
-                    <label class="block text-sm font-semibold text-gray-700">Ruta del favicon
+                    <label class="block text-sm font-semibold text-gray-700">Ruta o URL del favicon
                         <input wire:model="faviconPath" type="text" class="mt-2 w-full rounded-lg border-gray-300" placeholder="images/mi-favicon.png">
                     </label>
-                    <label class="block text-sm font-semibold text-gray-700">Color principal
-                        <input wire:model="primaryColor" type="text" class="mt-2 w-full rounded-lg border-gray-300" placeholder="#6B4E63">
-                        @error('primaryColor') <span class="mt-1 block text-xs text-red-600">{{ $message }}</span> @enderror
-                    </label>
-                    <label class="block text-sm font-semibold text-gray-700">Color secundario
-                        <input wire:model="secondaryColor" type="text" class="mt-2 w-full rounded-lg border-gray-300" placeholder="#F6F1EE">
-                        @error('secondaryColor') <span class="mt-1 block text-xs text-red-600">{{ $message }}</span> @enderror
-                    </label>
                     <label class="block text-sm font-semibold text-gray-700">Teléfono de contacto
-                        <input wire:model="contactPhone" type="text" class="mt-2 w-full rounded-lg border-gray-300">
+                        <input wire:model="contactPhone" type="text" class="mt-2 w-full rounded-lg border-gray-300" placeholder="Ej: 2222-3333">
                     </label>
                     <label class="block text-sm font-semibold text-gray-700">Correo de contacto
-                        <input wire:model="contactEmail" type="email" class="mt-2 w-full rounded-lg border-gray-300">
+                        <input wire:model="contactEmail" type="email" class="mt-2 w-full rounded-lg border-gray-300" placeholder="contacto@empresa.com">
                     </label>
                     <label class="block text-sm font-semibold text-gray-700 md:col-span-2">Pie del ticket
-                        <textarea wire:model="ticketFooter" rows="3" class="mt-2 w-full rounded-lg border-gray-300"></textarea>
+                        <textarea wire:model="ticketFooter" rows="3" class="mt-2 w-full rounded-lg border-gray-300" placeholder="¡Gracias por su compra! Síguenos en Instagram @..."></textarea>
                     </label>
                 </form>
             @endif

@@ -12,6 +12,7 @@ class EscPosPrintService
 {
     public function __construct(
         private readonly PrinterConnectorFactory $connectorFactory,
+        private readonly PdfTicketService $pdfTicketService,
     ) {}
 
     public function print(int $trabajoId): void
@@ -23,6 +24,13 @@ class EscPosPrintService
         }
 
         try {
+            // Generar y almacenar archivo PDF para consulta y descarga digital
+            try {
+                $this->pdfTicketService->saveForJob($job);
+            } catch (\Throwable $pdfEx) {
+                Log::warning("No se pudo generar el PDF del trabajo #{$job->getKey()}: {$pdfEx->getMessage()}");
+            }
+
             $printer = new Printer($this->connectorFactory->create($job->impresora));
             $this->renderContent($printer, $job->contenido);
             $printer->cut();

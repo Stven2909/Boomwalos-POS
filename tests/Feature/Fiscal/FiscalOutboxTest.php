@@ -125,15 +125,20 @@ class FiscalOutboxTest extends TestCase
     private function postWebhook(array $datos): TestResponse
     {
         $content = json_encode($datos);
+        $path = '/api/fiscal/v1/webhooks';
+        $timestamp = time();
+        $nonce = 'test-nonce-wh-123';
+        $secret = (string) config('fiscal.mock.secret');
 
         $server = [
             'CONTENT_TYPE' => 'application/json',
-            'HTTP_X_FISCAL_KEY' => 'est-test',
-            'HTTP_X_FISCAL_TIMESTAMP' => (string) time(),
-            'HTTP_X_FISCAL_HMAC' => HmacSigner::sign((string) $content, (string) config('fiscal.mock.secret')),
+            'HTTP_X_CLIENT_ID' => 'est-test',
+            'HTTP_X_TIMESTAMP' => (string) $timestamp,
+            'HTTP_X_NONCE' => $nonce,
+            'HTTP_X_SIGNATURE' => HmacSigner::sign('POST', $path, (int) $timestamp, $nonce, (string) $content, $secret),
         ];
 
-        return $this->call('POST', '/api/fiscal/v1/webhooks', [], [], [], $server, $content);
+        return $this->call('POST', $path, [], [], [], $server, $content);
     }
 
     public function test_cobro_sin_config_fiscal_no_registra_venta(): void
@@ -477,12 +482,22 @@ class FiscalOutboxTest extends TestCase
 
         app(FiscalOutboxService::class)->enviarPendientes($venta->getKey());
 
-        $this->assertSame($config->cliente_key, $capturado['X-Fiscal-Key'][0]);
-        $this->assertNotNull($capturado['X-Fiscal-Timestamp'][0] ?? null);
-        $this->assertNotEmpty($capturado['X-Fiscal-Hmac'][0] ?? null);
+        $this->assertSame($config->cliente_key, $capturado['X-Client-Id'][0]);
+        $this->assertNotNull($capturado['X-Timestamp'][0] ?? null);
+        $this->assertNotNull($capturado['X-Nonce'][0] ?? null);
+        $this->assertNotNull($capturado['Idempotency-Key'][0] ?? null);
+        $this->assertSame($payload['clave_reintento'], $capturado['Idempotency-Key'][0]);
+        $this->assertNotEmpty($capturado['X-Signature'][0] ?? null);
         $this->assertSame(
-            'sha256=' . hash_hmac('sha256', json_encode($payload), (string) $config->cliente_secret),
-            $capturado['X-Fiscal-Hmac'][0],
+            HmacSigner::sign(
+                'POST',
+                '/api/v1/pos/emitir',
+                (int) $capturado['X-Timestamp'][0],
+                (string) $capturado['X-Nonce'][0],
+                json_encode($payload),
+                (string) $config->cliente_secret,
+            ),
+            $capturado['X-Signature'][0],
         );
         $this->assertSame(json_encode($payload), $capturado['_cuerpo']);
     }
