@@ -131,7 +131,7 @@ class QueueCustomerTicket implements CustomerTicketDispatcherInterface
 
     protected function qrLine(Pedido $pedido): ?string
     {
-        $portalUrl = env('WEBFACT_URL', env('FRONTEND_URL', 'https://webfact.vercel.app'));
+        $portalUrl = env('WEBFACT_URL', env('FRONTEND_URL', 'https://boomwalos.vercel.app'));
         $tracking = $pedido->numero_seguimiento;
         $urlFactura = rtrim((string) $portalUrl, '/') . '/?tracking=' . urlencode($tracking);
 
