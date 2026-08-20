@@ -10,6 +10,7 @@ use Filament\Actions\CreateAction;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Radio;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ManageRecords;
@@ -88,12 +89,29 @@ class ManageConfiguracionFiscal extends ManageRecords
                         ->revealable()
                         ->maxLength(100)
                         ->helperText('Contraseña de la API de Hacienda.'),
+                    Radio::make('metodo_llave')
+                        ->label('Método para ingresar la Llave Privada')
+                        ->options([
+                            'texto' => '📋 Pegar contenido de private_pkcs8.key (Recomendado - 100% Compatible)',
+                            'archivo' => '📁 Subir archivo (.key / .p12 / .pfx)',
+                        ])
+                        ->default('texto')
+                        ->live()
+                        ->helperText('Pegar el contenido es la opción más rápida y no depende de permisos de subida en el servidor.'),
+                    Textarea::make('llave_texto')
+                        ->label('Contenido de la Llave Privada (private_pkcs8.key)')
+                        ->placeholder("-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQC7...\n-----END PRIVATE KEY-----")
+                        ->rows(6)
+                        ->visible(fn ($get): bool => $get('metodo_llave') === 'texto' || $get('metodo_llave') === null)
+                        ->required(fn ($get): bool => $get('metodo_llave') === 'texto' || $get('metodo_llave') === null)
+                        ->helperText('Abre tu archivo private_pkcs8.key con el Bloc de notas o editor de texto, copia todo el texto y pégalo aquí.'),
                     FileUpload::make('p12_file')
-                        ->label('Llave Privada / Certificado (.key / .p12 / .pfx)')
+                        ->label('Archivo de Llave Privada / Certificado (.key / .p12 / .pfx)')
                         ->maxSize(2048)
                         ->disk('local')
                         ->directory('temp_certs')
-                        ->required()
+                        ->visible(fn ($get): bool => $get('metodo_llave') === 'archivo')
+                        ->required(fn ($get): bool => $get('metodo_llave') === 'archivo')
                         ->helperText('Sube tu archivo private_pkcs8.key o certificado .p12 provisto por Hacienda.'),
                     TextInput::make('password')
                         ->label('Contraseña de la Llave Privada / Certificado')
@@ -103,22 +121,43 @@ class ManageConfiguracionFiscal extends ManageRecords
                         ->helperText('Contraseña de la llave privada o certificado .p12.'),
                 ])
                 ->action(function (array $data, Action $action): void {
-                    $p12Path = $data['p12_file'] ?? null;
+                    $metodo = $data['metodo_llave'] ?? 'texto';
                     $p12Base64 = null;
 
-                    if ($p12Path) {
-                        $fullPath = Storage::disk('local')->path($p12Path);
-                        if (file_exists($fullPath)) {
-                            $binary = file_get_contents($fullPath);
-                            $p12Base64 = base64_encode($binary);
-                            @unlink($fullPath);
+                    if ($metodo === 'texto') {
+                        $texto = trim((string) ($data['llave_texto'] ?? ''));
+                        if ($texto !== '') {
+                            $p12Base64 = base64_encode($texto);
                         }
+                    } else {
+                        $uploaded = $data['p12_file'] ?? null;
+                        $binary = null;
+
+                        if ($uploaded instanceof \Livewire\Features\SupportFileUploads\TemporaryUploadedFile || $uploaded instanceof \Illuminate\Http\UploadedFile) {
+                            $binary = file_get_contents($uploaded->getRealPath());
+                        } elseif (is_string($uploaded)) {
+                            if (Storage::disk('local')->exists($uploaded)) {
+                                $binary = Storage::disk('local')->get($uploaded);
+                                Storage::disk('local')->delete($uploaded);
+                            } elseif (file_exists($uploaded)) {
+                                $binary = file_get_contents($uploaded);
+                                @unlink($uploaded);
+                            } elseif (file_exists(storage_path('app/private/' . $uploaded))) {
+                                $binary = file_get_contents(storage_path('app/private/' . $uploaded));
+                                @unlink(storage_path('app/private/' . $uploaded));
+                            } elseif (file_exists(storage_path('app/' . $uploaded))) {
+                                $binary = file_get_contents(storage_path('app/' . $uploaded));
+                                @unlink(storage_path('app/' . $uploaded));
+                            }
+                        }
+
+                        $p12Base64 = $binary ? base64_encode($binary) : null;
                     }
 
                     if (! $p12Base64) {
                         Notification::make()
-                            ->title('Archivo no encontrado')
-                            ->body('No se pudo leer el archivo de certificado .p12 subido.')
+                            ->title('Llave no proporcionada')
+                            ->body('Por favor ingresa el texto de tu llave privada o sube el archivo correspondiente.')
                             ->danger()
                             ->send();
                         $action->halt();

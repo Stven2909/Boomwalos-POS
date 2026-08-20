@@ -37,6 +37,11 @@ class Impresora extends Model
         ];
     }
 
+    public function setPuertoAttribute(mixed $value): void
+    {
+        $this->attributes['puerto'] = filled($value) ? (int) $value : 9100;
+    }
+
     public function establecimiento(): BelongsTo
     {
         return $this->belongsTo(Establecimiento::class);
