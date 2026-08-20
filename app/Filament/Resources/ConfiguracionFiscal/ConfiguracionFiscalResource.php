@@ -35,6 +35,8 @@ class ConfiguracionFiscalResource extends Resource
 
     protected static ?string $pluralModelLabel = 'Configuración fiscal';
 
+    protected static ?string $slug = 'configuracion-fiscals';
+
     public static function canAccess(): bool
     {
         return auth()->user()?->can('gestionar_configuracion_fiscal') ?? false;
