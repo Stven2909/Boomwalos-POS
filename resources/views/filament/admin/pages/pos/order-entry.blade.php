@@ -78,7 +78,7 @@
 
                             <div class="bw-pos-combo-grid">
                                 @foreach ($this->combos as $combo)
-                                    <article class="bw-pos-combo-card">
+                                    <article class="bw-pos-combo-card" wire:click="openCombo({{ $combo->getKey() }})" tabindex="0" role="button" aria-label="Configurar {{ $combo->nombre }}">
                                         <span class="bw-pos-product-image bw-pos-combo-image" aria-hidden="true">
                                             @if ($combo->imageUrl())
                                                 <img src="{{ $combo->imageUrl() }}" alt="" onerror="this.hidden = true; this.nextElementSibling.hidden = false;">
@@ -87,14 +87,14 @@
                                                 <x-heroicon-o-squares-2x2 class="h-9 w-9" />
                                             @endif
                                         </span>
-                                        <div class="bw-pos-product-copy">
+                                        <div class="bw-pos-product-copy bw-pos-combo-copy">
                                             <strong>{{ $combo->nombre }}</strong>
-                                            <span>{{ $combo->opcionesCombo->map(fn ($option): string => $option->cantidad_requerida . ' ' . $option->nombre)->implode(' · ') }}</span>
+                                            <span class="bw-pos-combo-options">{{ $combo->opcionesCombo->map(fn ($option): string => $option->cantidad_requerida . ' ' . $option->nombre)->implode(' · ') }}</span>
                                             <b>{{ $this->money($combo->precio_fijo) }}</b>
                                         </div>
-                                        <button type="button" wire:click="openCombo({{ $combo->getKey() }})" class="bw-pos-add-button bw-pos-combo-button">
+                                        <span class="bw-pos-add-button bw-pos-combo-button" aria-hidden="true">
                                             <x-heroicon-o-adjustments-horizontal class="h-4 w-4" /> Configurar
-                                        </button>
+                                        </span>
                                     </article>
                                 @endforeach
                             </div>
@@ -129,9 +129,9 @@
                                 <span class="bw-pos-product-image" aria-hidden="true">
                                     @if ($producto->imageUrl())
                                         <img src="{{ $producto->imageUrl() }}" alt="" onerror="this.hidden = true; this.nextElementSibling.hidden = false;">
-                                        <x-heroicon-o-shopping-bag class="h-9 w-9" hidden />
+                                        <x-heroicon-o-fire class="h-9 w-9" hidden />
                                     @else
-                                        <x-heroicon-o-shopping-bag class="h-9 w-9" />
+                                        <x-heroicon-o-fire class="h-9 w-9" />
                                     @endif
                                 </span>
                                 <div class="bw-pos-product-copy">
@@ -145,7 +145,7 @@
                             </article>
                         @empty
                             <div class="bw-pos-empty-state">
-                                <x-heroicon-o-shopping-bag class="h-8 w-8" />
+                                <x-heroicon-o-fire class="h-8 w-8" />
                                 <strong>No hay productos disponibles.</strong>
                                 <span>Revisa el catálogo o selecciona otra subcategoría.</span>
                             </div>
@@ -231,7 +231,7 @@
                         </div>
                     @empty
                         <div class="bw-pos-summary-empty">
-                            <x-heroicon-o-shopping-bag class="h-7 w-7" />
+                            <x-heroicon-o-fire class="h-7 w-7" />
                             <span>Aún no agregas productos.</span>
                         </div>
                     @endforelse

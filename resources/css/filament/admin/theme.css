@@ -1463,21 +1463,64 @@ body:has(.bw-pos-page) .fi-page-content {
 .bw-pos-combo-card {
     display: grid;
     min-height: 172px;
-    grid-template-columns: 80px minmax(0, 1fr);
+    grid-template-columns: 80px minmax(0, 1fr) auto;
     align-items: center;
     gap: 14px;
     border: 1px solid #d9cbd6;
     border-radius: 14px;
-    background: #fbf8fa;
+    background: #fff;
     padding: 16px;
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.bw-pos-combo-card:hover,
+.bw-pos-combo-card:focus-visible {
+    border-color: var(--bw-primary);
+    box-shadow: 0 6px 20px rgba(var(--bw-primary-rgb), 0.15);
+    transform: translateY(-2px);
+}
+
+.bw-pos-combo-card:active {
+    transform: scale(0.98);
 }
 
 .bw-pos-combo-image {
     background: #e8dce6;
 }
 
+.bw-pos-combo-copy .bw-pos-combo-options {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    align-self: flex-start;
+    border-radius: 999px;
+    background: var(--bw-secondary);
+    padding: 3px 10px;
+    color: var(--bw-primary);
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.bw-pos-combo-copy b {
+    font-size: 18px;
+}
+
 .bw-pos-combo-button {
+    grid-column: auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 40px;
+    border-radius: 9px;
     background: var(--bw-primary);
+    padding: 0 16px;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 800;
+    white-space: nowrap;
+    justify-self: end;
 }
 
 .bw-pos-combo-modal {
