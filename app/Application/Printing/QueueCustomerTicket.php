@@ -131,7 +131,20 @@ class QueueCustomerTicket implements CustomerTicketDispatcherInterface
 
     protected function qrLine(Pedido $pedido): ?string
     {
-        return null;
+        $portalUrl = env('WEBFACT_URL', env('FRONTEND_URL', 'https://webfact.vercel.app'));
+        $tracking = $pedido->numero_seguimiento;
+        $urlFactura = rtrim((string) $portalUrl, '/') . '/?tracking=' . urlencode($tracking);
+
+        return implode(PHP_EOL, [
+            str_repeat('-', 32),
+            '¿SOLICITAR FACTURA O CCF?',
+            'Escanea el QR o ingresa a:',
+            rtrim((string) $portalUrl, '/'),
+            'Tracking: ' . $tracking,
+            'QR_URL: ' . $urlFactura,
+            str_repeat('-', 32),
+            '¡GRACIAS POR SU PREFERENCIA!',
+        ]);
     }
 
     protected function originalUid(int $printerId, int $pedidoId): string

@@ -6,7 +6,7 @@
     <style>
         @page {
             margin: 4mm 4mm 4mm 4mm;
-            size: 80mm {{ $altoMm ?? 200 }}mm;
+            size: 80mm {{ $altoMm ?? 220 }}mm;
         }
         body {
             font-family: Courier, monospace;
@@ -67,7 +67,9 @@
                     || $upper === 'PARA LLEVAR'
                     || str_starts_with($upper, 'FECHA')
                     || $upper === 'COMANDA'
-                    || $upper === 'TICKET DE CLIENTE';
+                    || $upper === 'TICKET DE CLIENTE'
+                    || str_contains($upper, 'SOLICITA')
+                    || str_contains($upper, 'GRACIAS');
                 $isBold = str_starts_with($upper, 'TOTAL')
                     || str_starts_with($upper, 'PAGO')
                     || str_starts_with($upper, 'RECIBIDO')
@@ -77,10 +79,19 @@
                     || str_starts_with($upper, 'TICKET')
                     || str_starts_with($upper, 'TANDA')
                     || str_contains($upper, 'ATENDIDO POR')
-                    || str_starts_with($upper, 'DOCUMENTO FISCAL');
+                    || str_starts_with($upper, 'DOCUMENTO FISCAL')
+                    || str_starts_with($upper, 'TRACKING:');
             @endphp
 
-            @if($isDivider)
+            @if(str_starts_with($trim, 'QR_URL:'))
+                @php
+                    $qrUrl = trim(substr($trim, 7));
+                @endphp
+                <div style="text-align: center; margin: 8px 0;">
+                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=110x110&data={{ urlencode($qrUrl) }}" width="110" height="110" style="display: block; margin: 0 auto;" alt="QR Facturación">
+                    <div style="font-size: 9px; color: #475569; margin-top: 3px;">Escanea para solicitar DTE</div>
+                </div>
+            @elseif($isDivider)
                 <div class="divider"></div>
             @elseif($trim === '')
                 <div style="height: 6px;"></div>
