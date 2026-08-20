@@ -82,6 +82,19 @@ class EscPosPrintService
                 continue;
             }
 
+            if (str_starts_with($linea, 'QR_URL:')) {
+                $qrUrl = trim(substr($linea, 7));
+                try {
+                    $printer->setJustification(Printer::JUSTIFY_CENTER);
+                    $printer->qrCode($qrUrl, Printer::QR_ECLEVEL_L, 6);
+                    $printer->feed();
+                    $printer->setJustification(Printer::JUSTIFY_LEFT);
+                } catch (\Throwable $qrEx) {
+                    Log::warning("Impresora térmica no soporta comando QR nativo: {$qrEx->getMessage()}");
+                }
+                continue;
+            }
+
             $printer->setJustification(Printer::JUSTIFY_LEFT);
             $printer->setEmphasis(false);
             $printer->selectPrintMode(Printer::MODE_FONT_A);
@@ -146,7 +159,8 @@ class EscPosPrintService
             || str_starts_with($upper, 'COMANDA')
             || str_starts_with($upper, 'TICKET')
             || str_starts_with($upper, 'TANDA')
-            || str_contains($upper, 'ATENDIDO POR');
+            || str_contains($upper, 'ATENDIDO POR')
+            || str_starts_with($upper, 'TRACKING:');
     }
 
     private function isCenteredLine(string $linea): bool
@@ -156,6 +170,8 @@ class EscPosPrintService
         return str_contains($upper, 'MESA ')
             || $upper === 'PARA LLEVAR · MOSTRADOR'
             || $upper === 'PARA LLEVAR'
-            || str_starts_with($upper, 'FECHA');
+            || str_starts_with($upper, 'FECHA')
+            || str_contains($upper, 'SOLICITAR')
+            || str_contains($upper, 'GRACIAS');
     }
 }

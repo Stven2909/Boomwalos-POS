@@ -68,7 +68,7 @@
                     || str_starts_with($upper, 'FECHA')
                     || $upper === 'COMANDA'
                     || $upper === 'TICKET DE CLIENTE'
-                    || str_contains($upper, 'SOLICITA')
+                    || str_contains($upper, 'SOLICITAR')
                     || str_contains($upper, 'GRACIAS');
                 $isBold = str_starts_with($upper, 'TOTAL')
                     || str_starts_with($upper, 'PAGO')
@@ -86,10 +86,25 @@
             @if(str_starts_with($trim, 'QR_URL:'))
                 @php
                     $qrUrl = trim(substr($trim, 7));
+                    $qrBase64 = null;
+                    try {
+                        $qrOptions = new \chillerlan\QRCode\QROptions([
+                            'outputType' => \chillerlan\QRCode\QRCode::OUTPUT_IMAGE_PNG,
+                            'imageBase64' => true,
+                            'scale' => 4,
+                        ]);
+                        $qrBase64 = (new \chillerlan\QRCode\QRCode($qrOptions))->render($qrUrl);
+                    } catch (\Throwable $e) {
+                        $qrBase64 = null;
+                    }
                 @endphp
                 <div style="text-align: center; margin: 8px 0;">
-                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=110x110&data={{ urlencode($qrUrl) }}" width="110" height="110" style="display: block; margin: 0 auto;" alt="QR Facturación">
-                    <div style="font-size: 9px; color: #475569; margin-top: 3px;">Escanea para solicitar DTE</div>
+                    @if ($qrBase64)
+                        <img src="{{ $qrBase64 }}" width="115" height="115" style="display: block; margin: 0 auto;" alt="QR Facturación">
+                    @else
+                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=115x115&data={{ urlencode($qrUrl) }}" width="115" height="115" style="display: block; margin: 0 auto;" alt="QR Facturación">
+                    @endif
+                    <div style="font-size: 8.5px; color: #334155; margin-top: 3px; font-weight: bold;">ESCANEA PARA SOLICITAR DTE</div>
                 </div>
             @elseif($isDivider)
                 <div class="divider"></div>
