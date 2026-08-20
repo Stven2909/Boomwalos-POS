@@ -21,7 +21,7 @@ return [
 
     'gateway' => env('FISCAL_GATEWAY', 'http'),
 
-    'provisioning_token' => env('PROVISIONING_TOKEN', env('FISCAL_PROVISIONING_TOKEN')),
+    'provisioning_token' => env('PROVISIONING_TOKEN', env('FISCAL_PROVISIONING_TOKEN', env('POSFACT_MASTER_KEY'))),
 
     'onboarding_url' => env('FISCAL_ONBOARDING_URL', rtrim((string) env('FISCAL_API_URL', 'https://phplaravel-1581457-6620216.cloudwaysapps.com'), '/') . '/api/v1/onboarding/emisor'),
 
