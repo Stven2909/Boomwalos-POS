@@ -76,7 +76,14 @@ class PortalAdminController extends Controller
     public function solicitudes(Request $request): JsonResponse
     {
         $query = DocumentoFiscal::query()
-            ->with(['pedido.detalles.producto', 'pedido.detalles.combo', 'pedido.pago', 'pedido.mesa', 'pedido.establecimiento'])
+            ->with([
+                'pedido.detalles.producto',
+                'pedido.detalles.combo',
+                'pedido.detalles.detallePedidoNotas.notaCocina',
+                'pedido.pago',
+                'pedido.mesa',
+                'pedido.establecimiento',
+            ])
             ->latest('id');
 
         if ($request->filled('estado')) {

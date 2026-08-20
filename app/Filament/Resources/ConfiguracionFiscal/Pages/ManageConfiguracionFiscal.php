@@ -24,30 +24,31 @@ class ManageConfiguracionFiscal extends ManageRecords
     {
         return [
             Action::make('onboardingAutomatico')
-                ->label('✨ Activar Facturación Automática (Onboarding MH)')
-                ->icon(Heroicon::OutlinedSparkles)
+                ->label('Activar Facturación (Onboarding)')
+                ->icon(Heroicon::OutlinedShieldCheck)
                 ->color('primary')
-                ->modalHeading('Aprovisionamiento y Activación Fiscal Automática')
-                ->modalDescription('Configura el emisor y sube el certificado .p12 para generar automáticamente las claves de acceso de tu restaurante.')
-                ->modalSubmitActionLabel('⚡ Activar Facturación en la API')
+                ->modalHeading('Activación de Facturación Electrónica')
+                ->modalDescription('Registra los datos del emisor y sube el certificado de Hacienda para aprovisionar automáticamente la sucursal.')
+                ->modalSubmitActionLabel('Guardar y Activar')
                 ->modalWidth('2xl')
                 ->schema([
                     Select::make('establecimiento_id')
-                        ->label('Establecimiento a vincular')
+                        ->label('Establecimiento')
                         ->options(fn (): array => Establecimiento::query()->orderBy('nombre')->pluck('nombre', 'id')->all())
                         ->searchable()
                         ->native(false)
                         ->required()
-                        ->helperText('Selecciona la sucursal o establecimiento que emitirá los DTEs.'),
-                    Radio::make('ambiente')
+                        ->helperText('Sucursal o establecimiento al que se asociarán los DTEs emitidos.'),
+                    Select::make('ambiente')
                         ->label('Ambiente de Facturación')
                         ->options([
-                            '00' => '🟡 Modo Pruebas / Homologación (00) - Sin validez tributaria',
-                            '01' => '🟢 Modo Producción (01) - En Vivo con validez legal ante Hacienda',
+                            '00' => 'Pruebas / Homologación (00)',
+                            '01' => 'Producción (01) - Oficial MH',
                         ])
                         ->default('00')
+                        ->native(false)
                         ->required()
-                        ->helperText('Selecciona "00" durante la etapa de certificación y capacitación. Cambia a "01" cuando Hacienda te autorice a emitir en vivo.'),
+                        ->helperText('Usa "00" durante la etapa de pruebas. Cambia a "01" cuando Hacienda te autorice a emitir en vivo.'),
                     TextInput::make('razon_social')
                         ->label('Razón Social / Nombre Comercial')
                         ->placeholder('Ej: Pupusería Boomwalos S.A. de C.V.')
@@ -76,19 +77,30 @@ class ManageConfiguracionFiscal extends ManageRecords
                         ->default('001')
                         ->required()
                         ->maxLength(10),
+                    TextInput::make('usuario_mh')
+                        ->label('Usuario API Hacienda (Opcional)')
+                        ->placeholder('Ej: 06140101901011')
+                        ->maxLength(50)
+                        ->helperText('Usuario para autenticación /auth con el Ministerio de Hacienda.'),
+                    TextInput::make('clave_mh')
+                        ->label('Contraseña API Hacienda (Opcional)')
+                        ->password()
+                        ->revealable()
+                        ->maxLength(100)
+                        ->helperText('Contraseña de la API de Hacienda.'),
                     FileUpload::make('p12_file')
-                        ->label('Certificado Digital (.p12 / .pfx) del Ministerio de Hacienda')
-                        ->acceptedFileTypes(['application/x-pkcs12', 'application/pkcs12', 'application/octet-stream'])
+                        ->label('Llave Privada / Certificado (.key / .p12 / .pfx)')
+                        ->acceptedFileTypes(['application/x-pkcs12', 'application/pkcs12', 'application/octet-stream', 'application/x-pem-file', 'text/plain'])
                         ->disk('local')
                         ->directory('temp_certs')
                         ->required()
-                        ->helperText('Sube el archivo .p12 provisto por el Ministerio de Hacienda.'),
+                        ->helperText('Sube tu archivo private_pkcs8.key o certificado .p12 provisto por Hacienda.'),
                     TextInput::make('password')
-                        ->label('Contraseña del Certificado .p12')
+                        ->label('Contraseña de la Llave Privada / Certificado')
                         ->password()
                         ->revealable()
                         ->required()
-                        ->helperText('Clave secreta asignada al archivo .p12 al descargarlo del portal de Hacienda.'),
+                        ->helperText('Contraseña de la llave privada o certificado .p12.'),
                 ])
                 ->action(function (array $data, Action $action): void {
                     $p12Path = $data['p12_file'] ?? null;

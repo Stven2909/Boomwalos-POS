@@ -34,7 +34,15 @@ class PortalFiscalService
 
         /** @var Pedido|null $pedido */
         $pedido = Pedido::query()
-            ->with(['detalles.producto', 'detalles.combo', 'pago', 'mesa', 'usuario', 'establecimiento'])
+            ->with([
+                'detalles.producto',
+                'detalles.combo',
+                'detalles.detallePedidoNotas.notaCocina',
+                'pago',
+                'mesa',
+                'usuario',
+                'establecimiento',
+            ])
             ->where('numero_seguimiento', $tracking)
             ->orWhere(function (Builder $query) use ($tracking): void {
                 if (is_numeric($tracking)) {
@@ -59,20 +67,55 @@ class PortalFiscalService
         $totalCalculado = 0.0;
 
         foreach ($pedido->detalles as $detalle) {
-            $nombre = $detalle->producto?->nombre ?? $detalle->combo?->nombre ?? 'Artículo';
+            if ($detalle->estado_linea && $detalle->estado_linea->value !== 'ACTIVA') {
+                continue;
+            }
+
+            $nombre = $detalle->combo?->nombre ?? $detalle->producto?->nombre ?? 'Artículo';
             $cantidad = (int) $detalle->cantidad;
             $precio = (float) $detalle->precio_unitario;
             $subtotal = $cantidad * $precio;
             $totalCalculado += $subtotal;
 
+            $descripciones = [];
+            $opcionesCombo = [];
+            $notasCocina = [];
+
+            // Extraer opciones seleccionadas de combos por slots
+            foreach ($detalle->seleccion_combo ?? [] as $grupo) {
+                foreach ($grupo['items'] ?? [] as $itemCombo) {
+                    if (! empty($itemCombo['nombre']) && ! empty($itemCombo['cantidad'])) {
+                        $opcionesCombo[] = "{$itemCombo['cantidad']}x {$itemCombo['nombre']}";
+                        $descripciones[] = "{$itemCombo['cantidad']}x {$itemCombo['nombre']}";
+                    }
+                }
+            }
+
+            // Extraer notas de cocina / preparación
+            foreach ($detalle->detallePedidoNotas as $notaDetalle) {
+                if ($notaDetalle->notaCocina?->nombre) {
+                    $notasCocina[] = $notaDetalle->notaCocina->nombre;
+                    $descripciones[] = "Nota: {$notaDetalle->notaCocina->nombre}";
+                }
+            }
+
+            $descripcionTexto = implode(' | ', $descripciones);
+
             $items[] = [
                 'cantidad' => $cantidad,
                 'nombre' => $nombre,
+                'descripcion' => $descripcionTexto,
+                'opciones_combo' => $opcionesCombo,
+                'notas_cocina' => $notasCocina,
                 'precio' => number_format($precio, 2, '.', ''),
                 'subtotal' => number_format($subtotal, 2, '.', ''),
             ];
 
-            $itemsTextoArray[] = "{$cantidad}x {$nombre} ($" . number_format($subtotal, 2, '.', '') . ")";
+            $lineaTexto = "{$cantidad}x {$nombre} ($" . number_format($subtotal, 2, '.', '') . ")";
+            if (! empty($descripciones)) {
+                $lineaTexto .= "\n   ↳ " . implode("\n   ↳ ", $descripciones);
+            }
+            $itemsTextoArray[] = $lineaTexto;
         }
 
         $totalFinal = $pedido->pago?->monto_recibido !== null
@@ -85,6 +128,7 @@ class PortalFiscalService
             'codigo_corto' => $pedido->codigo_corto,
             'fecha' => $pedido->created_at?->format('d/m/Y h:i A') ?? now()->format('d/m/Y h:i A'),
             'cliente' => $pedido->usuario?->nombre ?? 'Consumidor Final',
+            'establecimiento' => $pedido->establecimiento?->nombre,
             'estado_comercial' => $pedido->estado_comercial?->value,
             'estado_solicitud' => $docFiscal?->estado?->value ?? 'SIN_SOLICITUD',
             'tipo_documento' => $docFiscal?->tipo_documento?->value,

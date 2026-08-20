@@ -27,12 +27,14 @@ class PortalQrController extends Controller
             ], 404);
         }
 
+        $responseData = array_merge($orden, [
+            'orden' => $orden,
+            'estadoSolicitud' => $orden['estado_solicitud'],
+        ]);
+
         return response()->json([
             'success' => true,
-            'data' => [
-                'orden' => $orden,
-                'estadoSolicitud' => $orden['estado_solicitud'],
-            ],
+            'data' => $responseData,
         ]);
     }
 

@@ -61,3 +61,32 @@ Al finalizar el turno, el cajero debe ingresar el dinero físico contado en efec
 ### D. Multi-Tenancy y Multi-Sucursal (`EstablecimientoContext.php`)
 - Cada usuario inicia sesión y opera bajo el contexto de una sucursal específica (`establecimiento_id`).
 - Todas las consultas de mesas, productos, pedidos, sesiones de caja e impresoras quedan filtradas estrictamente a su sucursal.
+
+---
+
+## 4. Los Dos Momentos de la Facturación Electrónica
+
+```
+┌────────────────────────────────────────────────────────────────────────┐
+│               LOS DOS MOMENTOS DE LA FACTURACIÓN FISCAL                │
+├────────────────────────────────────────────────────────────────────────┤
+│                                                                        │
+│  MOMENTO 1: CONFIGURACIÓN INICIAL (ONBOARDING UNA SOLA VEZ)           │
+│  1. El dueño ingresa al POS y llena sus datos tributarios (NIT, Giro). │
+│  2. Sube su llave privada (private_pkcs8.key o .p12) y credenciales MH.│
+│  3. El POS envía POST a /api/v1/onboarding/emisor con token maestro.   │
+│  4. La API retorna client_id y secret.                                 │
+│  5. El POS guarda las credenciales en configuraciones_fiscales.        │
+│     -> ¡Listo! El POS queda enlazado y nunca más almacena la llave.    │
+│                                                                        │
+│  MOMENTO 2: OPERACIÓN DÍA A DÍA                                        │
+│  • Opción A (Caja Directa):                                            │
+│    Cajero cobra -> Selecciona Factura 01 o CCF 03 -> POS firma con     │
+│    HMAC -> Envía a /api/v1/pos/emitir -> Recibe UUID -> Imprime ticket.│
+│  • Opción B (Portal QR / Autoservicio):                                │
+│    Cliente compra con Ticket Normal -> Escanea QR (boomwalos.vercel) ->│
+│    Ingresa sus datos fiscales -> WebFact solicita a POS -> POS dispara │
+│    hacia la API -> Cliente descarga su PDF de factura en su celular.   │
+│                                                                        │
+└────────────────────────────────────────────────────────────────────────┘
+```

@@ -218,4 +218,16 @@ class PortalQrTest extends TestCase
             ->assertJsonPath('estado', 'EMITIDO')
             ->assertJsonPath('dte.codigo_generacion', 'GEN-12345');
     }
+
+    public function test_consultar_orden_returns_items_with_descriptions_and_options(): void
+    {
+        $response = $this->getJson('/api/v1/portal-qr/orden/TRACK-TEST-100');
+
+        $response->assertOk()
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('data.items.0.nombre', 'Pupusa Suprema')
+            ->assertJsonPath('data.items.0.cantidad', 2)
+            ->assertJsonPath('data.items.0.subtotal', '5.00')
+            ->assertJsonPath('data.orden.items.0.nombre', 'Pupusa Suprema');
+    }
 }

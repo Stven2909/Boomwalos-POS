@@ -84,10 +84,13 @@ class FiscalOnboardingService
                 'codigo_mh' => $codigoPuntoVenta,
                 'nombre' => 'Caja Principal',
             ],
-            'credencial' => [
+            'credencial' => array_filter([
                 'p12_base64' => $p12Base64,
+                'key_base64' => $p12Base64,
                 'password' => $password,
-            ],
+                'usuario_mh' => ! empty($data['usuario_mh']) ? trim((string) $data['usuario_mh']) : null,
+                'clave_mh' => ! empty($data['clave_mh']) ? (string) $data['clave_mh'] : null,
+            ], fn ($value) => $value !== null),
         ];
 
         try {

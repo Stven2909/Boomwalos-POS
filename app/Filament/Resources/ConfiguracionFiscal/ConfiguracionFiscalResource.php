@@ -63,11 +63,11 @@ class ConfiguracionFiscalResource extends Resource
                                 Select::make('ambiente')
                                     ->label('Ambiente de facturación')
                                     ->options([
-                                        '00' => '🟡 Modo Pruebas / Homologación (00)',
-                                        '01' => '🟢 Modo Producción (01) - Oficial MH',
+                                        '00' => 'Pruebas / Homologación (00)',
+                                        '01' => 'Producción (01) - Oficial MH',
                                     ])
                                     ->default('00')
-                                    ->helperText('En "01 Producción", todos los comprobantes emitidos tienen validez legal y generan débito fiscal.')
+                                    ->helperText('En Producción (01), los comprobantes emitidos tienen validez legal ante el Ministerio de Hacienda.')
                                     ->required(),
                                 TextInput::make('razon_social')
                                     ->label('Razón social / Nombre comercial')
@@ -123,8 +123,8 @@ class ConfiguracionFiscalResource extends Resource
                 TextColumn::make('ambiente')
                     ->label('Ambiente')
                     ->badge()
-                    ->color(fn (?string $state): string => $state === '01' ? 'success' : 'warning')
-                    ->formatStateUsing(fn (?string $state): string => $state === '01' ? '🟢 01 Producción' : '🟡 00 Pruebas')
+                    ->color(fn (?string $state): string => $state === '01' ? 'primary' : 'gray')
+                    ->formatStateUsing(fn (?string $state): string => $state === '01' ? 'Producción (01)' : 'Pruebas (00)')
                     ->alignCenter(),
                 IconColumn::make('fiscal_habilitada')->label('Habilitada')->boolean()->alignCenter(),
                 TextColumn::make('razon_social')->label('Razón Social')->searchable(),
