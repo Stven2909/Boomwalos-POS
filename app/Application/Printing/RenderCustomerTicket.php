@@ -29,7 +29,7 @@ class RenderCustomerTicket
         $lineas[] = $this->establecimiento($pedido);
         $lineas[] = 'TICKET DE CLIENTE';
         $lineas[] = $this->destino($pedido);
-        $lineas[] = 'Pedido: ' . $pedido->codigo_corto;
+        $lineas[] = 'Pedido: ' . ($pedido->codigo_corto ?? $pedido->numero_seguimiento);
         $lineas[] = 'Fecha: ' . now()->setTimezone('America/El_Salvador')->format('d/m/Y H:i');
         $lineas[] = str_repeat('-', 32);
 
@@ -72,9 +72,18 @@ class RenderCustomerTicket
             $lineas[] = $footer;
         }
 
-        $lineas[] = '';
-        $lineas[] = 'DOCUMENTO FISCAL PENDIENTE DE SINCRONIZACION.';
-        $lineas[] = 'CONSERVE ESTE TICKET.';
+        $portalUrl = env('WEBFACT_URL', env('FRONTEND_URL', 'https://webfact.vercel.app'));
+        $tracking = $pedido->numero_seguimiento ?: ($pedido->codigo_corto ? (string) $pedido->codigo_corto : (string) $pedido->getKey());
+        $urlFactura = rtrim((string) $portalUrl, '/') . '/?tracking=' . urlencode($tracking);
+
+        $lineas[] = str_repeat('-', 32);
+        $lineas[] = '¿DESEA FACTURA O CCF?';
+        $lineas[] = 'Escanea el QR o ingresa a:';
+        $lineas[] = rtrim((string) $portalUrl, '/');
+        $lineas[] = 'Tracking: ' . $tracking;
+        $lineas[] = 'QR_URL: ' . $urlFactura;
+        $lineas[] = str_repeat('-', 32);
+        $lineas[] = '¡GRACIAS POR SU PREFERENCIA!';
 
         return implode("\n", $lineas) . "\n";
     }
