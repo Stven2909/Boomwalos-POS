@@ -126,8 +126,13 @@ class FiscalOnboardingService
                     ];
                 }
 
-                $resultado = $response->json();
                 $rawBody = $response->body();
+                $resultado = $response->json();
+
+                if (! is_array($resultado)) {
+                    $resultado = json_decode($rawBody, true);
+                }
+
                 Log::info("Respuesta de onboarding de la API Fiscal [{$response->status()}]: " . $rawBody);
 
                 if (! is_array($resultado)) {
