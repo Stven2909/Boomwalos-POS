@@ -126,60 +126,67 @@ class FiscalOnboardingService
                     ];
                 }
 
-                $rawBody = $response->body();
-                $resultado = $response->json();
-
-                if (! is_array($resultado)) {
-                    $resultado = json_decode($rawBody, true);
-                }
-
+                $rawBody = (string) $response->body();
                 Log::info("Respuesta de onboarding de la API Fiscal [{$response->status()}]: " . $rawBody);
 
+                $resultado = $response->json();
                 if (! is_array($resultado)) {
-                    return [
-                        'success' => false,
-                        'message' => "La API Fiscal respondió con código [{$response->status()}] pero no envió un JSON. Contenido: " . (trim($rawBody) !== '' ? mb_substr($rawBody, 0, 200) : '(cuerpo vacío)'),
-                    ];
+                    $cleanBody = trim($rawBody);
+                    $cleanBody = preg_replace('/^\xEF\xBB\xBF/', '', $cleanBody);
+                    $resultado = json_decode($cleanBody, true);
                 }
 
-                $clientId = (string) (
-                    $resultado['client_id']
-                    ?? $resultado['clientId']
-                    ?? $resultado['cliente_key']
-                    ?? $resultado['key']
-                    ?? $resultado['api_key']
-                    ?? $resultado['data']['client_id']
-                    ?? $resultado['data']['clientId']
-                    ?? $resultado['data']['cliente_key']
-                    ?? $resultado['data']['key']
-                    ?? $resultado['data']['api_key']
-                    ?? $resultado['credenciales']['client_id']
-                    ?? $resultado['credentials']['client_id']
-                    ?? $resultado['emisor']['client_id']
-                    ?? ''
-                );
+                $clientId = '';
+                $secret = '';
 
-                $secret = (string) (
-                    $resultado['secret']
-                    ?? $resultado['client_secret']
-                    ?? $resultado['cliente_secret']
-                    ?? $resultado['api_secret']
-                    ?? $resultado['secret_key']
-                    ?? $resultado['data']['secret']
-                    ?? $resultado['data']['client_secret']
-                    ?? $resultado['data']['cliente_secret']
-                    ?? $resultado['data']['api_secret']
-                    ?? $resultado['data']['secret_key']
-                    ?? $resultado['credenciales']['secret']
-                    ?? $resultado['credentials']['secret']
-                    ?? $resultado['emisor']['secret']
-                    ?? ''
-                );
+                if (is_array($resultado)) {
+                    $clientId = (string) (
+                        $resultado['client_id']
+                        ?? $resultado['clientId']
+                        ?? $resultado['cliente_key']
+                        ?? $resultado['key']
+                        ?? $resultado['api_key']
+                        ?? $resultado['data']['client_id']
+                        ?? $resultado['data']['clientId']
+                        ?? $resultado['data']['cliente_key']
+                        ?? $resultado['data']['key']
+                        ?? $resultado['data']['api_key']
+                        ?? $resultado['credenciales']['client_id']
+                        ?? $resultado['credentials']['client_id']
+                        ?? $resultado['emisor']['client_id']
+                        ?? ''
+                    );
+
+                    $secret = (string) (
+                        $resultado['secret']
+                        ?? $resultado['client_secret']
+                        ?? $resultado['cliente_secret']
+                        ?? $resultado['api_secret']
+                        ?? $resultado['secret_key']
+                        ?? $resultado['data']['secret']
+                        ?? $resultado['data']['client_secret']
+                        ?? $resultado['data']['cliente_secret']
+                        ?? $resultado['data']['api_secret']
+                        ?? $resultado['data']['secret_key']
+                        ?? $resultado['credenciales']['secret']
+                        ?? $resultado['credentials']['secret']
+                        ?? $resultado['emisor']['secret']
+                        ?? ''
+                    );
+                }
+
+                // Fallback Regex: extrae directamente si el JSON parser de PHP recibió caracteres no estándar
+                if ($clientId === '' && preg_match('/["\'](?:client_id|clientId|cliente_key|key)["\']\s*:\s*["\']([^"\']+)["\']/', $rawBody, $mClient)) {
+                    $clientId = $mClient[1];
+                }
+                if ($secret === '' && preg_match('/["\'](?:secret|client_secret|cliente_secret|secret_key)["\']\s*:\s*["\']([^"\']+)["\']/', $rawBody, $mSecret)) {
+                    $secret = $mSecret[1];
+                }
 
                 if ($clientId === '' || $secret === '') {
                     return [
                         'success' => false,
-                        'message' => 'La API Fiscal respondió exitosamente pero no se encontraron las claves client_id / secret. Respuesta recibida: ' . json_encode($resultado),
+                        'message' => 'La API Fiscal respondió pero no se encontraron las claves client_id / secret en el cuerpo: ' . $rawBody,
                     ];
                 }
             }
