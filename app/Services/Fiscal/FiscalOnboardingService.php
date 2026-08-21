@@ -70,12 +70,14 @@ class FiscalOnboardingService
 
         $payload = [
             'ambiente' => $ambiente,
-            'emisor' => [
+            'emisor' => array_filter([
                 'nit' => $nit,
                 'nrc' => $nrc,
                 'nombre' => $razonSocial,
+                'actividad_economica' => '10005',
+                'desc_actividad' => $giro ?? 'Restaurantes y servicios de comida',
                 'giro' => $giro,
-            ],
+            ]),
             'establecimiento' => [
                 'codigo_mh' => $codigoEstablecimiento,
                 'nombre' => $establecimiento->nombre,
@@ -86,10 +88,13 @@ class FiscalOnboardingService
             ],
             'credencial' => array_filter([
                 'p12_base64' => $p12Base64,
-                'key_base64' => $p12Base64,
+                'private_key_base64' => $p12Base64,
+                'private_key' => $p12Base64,
+                'certificate_base64' => $p12Base64,
                 'password' => $password,
-                'usuario_mh' => ! empty($data['usuario_mh']) ? trim((string) $data['usuario_mh']) : null,
-                'clave_mh' => ! empty($data['clave_mh']) ? (string) $data['clave_mh'] : null,
+                'certificate_password' => $password,
+                'username' => ! empty($data['usuario_mh']) ? trim((string) $data['usuario_mh']) : $nit,
+                'password_mh' => ! empty($data['clave_mh']) ? (string) $data['clave_mh'] : null,
             ], fn ($value) => $value !== null),
         ];
 
@@ -122,7 +127,15 @@ class FiscalOnboardingService
                 }
 
                 $resultado = $response->json();
-                Log::info("Respuesta de onboarding de la API Fiscal: " . json_encode($resultado));
+                $rawBody = $response->body();
+                Log::info("Respuesta de onboarding de la API Fiscal [{$response->status()}]: " . $rawBody);
+
+                if (! is_array($resultado)) {
+                    return [
+                        'success' => false,
+                        'message' => "La API Fiscal respondió con código [{$response->status()}] pero no envió un JSON. Contenido: " . (trim($rawBody) !== '' ? mb_substr($rawBody, 0, 200) : '(cuerpo vacío)'),
+                    ];
+                }
 
                 $clientId = (string) (
                     $resultado['client_id']
@@ -161,7 +174,7 @@ class FiscalOnboardingService
                 if ($clientId === '' || $secret === '') {
                     return [
                         'success' => false,
-                        'message' => 'La API Fiscal respondió exitosamente pero no se encontraron las claves client_id / secret. Respuesta: ' . json_encode($resultado),
+                        'message' => 'La API Fiscal respondió exitosamente pero no se encontraron las claves client_id / secret. Respuesta recibida: ' . json_encode($resultado),
                     ];
                 }
             }
