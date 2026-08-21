@@ -122,13 +122,46 @@ class FiscalOnboardingService
                 }
 
                 $resultado = $response->json();
-                $clientId = (string) ($resultado['client_id'] ?? $resultado['cliente_key'] ?? '');
-                $secret = (string) ($resultado['secret'] ?? $resultado['cliente_secret'] ?? '');
+                Log::info("Respuesta de onboarding de la API Fiscal: " . json_encode($resultado));
+
+                $clientId = (string) (
+                    $resultado['client_id']
+                    ?? $resultado['clientId']
+                    ?? $resultado['cliente_key']
+                    ?? $resultado['key']
+                    ?? $resultado['api_key']
+                    ?? $resultado['data']['client_id']
+                    ?? $resultado['data']['clientId']
+                    ?? $resultado['data']['cliente_key']
+                    ?? $resultado['data']['key']
+                    ?? $resultado['data']['api_key']
+                    ?? $resultado['credenciales']['client_id']
+                    ?? $resultado['credentials']['client_id']
+                    ?? $resultado['emisor']['client_id']
+                    ?? ''
+                );
+
+                $secret = (string) (
+                    $resultado['secret']
+                    ?? $resultado['client_secret']
+                    ?? $resultado['cliente_secret']
+                    ?? $resultado['api_secret']
+                    ?? $resultado['secret_key']
+                    ?? $resultado['data']['secret']
+                    ?? $resultado['data']['client_secret']
+                    ?? $resultado['data']['cliente_secret']
+                    ?? $resultado['data']['api_secret']
+                    ?? $resultado['data']['secret_key']
+                    ?? $resultado['credenciales']['secret']
+                    ?? $resultado['credentials']['secret']
+                    ?? $resultado['emisor']['secret']
+                    ?? ''
+                );
 
                 if ($clientId === '' || $secret === '') {
                     return [
                         'success' => false,
-                        'message' => 'La API Fiscal respondió exitosamente pero no retornó las credenciales (client_id / secret).',
+                        'message' => 'La API Fiscal respondió exitosamente pero no se encontraron las claves client_id / secret. Respuesta: ' . json_encode($resultado),
                     ];
                 }
             }
