@@ -162,7 +162,7 @@ class PortalFiscalService
             return strtoupper($valor);
         }
 
-        return self::MODO_HIBRIDO;
+        return self::MODO_AUTOMATICO;
     }
 
     /**
@@ -172,7 +172,7 @@ class PortalFiscalService
     {
         $modo = strtoupper(trim($modo));
         if (! in_array($modo, [self::MODO_MANUAL, self::MODO_AUTOMATICO, self::MODO_HIBRIDO], true)) {
-            $modo = self::MODO_HIBRIDO;
+            $modo = self::MODO_AUTOMATICO;
         }
 
         $establecimientoId ??= Establecimiento::query()->value('id') ?? 1;
@@ -243,8 +243,8 @@ class PortalFiscalService
         }
 
         $datosCliente = [
-            'nombre' => trim((string) ($datos['nombre'] ?? '')),
-            'nit' => trim((string) ($datos['nit'] ?? '')),
+            'nombre' => trim((string) ($datos['nombre'] ?? 'Consumidor Final')),
+            'nit' => trim((string) ($datos['nit'] ?? $datos['dui'] ?? '')),
             'nrc' => trim((string) ($datos['nrc'] ?? '')),
             'dui' => trim((string) ($datos['dui'] ?? '')),
             'email' => trim((string) ($datos['email'] ?? '')),
@@ -299,7 +299,39 @@ class PortalFiscalService
             ? bcsub((string) $pedido->pago->monto_recibido, (string) ($pedido->pago->cambio_devuelto ?? 0), 2)
             : '0.00';
 
+        $items = [];
+        foreach ($pedido->detalles as $detalle) {
+            if ($detalle->estado_linea?->value === 'CANCELADA') {
+                continue;
+            }
+            $items[] = [
+                'nombre' => $detalle->producto?->nombre ?? $detalle->combo?->nombre ?? 'Consumo en Restaurante',
+                'cantidad' => (float) ($detalle->cantidad ?? 1),
+                'precio_unitario' => (float) ($detalle->precio_unitario ?? 0),
+            ];
+        }
+
+        if (empty($items)) {
+            $items[] = [
+                'nombre' => 'Consumo de Alimentos y Bebidas',
+                'cantidad' => 1,
+                'precio_unitario' => (float) $total,
+            ];
+        }
+
         $payload = [
+            'establecimiento' => (string) ($config?->codigo_establecimiento ?? '0001'),
+            'puntoVenta' => (string) ($config?->codigo_punto_venta ?? '001'),
+            'tipoDte' => $tipoDocumento->value === 'CCF' || $tipoDocumento->value === '03' ? '03' : '01',
+            'cliente' => array_filter([
+                'nombre' => $datosCliente['nombre'] ?? 'Consumidor Final',
+                'nit' => ! empty($datosCliente['nit']) ? $datosCliente['nit'] : (! empty($datosCliente['dui']) ? $datosCliente['dui'] : null),
+                'nrc' => ! empty($datosCliente['nrc']) ? $datosCliente['nrc'] : null,
+                'email' => ! empty($datosCliente['email']) ? $datosCliente['email'] : null,
+                'telefono' => ! empty($datosCliente['telefono']) ? $datosCliente['telefono'] : null,
+                'direccion' => ! empty($datosCliente['direccion']) ? $datosCliente['direccion'] : null,
+            ], fn ($v) => $v !== null),
+            'items' => $items,
             'clave_reintento' => $clave,
             'referencia' => $pedido->numero_seguimiento,
             'fecha_emision' => now()->toIso8601String(),
