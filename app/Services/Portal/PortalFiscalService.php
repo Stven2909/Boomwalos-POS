@@ -2,6 +2,7 @@
 
 namespace App\Services\Portal;
 
+use App\Contracts\EstablishmentContextInterface;
 use App\Contracts\FiscalGatewayInterface;
 use App\Enums\EstadoDocumentoFiscal;
 use App\Enums\TipoDocumento;
@@ -12,6 +13,7 @@ use App\Models\Establecimiento;
 use App\Models\Pedido;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Str;
 use Throwable;
 
@@ -23,6 +25,7 @@ class PortalFiscalService
 
     public function __construct(
         private readonly FiscalGatewayInterface $fiscalGateway,
+        private readonly EstablishmentContextInterface $establishmentContext,
     ) {}
 
     /**
@@ -32,25 +35,33 @@ class PortalFiscalService
     {
         $tracking = trim($tracking);
 
+        $relations = [
+            'detalles.producto',
+            'detalles.combo',
+            'detalles.detallePedidoNotas.notaCocina',
+            'pago',
+            'mesa',
+            'usuario',
+            'establecimiento',
+        ];
+
         /** @var Pedido|null $pedido */
         $pedido = Pedido::query()
-            ->with([
-                'detalles.producto',
-                'detalles.combo',
-                'detalles.detallePedidoNotas.notaCocina',
-                'pago',
-                'mesa',
-                'usuario',
-                'establecimiento',
-            ])
+            ->with($relations)
             ->where('numero_seguimiento', $tracking)
-            ->orWhere(function (Builder $query) use ($tracking): void {
-                if (is_numeric($tracking)) {
-                    $query->where('codigo_corto', (int) $tracking);
-                }
-            })
-            ->latest('id')
             ->first();
+
+        if (! $pedido && is_numeric($tracking)) {
+            $matches = Pedido::query()
+                ->with($relations)
+                ->where('codigo_corto', (int) $tracking)
+                ->limit(2)
+                ->get();
+
+            // El código corto se reinicia por sucursal; no elegir una orden
+            // arbitraria si hay más de una coincidencia.
+            $pedido = $matches->count() === 1 ? $matches->first() : null;
+        }
 
         if (! $pedido) {
             return null;
@@ -82,13 +93,21 @@ class PortalFiscalService
             $notasCocina = [];
 
             // Extraer opciones seleccionadas de combos por slots
+            $masaLinea = data_get($detalle->configuracion_producto, 'masa.nombre');
             foreach ($detalle->seleccion_combo ?? [] as $grupo) {
                 foreach ($grupo['items'] ?? [] as $itemCombo) {
                     if (! empty($itemCombo['nombre']) && ! empty($itemCombo['cantidad'])) {
-                        $opcionesCombo[] = "{$itemCombo['cantidad']}x {$itemCombo['nombre']}";
-                        $descripciones[] = "{$itemCombo['cantidad']}x {$itemCombo['nombre']}";
+                        $cantidadItem = (int) $cantidad * (int) $itemCombo['cantidad'];
+                        $masaItem = data_get($itemCombo, 'masa.nombre') ?: $masaLinea;
+                        $detalleItem = "{$cantidadItem}x {$itemCombo['nombre']}" . ($masaItem ? " ({$masaItem})" : '');
+                        $opcionesCombo[] = $detalleItem;
+                        $descripciones[] = $detalleItem;
                     }
                 }
+            }
+
+            if (! $detalle->combo_id && $masaLinea) {
+                $descripciones[] = 'Masa: ' . $masaLinea;
             }
 
             // Extraer notas de cocina / preparación
@@ -127,7 +146,7 @@ class PortalFiscalService
             'tracking_number' => $pedido->numero_seguimiento,
             'codigo_corto' => $pedido->codigo_corto,
             'fecha' => $pedido->created_at?->format('d/m/Y h:i A') ?? now()->format('d/m/Y h:i A'),
-            'cliente' => $pedido->usuario?->nombre ?? 'Consumidor Final',
+            'cliente' => $docFiscal?->datos_solicitante['nombre'] ?? 'Consumidor Final',
             'establecimiento' => $pedido->establecimiento?->nombre,
             'estado_comercial' => $pedido->estado_comercial?->value,
             'estado_solicitud' => $docFiscal?->estado?->value ?? 'SIN_SOLICITUD',
@@ -146,6 +165,7 @@ class PortalFiscalService
      */
     public function obtenerModoEmision(?int $establecimientoId = null): string
     {
+        $establecimientoId = $this->resolvePortalEstablishmentId($establecimientoId);
         $query = Configuracion::query()->where('clave', 'modo_emision_portal');
 
         if ($establecimientoId !== null) {
@@ -175,7 +195,7 @@ class PortalFiscalService
             $modo = self::MODO_AUTOMATICO;
         }
 
-        $establecimientoId ??= Establecimiento::query()->value('id') ?? 1;
+        $establecimientoId = $this->resolvePortalEstablishmentId($establecimientoId);
 
         Configuracion::updateOrCreate(
             [
@@ -294,7 +314,7 @@ class PortalFiscalService
         $config = $pedido->establecimiento?->configuracionFiscal
             ?? ConfiguracionFiscal::query()->where('establecimiento_id', $pedido->establecimiento_id)->first();
 
-        $clave = 'portal-' . $pedido->getKey() . '-' . time();
+        $clave = 'portal-' . $pedido->getKey() . '-' . $tipoDocumento->value;
         $total = $pedido->pago?->monto_recibido !== null
             ? bcsub((string) $pedido->pago->monto_recibido, (string) ($pedido->pago->cambio_devuelto ?? 0), 2)
             : '0.00';
@@ -320,8 +340,8 @@ class PortalFiscalService
         }
 
         $payload = [
-            'establecimiento' => (string) ($config?->codigo_establecimiento ?? '0001'),
-            'puntoVenta' => (string) ($config?->codigo_punto_venta ?? '001'),
+            'establecimiento' => (string) ($config?->codigo_establecimiento ?: 'S001'),
+            'puntoVenta' => (string) ($config?->codigo_punto_venta ?: 'P001'),
             'tipoDte' => $tipoDocumento->value === 'CCF' || $tipoDocumento->value === '03' ? '03' : '01',
             'cliente' => array_filter([
                 'nombre' => $datosCliente['nombre'] ?? 'Consumidor Final',
@@ -345,19 +365,24 @@ class PortalFiscalService
             $resultado = [];
             if ($config && $config->fiscal_habilitada) {
                 $resultado = $this->fiscalGateway->enviarVenta($config, $payload);
-            } else {
-                // Simulación en entornos de desarrollo / mock
+            } elseif (app()->environment(['local', 'testing']) && config('fiscal.mock.enabled')) {
+                // El mock solo es válido fuera de producción y debe habilitarse
+                // explícitamente en la configuración del entorno.
                 $resultado = [
-                    'fiscal_sale_id' => 'GEN-' . strtoupper(Str::random(8)),
-                    'codigo_generacion' => (string) Str::uuid(),
-                    'sello_recepcion' => 'SELLO-' . strtoupper(Str::random(24)),
-                    'numero_control' => 'DTE-01-' . strtoupper(Str::random(10)),
+                    'codigoGeneracion' => (string) Str::uuid(),
+                    'selloRecepcion' => 'MOCK-SELLO-' . strtoupper(Str::random(24)),
+                    'numeroControl' => 'DTE-' . ($tipoDocumento->value === 'CCF' || $tipoDocumento->value === '03' ? '03' : '01') . '-M001P001-000000000000001',
+                ];
+            } else {
+                return [
+                    'success' => false,
+                    'message' => 'La configuración fiscal de la sucursal no está habilitada.',
                 ];
             }
 
-            $codigoGeneracion = $resultado['codigo_generacion'] ?? (string) Str::uuid();
-            $selloRecepcion = $resultado['sello_recepcion'] ?? ('REC-' . strtoupper(Str::random(20)));
-            $numeroControl = $resultado['numero_control'] ?? ('DTE-' . $tipoDocumento->value . '-' . rand(1000, 9999));
+            $codigoGeneracion = $resultado['codigoGeneracion'] ?? $resultado['codigo_generacion'] ?? null;
+            $selloRecepcion = $resultado['selloRecepcion'] ?? $resultado['sello_recepcion'] ?? null;
+            $numeroControl = $resultado['numeroControl'] ?? $resultado['numero_control'] ?? null;
 
             $docFiscal = DocumentoFiscal::updateOrCreate(
                 [
@@ -420,6 +445,31 @@ class PortalFiscalService
         $datosCliente = $docFiscal->datos_solicitante ?? [];
 
         return $this->emitirDteDirecto($pedido, $docFiscal->tipo_documento, $datosCliente);
+    }
+
+    private function resolvePortalEstablishmentId(?int $establishmentId): int
+    {
+        if ($establishmentId !== null) {
+            if (! $this->establishmentContext->canAccess($establishmentId)) {
+                throw new \Illuminate\Auth\Access\AuthorizationException('No tienes acceso a esta sucursal.');
+            }
+
+            return $establishmentId;
+        }
+
+        $activeId = $this->establishmentContext->idOrNull();
+        if ($activeId !== null) {
+            return $activeId;
+        }
+
+        $accessible = $this->establishmentContext->accessible();
+        if ($accessible->count() === 1) {
+            return (int) $accessible->first()->getKey();
+        }
+
+        throw ValidationException::withMessages([
+            'establecimiento_id' => 'Selecciona la sucursal para consultar o guardar el modo fiscal.',
+        ]);
     }
 
     /**

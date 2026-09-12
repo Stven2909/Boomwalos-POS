@@ -1,0 +1,22 @@
+<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><style>
+        @page { size: A4 portrait; margin: 1.5cm 1.3cm 1.5cm 1.3cm; }
+        body { font-family: 'Segoe UI', sans-serif; color: #1e293b; font-size: 8.5pt; line-height: 1.5; }
+        .header { border-bottom: 2px solid #d97706; padding-bottom: 8px; margin-bottom: 12px; display: flex; justify-content: space-between; }
+        h1 { font-size: 15pt; color: #0f172a; margin: 0; }
+        .badge { background: #fef3c7; color: #92400e; padding: 3px 8px; border-radius: 4px; font-size: 7.5pt; font-weight: 700; }
+        table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 7.5pt; }
+        th { background: #0f172a; color: #fff; padding: 5px 8px; text-align: left; font-size: 7pt; }
+        td { padding: 4.5px 8px; border-bottom: 1px solid #e2e8f0; }
+        tr:nth-child(even) td { background: #f8fafc; }
+        </style></head><body>
+        <div class="header"><div><h3 style="margin:0;color:#d97706;font-size:9pt;">CUMPLIMIENTO NORMATIVO TRIBUTARIO</h3><h1>Traductor Inteligente de Esquemas DTE (FSC-003)</h1></div><span class="badge">CONFORME A GUÍA TÉCNICA MH</span></div>
+        <p><strong>Autor:</strong> Moisés Herrera | <strong>Servicio:</strong> `DteTranslatorService.php` | <strong>Fecha:</strong> Agosto 2026</p>
+        <h3>Capacidades del Traductor Fiscal</h3>
+        <table><thead><tr><th>Documento</th><th>Tipo DTE</th><th>Lógica de Transformación Automática</th></tr></thead><tbody>
+        <tr><td><strong>Factura Electrónica</strong></td><td><code>01</code></td><td>Precios con IVA incluido, sumatoria directa y asignación de unidad 59.</td></tr>
+        <tr><td><strong>Comprobante de Crédito Fiscal</strong></td><td><code>03</code></td><td>Extracción automática de base imponible, cálculo del 13% de IVA y sumatoria separada.</td></tr>
+        <tr><td><strong>Nota de Crédito</strong></td><td><code>05</code></td><td>Referencia a DTE previo y anulación total o parcial conforme a Hacienda.</td></tr>
+        </tbody></table>
+        <h3>Endpoints en `POsFact-Laravel`</h3>
+        <p><code>POST /api/v1/pos/emitir</code> protegido por middleware HMAC-SHA256.</p>
+        </body></html>

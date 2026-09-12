@@ -7,7 +7,7 @@ use App\Filament\Pages\Auth\Login;
 use App\Filament\Pages\Pos\ListaPedidos;
 use App\Filament\Pages\Pos\ServiceSelection;
 use App\Contracts\BrandingServiceInterface;
-use App\Http\Middleware\ResolveTenant;
+
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -85,10 +85,6 @@ class AdminPanelProvider extends PanelProvider
                 AuthenticateSession::class,
                 ShareErrorsFromSession::class,
                 PreventRequestForgery::class,
-                // ResolveTenant debe quedar antes de SubstituteBindings para que
-                // los route model bindings del panel consulten la conexión del
-                // tenant ya resuelta (mismo requisito que en el grupo `web`).
-                ResolveTenant::class,
                 SubstituteBindings::class,
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,

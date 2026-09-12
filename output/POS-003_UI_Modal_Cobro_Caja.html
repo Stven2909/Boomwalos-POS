@@ -1,0 +1,49 @@
+<!DOCTYPE html><html><head><meta charset="UTF-8"><style>
+        * { box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; margin: 0; padding: 0; }
+        body { background: #0f172a; color: #f8fafc; display: flex; align-items: center; justify-content: center; height: 100vh; }
+        .modal { width: 850px; background: #1e293b; border: 1px solid #334155; border-radius: 14px; padding: 24px; display: grid; grid-template-columns: 1fr 1fr; gap: 24px; box-shadow: 0 20px 40px rgba(0,0,0,0.5); }
+        .left-col { display: flex; flex-direction: column; justify-content: space-between; }
+        .total-box { background: #0f172a; border: 1px solid #334155; border-radius: 10px; padding: 16px; margin-bottom: 16px; }
+        .methods { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+        .m-btn { padding: 14px; border-radius: 8px; border: 1px solid #334155; background: #0f172a; color: #cbd5e1; font-weight: 700; text-align: center; cursor: pointer; }
+        .m-btn.active { background: #0284c7; color: #fff; border-color: #38bdf8; }
+        .numpad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+        .num-btn { background: #0f172a; border: 1px solid #334155; color: #f8fafc; font-size: 20px; font-weight: 700; border-radius: 8px; padding: 16px; text-align: center; cursor: pointer; }
+        .num-btn:hover { background: #334155; }
+        .change-box { background: #064e3b; border: 1px solid #10b981; border-radius: 10px; padding: 14px; text-align: center; margin-top: 14px; }
+        .btn-confirm { background: #10b981; color: #fff; padding: 16px; border-radius: 8px; font-weight: 800; font-size: 18px; border: none; width: 100%; cursor: pointer; margin-top: 14px; }
+        </style></head><body>
+        <div class="modal">
+            <div class="left-col">
+                <div>
+                    <div style="font-size:18px;font-weight:800;margin-bottom:12px;">Estación de Cobro &bull; Mesa 03</div>
+                    <div class="total-box">
+                        <div style="font-size:12px;color:#94a3b8;">MONTO TOTAL A COBRAR</div>
+                        <div style="font-size:32px;font-weight:800;color:#38bdf8;">$24.50</div>
+                    </div>
+                    <div style="font-size:13px;font-weight:700;margin-bottom:8px;">MÉTODO DE PAGO</div>
+                    <div class="methods">
+                        <div class="m-btn active">💵 Efectivo</div>
+                        <div class="m-btn">💳 Tarjeta (POS)</div>
+                        <div class="m-btn">📲 Transferencia</div>
+                        <div class="m-btn">🔀 Pago Mixto</div>
+                    </div>
+                </div>
+                <div class="change-box">
+                    <div style="font-size:11px;color:#a7f3d0;font-weight:700;">CAMBIO / VUELTO AL CLIENTE</div>
+                    <div style="font-size:28px;font-weight:800;color:#34d399;">$25.50</div>
+                </div>
+            </div>
+            <div>
+                <div style="font-size:13px;color:#94a3b8;margin-bottom:6px;">EFECTIVO RECIBIDO</div>
+                <div style="background:#0f172a;border:2px solid #0284c7;border-radius:8px;padding:12px;font-size:24px;font-weight:800;text-align:right;margin-bottom:12px;color:#fff;">$50.00</div>
+                <div class="numpad">
+                    <div class="num-btn">1</div><div class="num-btn">2</div><div class="num-btn">3</div>
+                    <div class="num-btn">4</div><div class="num-btn">5</div><div class="num-btn">6</div>
+                    <div class="num-btn">7</div><div class="num-btn">8</div><div class="num-btn">9</div>
+                    <div class="num-btn">.</div><div class="num-btn">0</div><div class="num-btn">⌫</div>
+                </div>
+                <button class="btn-confirm">🖨️ Finalizar Cobro & Emitir Ticket QR</button>
+            </div>
+        </div>
+        </body></html>

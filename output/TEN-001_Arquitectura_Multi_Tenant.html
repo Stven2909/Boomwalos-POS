@@ -1,0 +1,23 @@
+<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><style>
+        @page { size: A4 portrait; margin: 1.5cm 1.3cm 1.5cm 1.3cm; }
+        body { font-family: 'Segoe UI', sans-serif; color: #1e293b; font-size: 8.5pt; line-height: 1.5; }
+        .header { border-bottom: 2px solid #2563eb; padding-bottom: 8px; margin-bottom: 12px; display: flex; justify-content: space-between; }
+        h1 { font-size: 15pt; color: #0f172a; margin: 0; }
+        .badge { background: #dcfce7; color: #166534; padding: 3px 8px; border-radius: 4px; font-size: 7.5pt; font-weight: 700; }
+        table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 7.5pt; }
+        th { background: #0f172a; color: #fff; padding: 5px 8px; text-align: left; font-size: 7pt; }
+        td { padding: 4.5px 8px; border-bottom: 1px solid #e2e8f0; }
+        tr:nth-child(even) td { background: #f8fafc; }
+        </style></head><body>
+        <div class="header"><div><h3 style="margin:0;color:#2563eb;font-size:9pt;">ARQUITECTURA DE PLATAFORMA</h3><h1>Aislamiento y Gestión Multi-Tenant (TEN-001)</h1></div><span class="badge">AISLAMIENTO PROBADO</span></div>
+        <p><strong>Autor:</strong> Moisés Herrera | <strong>Servicio:</strong> `TenantConnectionResolver.php` | <strong>Fecha:</strong> Agosto 2026</p>
+        <h3>Componentes de Aislamiento</h3>
+        <table><thead><tr><th>Componente</th><th>Archivo</th><th>Función</th></tr></thead><tbody>
+        <tr><td><strong>Modelo de Tenant</strong></td><td><code>app/Models/Platform/PlatformTenant.php</code></td><td>Identificación del inquilino y base de datos asignada.</td></tr>
+        <tr><td><strong>Conexión Dinámica</strong></td><td><code>app/Services/Platform/TenantConnectionResolver.php</code></td><td>Conmutación transparente de conexión MySQL por request.</td></tr>
+        <tr><td><strong>Selector de Sucursal</strong></td><td><code>app/Http/Controllers/EstablishmentContextController.php</code></td><td>Cambio de contexto para usuarios autorizados.</td></tr>
+        <tr><td><strong>Personalización</strong></td><td><code>app/Services/BrandingService.php</code></td><td>Inyección dinámica de logos y CSS corporativo por restaurante.</td></tr>
+        </tbody></table>
+        <h3>Pruebas de Aislamiento</h3>
+        <p>Validado mediante <code>TenantIsolationTest.php</code> asegurando que ningún dato se comparta entre sucursales.</p>
+        </body></html>

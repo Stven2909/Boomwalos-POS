@@ -4,7 +4,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
-use App\Http\Middleware\ResolveTenant;
+
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -15,11 +15,7 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        // ResolveTenant debe correr antes de SubstituteBindings para que el
-        // route model binding (p. ej. `Establecimiento $establecimiento`) se
-        // resuelva sobre la conexión del tenant ya activa. Se usa `prepend`
-        // para que quede por delante del grupo `web` completo.
-        $middleware->web(prepend: [ResolveTenant::class]);
+        // Se conservan los grupos web y api predeterminados de Laravel.
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

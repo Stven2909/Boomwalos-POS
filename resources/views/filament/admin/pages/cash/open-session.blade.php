@@ -1,7 +1,8 @@
 <x-filament-panels::page>
     <div class="bw-pos-page bw-cash-opening-page">
         @include('filament.admin.components.pos-header', [
-            'rightLabel' => 'CAJA 1 · TURNO INACTIVO',
+            'centerLabel' => $this->operationContext,
+            'rightLabel' => $this->actorName,
         ])
 
         <main class="bw-cash-opening-main">

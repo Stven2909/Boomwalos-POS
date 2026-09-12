@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Printing;
 
+use App\Contracts\EstablishmentContextInterface;
 use App\Http\Controllers\Controller;
 use App\Models\Impresora;
 use App\Models\TrabajoImpresion;
@@ -21,8 +22,11 @@ class TicketPdfController extends Controller
         try {
             $id = $trabajo instanceof TrabajoImpresion ? $trabajo->getKey() : $trabajo;
             $job = $trabajo instanceof TrabajoImpresion
-                ? $trabajo
-                : TrabajoImpresion::query()->find($id);
+                ? $trabajo->loadMissing('pedido')
+                : TrabajoImpresion::query()->with('pedido')->find($id);
+
+            abort_unless(auth()->user()?->can('ver_impresoras'), 403);
+            abort_unless($this->canAccessEstablishment($job?->pedido?->establecimiento_id), 404);
 
             if (! $job) {
                 return response(
@@ -65,6 +69,9 @@ class TicketPdfController extends Controller
                 ? $impresora
                 : Impresora::query()->find($id);
 
+            abort_unless(auth()->user()?->can('ver_impresoras'), 403);
+            abort_unless($this->canAccessEstablishment($printer?->establecimiento_id), 404);
+
             if (! $printer) {
                 return response(
                     view('printing.ticket-fallback', [
@@ -94,5 +101,18 @@ class TicketPdfController extends Controller
                 ['Content-Type' => 'text/html; charset=UTF-8']
             );
         }
+    }
+
+    private function canAccessEstablishment(?int $establishmentId): bool
+    {
+        if ($establishmentId === null) {
+            return true;
+        }
+
+        $context = app(EstablishmentContextInterface::class);
+        $activeId = $context->idOrNull();
+
+        return $context->canAccess($establishmentId)
+            && ($activeId === null || $activeId === $establishmentId);
     }
 }

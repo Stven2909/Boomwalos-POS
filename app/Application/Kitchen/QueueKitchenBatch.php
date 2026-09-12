@@ -19,10 +19,8 @@ class QueueKitchenBatch implements KitchenDispatcherInterface
 
     public function handle(TandaPedido $batch): ?TrabajoImpresion
     {
-        $printer = Impresora::query()
-            ->where('tipo', TipoImpresora::COMANDA->value)
-            ->orderBy('id')
-            ->first();
+        $establecimientoId = $batch->pedido()->value('establecimiento_id');
+        $printer = Impresora::buscar(TipoImpresora::COMANDA, $establecimientoId);
 
         if (! $printer) {
             return null;
@@ -68,10 +66,18 @@ class QueueKitchenBatch implements KitchenDispatcherInterface
         foreach ($batch->detalles as $detail) {
             $name = $detail->combo?->nombre ?? $detail->producto?->nombre ?? 'Producto';
             $lines[] = $detail->cantidad . ' x ' . $name;
+            $lineMass = data_get($detail->configuracion_producto, 'masa.nombre');
+
+            if (! $detail->combo_id && $lineMass) {
+                $lines[] = '  Masa: ' . $lineMass;
+            }
 
             foreach ($detail->seleccion_combo ?? [] as $group) {
                 foreach ($group['items'] ?? [] as $item) {
-                    $lines[] = '  - ' . $item['cantidad'] . ' ' . $item['nombre'];
+                    $itemQuantity = (int) $detail->cantidad * (int) ($item['cantidad'] ?? 0);
+                    $itemMass = data_get($item, 'masa.nombre') ?: $lineMass;
+                    $massLabel = $itemMass ? ' · ' . $itemMass : '';
+                    $lines[] = '  - ' . $itemQuantity . ' ' . $item['nombre'] . $massLabel;
                 }
             }
 

@@ -16,6 +16,7 @@ class Producto extends Model
         'precio',
         'imagen_url',
         'disponibilidad',
+        'requiere_masa',
     ];
 
     protected function casts(): array
@@ -23,6 +24,7 @@ class Producto extends Model
         return [
             'precio' => 'decimal:2',
             'disponibilidad' => DisponibilidadProducto::class,
+            'requiere_masa' => 'boolean',
         ];
     }
 

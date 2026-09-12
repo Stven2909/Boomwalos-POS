@@ -41,10 +41,18 @@ class RenderCustomerTicket
             $nombre = $detalle->combo?->nombre ?? $detalle->producto?->nombre ?? 'Producto';
             $precio = number_format((float) $detalle->precio_unitario, 2);
             $lineas[] = "{$detalle->cantidad} x {$nombre}  \${$precio}";
+            $masaLinea = data_get($detalle->configuracion_producto, 'masa.nombre');
+
+            if (! $detalle->combo_id && $masaLinea) {
+                $lineas[] = '  Masa: ' . $masaLinea;
+            }
 
             foreach ($detalle->seleccion_combo ?? [] as $grupo) {
                 foreach ($grupo['items'] ?? [] as $item) {
-                    $lineas[] = "  - {$item['cantidad']} {$item['nombre']}";
+                    $cantidadItem = (int) $detalle->cantidad * (int) ($item['cantidad'] ?? 0);
+                    $masaItem = data_get($item, 'masa.nombre') ?: $masaLinea;
+                    $sufijoMasa = $masaItem ? ' · ' . $masaItem : '';
+                    $lineas[] = "  - {$cantidadItem} {$item['nombre']}{$sufijoMasa}";
                 }
             }
 

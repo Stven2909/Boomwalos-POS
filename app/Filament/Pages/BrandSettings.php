@@ -2,7 +2,8 @@
 
 namespace App\Filament\Pages;
 
-use App\Context\TenantContext;
+use App\Contracts\EstablishmentContextInterface;
+use App\Models\Configuracion;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 
@@ -21,19 +22,12 @@ class BrandSettings extends Page
     protected string $view = 'filament.admin.pages.brand-settings';
 
     public string $displayName = '';
-
     public string $logoPath = '';
-
     public string $faviconPath = '';
-
     public string $ticketHeader = '';
-
     public string $ticketFooter = '';
-
     public string $contactPhone = '';
-
     public string $contactEmail = '';
-
     public bool $editing = false;
 
     public static function canAccess(): bool
@@ -43,21 +37,28 @@ class BrandSettings extends Page
 
     public function mount(): void
     {
-        $tenant = app(TenantContext::class)->current();
+        $context = app(EstablishmentContextInterface::class);
+        $establishment = $context->currentOrNull();
 
-        if (! $tenant) {
+        if ($establishment === null) {
             $this->redirect(Dashboard::getUrl());
 
             return;
         }
 
-        $this->displayName = (string) $tenant->display_name;
-        $this->logoPath = (string) ($tenant->logo_path ?? '');
-        $this->faviconPath = (string) ($tenant->favicon_path ?? '');
-        $this->ticketHeader = (string) ($tenant->ticket_header ?? '');
-        $this->ticketFooter = (string) ($tenant->ticket_footer ?? '');
-        $this->contactPhone = (string) ($tenant->contact_phone ?? '');
-        $this->contactEmail = (string) ($tenant->contact_email ?? '');
+        $branding = Configuracion::query()
+            ->where('establecimiento_id', $establishment->getKey())
+            ->where('clave', 'marca')
+            ->value('valor');
+        $branding = is_array($branding) ? $branding : [];
+
+        $this->displayName = (string) ($branding['display_name'] ?? $establishment->nombre);
+        $this->logoPath = (string) ($branding['logo_path'] ?? '');
+        $this->faviconPath = (string) ($branding['favicon_path'] ?? '');
+        $this->ticketHeader = (string) ($branding['ticket_header'] ?? '');
+        $this->ticketFooter = (string) ($branding['ticket_footer'] ?? '');
+        $this->contactPhone = (string) ($branding['contact_phone'] ?? '');
+        $this->contactEmail = (string) ($branding['contact_email'] ?? '');
     }
 
     public function startEditing(): void
@@ -85,15 +86,20 @@ class BrandSettings extends Page
             'contactEmail' => ['nullable', 'email', 'max:150'],
         ]);
 
-        app(TenantContext::class)->require()->update([
-            'display_name' => $this->displayName,
-            'logo_path' => $this->logoPath ?: null,
-            'favicon_path' => $this->faviconPath ?: null,
-            'ticket_header' => $this->ticketHeader ?: null,
-            'ticket_footer' => $this->ticketFooter ?: null,
-            'contact_phone' => $this->contactPhone ?: null,
-            'contact_email' => $this->contactEmail ?: null,
-        ]);
+        $establishmentId = app(EstablishmentContextInterface::class)->id();
+
+        Configuracion::updateOrCreate(
+            ['establecimiento_id' => $establishmentId, 'clave' => 'marca'],
+            ['valor' => [
+                'display_name' => $this->displayName,
+                'logo_path' => $this->logoPath ?: null,
+                'favicon_path' => $this->faviconPath ?: null,
+                'ticket_header' => $this->ticketHeader ?: null,
+                'ticket_footer' => $this->ticketFooter ?: null,
+                'contact_phone' => $this->contactPhone ?: null,
+                'contact_email' => $this->contactEmail ?: null,
+            ]],
+        );
 
         Notification::make()->title('Datos de empresa actualizados')->success()->send();
 

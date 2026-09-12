@@ -12,6 +12,7 @@ class ConfiguracionService
 
     private const TIPOS = [
         'pos.montos_rapidos_efectivo' => 'array',
+        'pos.flujos_operativos' => 'array',
         'moneda.simbolo' => 'string',
         'impresion.ticket_activo' => 'boolean',
     ];
@@ -21,7 +22,7 @@ class ConfiguracionService
         $establecimientoId = $this->establishmentId();
         $cacheKey = $this->cacheKey($establecimientoId, $clave);
 
-        $cached = Cache::get($cacheKey, new \stdClass());
+        $cached = Cache::get($cacheKey, new \stdClass);
 
         if (! $cached instanceof \stdClass) {
             return $cached;
@@ -61,6 +62,11 @@ class ConfiguracionService
             ->where('establecimiento_id', $establecimientoId)
             ->where('clave', $clave)
             ->exists();
+    }
+
+    public function forget(string $clave): void
+    {
+        Cache::forget($this->cacheKey($this->establishmentId(), $clave));
     }
 
     private function validate(string $clave, mixed $valor): void

@@ -8,9 +8,9 @@
 
         <main class="bw-pos-service-main bw-pos-orders-main">
             <section class="bw-pos-service-intro bw-pos-page-intro" aria-labelledby="orders-title">
-                <span class="bw-pos-step-label">CAJA · PEDIDOS DEL DÍA</span>
-                <h1 id="orders-title">Pedidos</h1>
-                <p>Reanuda, cobra y envía a cocina o cancela pedidos.</p>
+                <span class="bw-pos-step-label">CAJA · CONSULTA DE PEDIDOS</span>
+                <h1 id="orders-title">Pedidos del Turno</h1>
+                <p>Revisa pedidos activos, pendientes de cobro y reimprime tickets del turno.</p>
             </section>
 
             <nav class="bw-pos-zone-tabs" aria-label="Filtros de pedidos">
@@ -44,7 +44,7 @@
                 <x-heroicon-o-magnifying-glass class="h-5 w-5" />
                 <input
                     type="search"
-                    wire:model.live.debounce.300ms="search"
+                    wire:model.live.debounce.250ms="search"
                     placeholder="Buscar por #código, mesa, seguimiento u origen"
                     aria-label="Buscar pedidos"
                 >
@@ -56,7 +56,17 @@
 
             <section class="bw-pos-orders-list" aria-label="Pedidos del día">
                 @forelse ($this->orders as $order)
-                    <article class="bw-pos-order-card">
+                    @php
+                        $orderStateClass = match ($order->estado_comercial?->value) {
+                            'ABIERTO' => 'is-open',
+                            'PENDIENTE_COBRO' => 'is-pending',
+                            'COBRADO' => 'is-paid',
+                            'CERRADO' => 'is-closed',
+                            'CANCELADO' => 'is-cancelled',
+                            default => 'is-neutral',
+                        };
+                    @endphp
+                    <article wire:key="order-{{ $order->getKey() }}" class="bw-pos-order-card">
                         <span class="bw-pos-order-code">
                             <strong>{{ $order->codigoCortoLabel() ?: 'PEDIDO' }}</strong>
                             <small>{{ $this->orderContextLabel($order) }} · {{ $this->timeLabel($order) }}</small>
@@ -64,26 +74,20 @@
                         <span class="bw-pos-order-meta">
                             <span>{{ $order->origen_pedido?->label() }}</span>
                             <span>{{ $this->orderItemCount($order) }} ítems</span>
-                            <span class="bw-pos-order-state {{ $order->estado_comercial?->value === 'PENDIENTE_COBRO' ? 'is-pending' : 'is-open' }}">
+                            <span class="bw-pos-order-state {{ $orderStateClass }}">
                                 {{ $this->estadoLabel($order) }}
                             </span>
                         </span>
                         <span class="bw-pos-order-amount">
                             <strong>{{ $this->money($this->orderTotal($order)) }}</strong>
                             <span class="bw-pos-order-actions">
-                                @if ($order->estado_comercial === \App\Enums\EstadoComercialPedido::ABIERTO)
-                                    <button type="button" wire:click="openComanda({{ $order->getKey() }})" class="bw-pos-action-button">
-                                        <x-heroicon-o-pencil-square class="h-4 w-4" />
-                                        Comanda
-                                    </button>
-                                @endif
-                                @if ($order->estado_comercial?->isPayable())
+                                @if ($order->estado_comercial?->isPayable() || $order->estado_comercial === \App\Enums\EstadoComercialPedido::ABIERTO)
                                     <button type="button" wire:click="openOrder({{ $order->getKey() }})" class="bw-pos-action-button is-primary">
-                                        <x-heroicon-o-banknotes class="h-4 w-4" />
-                                        Cobrar y enviar
+                                        <x-heroicon-o-bolt class="h-4 w-4" />
+                                        Abrir Pedido
                                     </button>
                                 @endif
-                                @if ($order->estado_comercial === \App\Enums\EstadoComercialPedido::COBRADO)
+                                @if (in_array($order->estado_comercial, [\App\Enums\EstadoComercialPedido::COBRADO, \App\Enums\EstadoComercialPedido::CERRADO], true))
                                     <button
                                         type="button"
                                         wire:click="reimprimirTicket({{ $order->getKey() }})"
@@ -116,6 +120,12 @@
                     </div>
                 @endforelse
             </section>
+
+            @if ($this->orders->hasPages())
+                <nav class="bw-pos-pagination" aria-label="Paginación de pedidos">
+                    {{ $this->orders->links() }}
+                </nav>
+            @endif
 
             <footer class="bw-pos-service-footer">
                 <a href="{{ \App\Filament\Pages\Pos\ServiceSelection::getUrl() }}" class="bw-pos-secondary-button">

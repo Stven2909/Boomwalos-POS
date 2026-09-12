@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages\Pos;
 
+use App\Contracts\EstablishmentContextInterface;
 use App\Filament\Pages\Cash\OpenSession;
 use App\Filament\Pages\EstablishmentSelection;
 use App\Models\Establecimiento;
@@ -19,7 +20,7 @@ abstract class PosPage extends Page
 
     protected function ensureCashSession(): bool
     {
-        $context = app(\App\Contracts\EstablishmentContextInterface::class);
+        $context = app(EstablishmentContextInterface::class);
 
         if ($context->idOrNull() === null) {
             if ($context->accessible()->count() > 1) {
@@ -42,7 +43,7 @@ abstract class PosPage extends Page
 
     protected function activeCashSession(): ?SesionCaja
     {
-        $establishmentId = app(\App\Contracts\EstablishmentContextInterface::class)->idOrNull();
+        $establishmentId = app(EstablishmentContextInterface::class)->idOrNull();
 
         if (! $establishmentId) {
             return null;
@@ -57,12 +58,12 @@ abstract class PosPage extends Page
 
     protected function establishment(): Establecimiento
     {
-        return app(\App\Contracts\EstablishmentContextInterface::class)->current();
+        return app(EstablishmentContextInterface::class)->current();
     }
 
     protected function establishmentOrNull(): ?Establecimiento
     {
-        return app(\App\Contracts\EstablishmentContextInterface::class)->currentOrNull();
+        return app(EstablishmentContextInterface::class)->currentOrNull();
     }
 
     protected function actorName(): string
@@ -70,8 +71,21 @@ abstract class PosPage extends Page
         return mb_strtoupper(auth()->user()?->getFilamentName() ?? 'USUARIO');
     }
 
+    protected function operationContext(): string
+    {
+        $establishment = $this->establishmentOrNull();
+        $session = $this->activeCashSession();
+
+        if (! $establishment) {
+            return 'SUCURSAL SIN SELECCIONAR';
+        }
+
+        return mb_strtoupper($establishment->nombre)
+            .($session ? ' · TURNO #'.$session->getKey() : ' · SIN TURNO');
+    }
+
     protected function money(float|int|string $amount): string
     {
-        return '$' . number_format((float) $amount, 2, '.', ',');
+        return '$'.number_format((float) $amount, 2, '.', ',');
     }
 }

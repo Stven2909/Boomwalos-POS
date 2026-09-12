@@ -3,12 +3,15 @@
 namespace App\Filament\Pages\Pos;
 
 use App\Enums\EstadoComercialPedido;
+use App\Enums\EstadoLineaPedido;
 use App\Enums\EstadoMesa;
+use App\Enums\FlujoPos;
 use App\Enums\OrigenPedido;
 use App\Enums\TipoPedido;
 use App\Enums\ZonaMesa;
 use App\Models\Mesa;
 use App\Services\PedidoService;
+use App\Services\PoliticaFlujosPos;
 use Illuminate\Validation\ValidationException;
 
 class TableSelection extends PosPage
@@ -32,6 +35,15 @@ class TableSelection extends PosPage
         if (! $this->ensureCashSession()) {
             return;
         }
+
+        if (! app(PoliticaFlujosPos::class)->permite(FlujoPos::MESA_POSTPAGO)) {
+            session()->flash('pos_feedback', 'El flujo de mesa está deshabilitado para esta sucursal.');
+            $this->redirect(ServiceSelection::getUrl());
+
+            return;
+        }
+
+        app(PedidoService::class)->discardEmptyDraftsForUser(auth()->user());
 
         if (request()->query('tipo') !== TipoPedido::MESA->value) {
             $this->redirect(ServiceSelection::getUrl());
@@ -127,19 +139,24 @@ class TableSelection extends PosPage
 
     public function getTablesProperty()
     {
-        $activeStates = [
-            EstadoComercialPedido::ABIERTO->value,
-            EstadoComercialPedido::PENDIENTE_COBRO->value,
-            EstadoComercialPedido::COBRADO->value,
-        ];
-
         return Mesa::query()
             ->where('establecimiento_id', $this->establishment()->getKey())
             ->where('activa', true)
             ->where('zona', $this->zona)
-            ->with(['pedidos' => function ($query) use ($activeStates): void {
+            ->with(['pedidos' => function ($query): void {
                 $query
-                    ->whereIn('estado_comercial', $activeStates)
+                    ->where(function ($query): void {
+                        $query
+                            ->whereIn('estado_comercial', [
+                                EstadoComercialPedido::PENDIENTE_COBRO->value,
+                                EstadoComercialPedido::COBRADO->value,
+                            ])
+                            ->orWhere(function ($query): void {
+                                $query
+                                    ->where('estado_comercial', EstadoComercialPedido::ABIERTO->value)
+                                    ->whereHas('detalles', fn ($details) => $details->where('estado_linea', EstadoLineaPedido::ACTIVA->value));
+                            });
+                    })
                     ->latest('id');
             }])
             ->orderBy('numero')

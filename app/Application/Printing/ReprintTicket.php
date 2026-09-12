@@ -26,7 +26,7 @@ class ReprintTicket
             throw new AuthorizationException('No puedes reimprimir tickets de otra sucursal.');
         }
 
-        $printer = Impresora::buscar(TipoImpresora::TICKET);
+        $printer = Impresora::buscar(TipoImpresora::TICKET, $pedido->establecimiento_id);
 
         if (! $printer) {
             return QueueTicketResult::noPrinter();

@@ -11,6 +11,7 @@ use Filament\Actions\EditAction;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
@@ -55,6 +56,9 @@ class ProductoResource extends Resource
                         ->default(DisponibilidadProducto::DISPONIBLE->value)
                         ->required()
                         ->native(false),
+                    Toggle::make('requiere_masa')
+                        ->label('Solicitar masa en el POS')
+                        ->helperText('Actívalo para pupusas que permitan elegir maíz o arroz.'),
                     FileUpload::make('imagen_url')
                         ->label('Imagen')
                         ->image()

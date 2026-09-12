@@ -17,7 +17,10 @@ use Illuminate\Validation\ValidationException;
 
 class CierreCajaService
 {
-    public function __construct(private readonly EstablishmentContextInterface $establishmentContext) {}
+    public function __construct(
+        private readonly EstablishmentContextInterface $establishmentContext,
+        private readonly PedidoService $pedidoService,
+    ) {}
 
     public function calcularEsperado(SesionCaja $sesion): string
     {
@@ -77,6 +80,7 @@ class CierreCajaService
                 ]);
             }
 
+            $this->pedidoService->discardEmptyDraftsForEstablishment($actor);
             $this->ensureNoOpenOrders($sesion);
 
             $contado = $this->normalizeAmount($efectivoContado);
@@ -116,13 +120,14 @@ class CierreCajaService
                 EstadoComercialPedido::ABIERTO->value,
                 EstadoComercialPedido::PENDIENTE_COBRO->value,
             ])
+            ->whereHas('detalles', fn ($query) => $query->where('estado_linea', \App\Enums\EstadoLineaPedido::ACTIVA->value))
             ->count();
 
         if ($openOrders > 0) {
             $pendientes = $openOrders === 1 ? 'pedido pendiente' : 'pedidos pendientes';
 
             throw ValidationException::withMessages([
-                'pedidos_abiertos' => "No puedes cerrar la caja. Hay {$openOrders} {$pendientes} de cobro. Resuelve esos pedidos antes de cerrar el turno.",
+                'pedidos_abiertos' => "No puedes cerrar la caja. Hay {$openOrders} {$pendientes} por resolver. Resuelve esos pedidos antes de cerrar el turno.",
             ]);
         }
     }

@@ -120,7 +120,7 @@ class EstablishmentContext implements EstablishmentContextInterface
 
         $assigned = $user->establecimientos()->orderBy('establecimientos.id')->get();
 
-        if ($assigned->isEmpty() && ! config('tenancy.require_explicit_establishment', false) && Establecimiento::query()->count() === 1) {
+        if ($assigned->isEmpty() && ! config('pos.require_explicit_establishment', false) && Establecimiento::query()->count() === 1) {
             return Establecimiento::query()->orderBy('id')->get();
         }
 
@@ -145,7 +145,7 @@ class EstablishmentContext implements EstablishmentContextInterface
 
         // Compatibility for the existing single-tenant installation. New
         // production tenants must assign every operator to a branch.
-        return ! config('tenancy.require_explicit_establishment', false)
+        return ! config('pos.require_explicit_establishment', false)
             && Establecimiento::query()->count() === 1
             && Establecimiento::query()->whereKey($establishmentId)->exists();
     }

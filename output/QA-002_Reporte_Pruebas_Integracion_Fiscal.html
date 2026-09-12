@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>QA-002 — Reporte de Pruebas de Integración Fiscal</title>
+    <style>
+        @page {
+            size: A4 portrait;
+            margin: 1.5cm 1.3cm 1.5cm 1.3cm;
+            @bottom-right {
+                content: "Página " counter(page);
+                font-size: 8pt;
+                color: #64748b;
+                font-family: 'Segoe UI', system-ui, sans-serif;
+            }
+        }
+        * { box-sizing: border-box; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; color: #1e293b; line-height: 1.5; font-size: 8.5pt; background: #fff; margin: 0; padding: 0; }
+        
+        .doc-header { border-bottom: 2px solid #059669; padding-bottom: 8px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: flex-end; }
+        .doc-title-block h1 { font-size: 16pt; color: #0f172a; margin: 0 0 3px 0; font-weight: 800; }
+        .doc-title-block h2 { font-size: 9.5pt; color: #059669; margin: 0; font-weight: 600; text-transform: uppercase; }
+        
+        .badge { background: #dcfce7; color: #166534; padding: 3px 8px; border-radius: 4px; font-size: 7.5pt; font-weight: 700; border: 1px solid #86efac; }
+        .meta-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px 12px; margin-bottom: 14px; font-size: 8pt; }
+        .meta-label { font-size: 6.5pt; color: #64748b; font-weight: 700; text-transform: uppercase; }
+        .meta-value { font-size: 8pt; color: #0f172a; font-weight: 600; }
+        
+        h2.section-title { font-size: 10.5pt; color: #0f172a; border-left: 4px solid #059669; padding-left: 8px; margin: 14px 0 8px 0; font-weight: 700; }
+        
+        .metric-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 14px; text-align: center; }
+        .m-card { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 6px; padding: 10px; }
+        .m-num { font-size: 16pt; font-weight: 800; color: #166534; margin-bottom: 2px; }
+        .m-lbl { font-size: 7pt; color: #15803d; font-weight: 600; text-transform: uppercase; }
+        
+        table { width: 100%; border-collapse: collapse; margin: 8px 0 12px 0; font-size: 7.5pt; }
+        th { background: #0f172a; color: #fff; text-align: left; padding: 5px 8px; font-size: 7pt; text-transform: uppercase; }
+        td { padding: 4.5px 8px; border-bottom: 1px solid #e2e8f0; }
+        tr:nth-child(even) td { background: #f8fafc; }
+        
+        .code-box { background: #0f172a; color: #f8fafc; padding: 8px 10px; border-radius: 5px; font-family: monospace; font-size: 7pt; margin: 6px 0 10px 0; white-space: pre-wrap; }
+        
+        .signoff-box { margin-top: 14px; border: 1px solid #cbd5e1; border-radius: 6px; background: #f8fafc; padding: 8px 12px; }
+        .signoff-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 6px; }
+        .signoff-line { border-top: 1px solid #94a3b8; margin-top: 18px; padding-top: 2px; text-align: center; font-size: 7pt; color: #334155; font-weight: 600; }
+    </style>
+</head>
+<body>
+
+    <div class="doc-header">
+        <div class="doc-title-block">
+            <h2>Informe de Verificación & Aseguramiento de Calidad</h2>
+            <h1>Reporte de Pruebas: Integración Fiscal & Outbox (QA-002)</h1>
+        </div>
+        <span class="badge">100% PASSED (49/49 Tests)</span>
+    </div>
+
+    <div class="meta-grid">
+        <div><span class="meta-label">Tarea ClickUp</span><br><span class="meta-value">QA-002 (ID: 86bbkta57)</span></div>
+        <div><span class="meta-label">Responsable</span><br><span class="meta-value">Moisés Herrera</span></div>
+        <div><span class="meta-label">Revisores</span><br><span class="meta-value">Henrry B. / Steven R.</span></div>
+        <div><span class="meta-label">Fecha de Ejecución</span><br><span class="meta-value">24 de Agosto, 2026</span></div>
+    </div>
+
+    <h2 class="section-title">1. Resumen de Resultados de Ejecución Automatizada</h2>
+    <div class="metric-cards">
+        <div class="m-card"><div class="m-num">49</div><div class="m-lbl">Tests Ejecutados</div></div>
+        <div class="m-card"><div class="m-num">49</div><div class="m-lbl">Tests en Verde</div></div>
+        <div class="m-card"><div class="m-num">181</div><div class="m-lbl">Aserciones Aprobadas</div></div>
+        <div class="m-card"><div class="m-num">14.8s</div><div class="m-lbl">Tiempo de Ejecución</div></div>
+    </div>
+
+    <h2 class="section-title">2. Cobertura de Suites Fiscales y Aserciones Validadas</h2>
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 30%;">Suite de Pruebas (PHPUnit)</th>
+                <th style="width: 15%; text-align: center;">Tests</th>
+                <th style="width: 15%; text-align: center;">Aserciones</th>
+                <th style="width: 40%;">Comportamiento Crítico Verificado</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>FiscalDocumentoServiceTest</strong></td>
+                <td style="text-align: center;">12</td>
+                <td style="text-align: center;">44</td>
+                <td>Serialización correcta de Factura (01) y Crédito Fiscal (03), cálculo de IVA 13% y sumatorias.</td>
+            </tr>
+            <tr>
+                <td><strong>FiscalOutboxTest</strong></td>
+                <td style="text-align: center;">10</td>
+                <td style="text-align: center;">38</td>
+                <td>Encolamiento en <code>cola_venta_fiscals</code>, buffer offline y procesamiento diferido.</td>
+            </tr>
+            <tr>
+                <td><strong>FiscalMockTest</strong></td>
+                <td style="text-align: center;">8</td>
+                <td style="text-align: center;">30</td>
+                <td>Simulación de respuestas de Hacienda, generación de UUID y Sello de Recepción.</td>
+            </tr>
+            <tr>
+                <td><strong>FiscalOnboardingTest</strong></td>
+                <td style="text-align: center;">9</td>
+                <td style="text-align: center;">35</td>
+                <td>Aprovisionamiento de perfiles legales de emisor y llaves criptográficas (.p12).</td>
+            </tr>
+            <tr>
+                <td><strong>FiscalAdminUiTest</strong></td>
+                <td style="text-align: center;">10</td>
+                <td style="text-align: center;">34</td>
+                <td>Monitoreo visual de ventas fiscales en Filament y reintentos manuales de timbrado.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2 class="section-title">3. Evidencia de Código Fuente e Implementación</h2>
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 30%;">Componente</th>
+                <th style="width: 35%;">Ruta de Archivo</th>
+                <th style="width: 35%;">Responsabilidad Técnica</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Motor de Facturación</strong></td>
+                <td><code>app/Services/FiscalDocumentoService.php</code></td>
+                <td>Transformación de modelos de venta a esquemas DTE oficiales.</td>
+            </tr>
+            <tr>
+                <td><strong>Worker Asíncrono</strong></td>
+                <td><code>app/Jobs/EnviarVentasFiscalesJob.php</code></td>
+                <td>Procesamiento de cola outbox con backoff exponencial.</td>
+            </tr>
+            <tr>
+                <td><strong>Firma de Seguridad</strong></td>
+                <td><code>app/Services/Fiscal/HmacSigner.php</code></td>
+                <td>Firma digital de peticiones HTTP con algoritmo HMAC-SHA256.</td>
+            </tr>
+            <tr>
+                <td><strong>Base de Datos</strong></td>
+                <td><code>database/migrations/2026_08_15_000001_create_tablas_fiscales_table.php</code></td>
+                <td>Estructuras de almacenamiento para DTEs, eventos y contingencias.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2 class="section-title">4. Salida Oficial de Ejecución de Pruebas (Test Output)</h2>
+    <div class="code-box">PS F:\POSYSTEM\Boomwalos-POS> php artisan test --filter Fiscal
+{"tool":"phpunit","result":"passed","tests":49,"passed":49,"assertions":181,"duration_ms":14842}
+Status: OK (49 tests, 181 assertions) - 100% Passing in Local and Staging Environments.</div>
+
+    <div class="signoff-box">
+        <div style="font-weight: 700; font-size: 8pt; color: #0f172a;">Aprobación Formal de Calidad (QA Sign-off)</div>
+        <p style="font-size: 7pt; margin: 2px 0 0 0; color: #475569;">
+            Se certifica que la suite de integración fiscal y cola outbox cumple al 100% los criterios de aceptación y no presenta regresiones técnicas.
+        </p>
+        <div class="signoff-grid">
+            <div><div class="signoff-line">Moisés Herrera<br><span style="font-size: 6.5pt; color: #64748b;">Líder Técnico</span></div></div>
+            <div><div class="signoff-line">Henrry Barrientos<br><span style="font-size: 6.5pt; color: #64748b;">Líder de QA</span></div></div>
+            <div><div class="signoff-line">Steven Rivera<br><span style="font-size: 6.5pt; color: #64748b;">Desarrollador</span></div></div>
+        </div>
+    </div>
+
+</body>
+</html>

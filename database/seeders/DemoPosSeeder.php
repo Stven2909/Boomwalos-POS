@@ -136,9 +136,14 @@ class DemoPosSeeder extends Seeder
                 [
                     'precio' => $data['precio'],
                     'disponibilidad' => DisponibilidadProducto::DISPONIBLE,
+                    'requiere_masa' => str_starts_with($data['categoria'], 'Pupusas'),
                 ],
             );
         }
+
+        Producto::query()
+            ->whereIn('nombre', ['Pupusa de queso', 'Pupusa revuelta', 'Pupusa con chicharrón'])
+            ->update(['requiere_masa' => true]);
 
         $pupusaIds = Producto::query()
             ->whereIn('categoria_id', [

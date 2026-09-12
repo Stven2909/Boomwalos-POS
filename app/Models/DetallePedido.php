@@ -24,6 +24,7 @@ class DetallePedido extends Model
         'cantidad',
         'precio_unitario',
         'seleccion_combo',
+        'configuracion_producto',
     ];
 
     protected function casts(): array
@@ -32,6 +33,7 @@ class DetallePedido extends Model
             'cantidad' => 'integer',
             'precio_unitario' => 'decimal:2',
             'seleccion_combo' => 'array',
+            'configuracion_producto' => 'array',
             'estado_linea' => EstadoLineaPedido::class,
             'cancelada_at' => 'datetime',
         ];
@@ -44,7 +46,12 @@ class DetallePedido extends Model
 
     public function tanda(): BelongsTo
     {
-        return $this->belongsTo(TandaPedido::class, 'tanda_id');
+        return $this->belongsTo(TrabajoImpresion::class, 'tanda_id');
+    }
+
+    public function trabajoImpresion(): BelongsTo
+    {
+        return $this->belongsTo(TrabajoImpresion::class, 'tanda_id');
     }
 
     public function producto(): BelongsTo

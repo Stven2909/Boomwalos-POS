@@ -19,6 +19,14 @@ class WebhooksController extends Controller
      */
     public function store(Request $request, FiscalWebhookService $webhooks): JsonResponse
     {
+        // 1. Caso de eventos automáticos desde POsFact-Laravel (DTE Sealed / Processed)
+        if ($request->filled('codigoGeneracion') || $request->filled('codigo_generacion') || $request->hasHeader('X-POsFact-Event')) {
+            $resultado = $webhooks->procesarEventoPosFact($request->all());
+
+            return response()->json($resultado, 200);
+        }
+
+        // 2. Caso de webhook secuencial simulado / mock
         if (! $this->mockDisponible()) {
             abort(404);
         }

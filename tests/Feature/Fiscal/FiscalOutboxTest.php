@@ -4,7 +4,6 @@ namespace Tests\Feature\Fiscal;
 
 use App\Application\Fiscal\FiscalOutboxService;
 use App\Application\Fiscal\HmacSigner;
-use App\Enums\EstadoComercialPedido;
 use App\Enums\EstadoDocumentoFiscal;
 use App\Enums\EstadoMesa;
 use App\Enums\EstadoVentaFiscal;
@@ -21,7 +20,6 @@ use App\Models\Establecimiento;
 use App\Models\FiscalSyncState;
 use App\Models\Impresora;
 use App\Models\Mesa;
-use App\Models\Pago;
 use App\Models\Producto;
 use App\Models\SesionCaja;
 use App\Models\User;
@@ -111,6 +109,7 @@ class FiscalOutboxTest extends TestCase
         $pedido = $service->startOrder(TipoPedido::MESA, $this->cashier, $this->table->getKey());
         $service->addProduct($pedido, $this->product, $this->cashier);
         $service->sendPendingBatch($pedido, $this->cashier);
+        $service->sendToCashRegister($pedido, $this->cashier);
 
         $pago = app(CobroService::class)->charge(
             $pedido,
@@ -180,7 +179,7 @@ class FiscalOutboxTest extends TestCase
         $this->assertNotNull($cola);
         $this->assertSame('PENDIENTE', $cola->estado->value);
         $this->assertSame(
-            'v-' . $this->establishment->getKey() . '-' . $pedido->getKey() . '-' . $pago->getKey(),
+            'v-'.$this->establishment->getKey().'-'.$pedido->getKey().'-'.$pago->getKey(),
             $cola->clave_reintento,
         );
         $this->assertSame('4.00', $cola->payload_envio['monto_total']);
@@ -223,6 +222,7 @@ class FiscalOutboxTest extends TestCase
         $pedido = $service->startOrder(TipoPedido::MESA, $this->cashier, $this->table->getKey());
         $service->addProduct($pedido, $this->product, $this->cashier);
         $service->sendPendingBatch($pedido, $this->cashier);
+        $service->sendToCashRegister($pedido, $this->cashier);
 
         $datosSolicitante = [
             'nombre' => 'Receptor de Prueba',

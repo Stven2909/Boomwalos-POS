@@ -3,6 +3,7 @@
 namespace App\Services\Orders;
 
 use App\Enums\DisponibilidadProducto;
+use App\Enums\MasaPupusa;
 use App\Models\Combo;
 use App\Models\Producto;
 use Illuminate\Validation\ValidationException;
@@ -20,13 +21,8 @@ class ComboSelectionValidator
             $items = [];
             $total = 0;
 
-            foreach ($rawItems as $productId => $quantity) {
+            foreach ($rawItems as $productId => $rawQuantity) {
                 $product = $allowedProducts->get((string) $productId);
-                $quantity = (int) $quantity;
-
-                if ($quantity < 1) {
-                    continue;
-                }
 
                 if (! $product) {
                     throw ValidationException::withMessages([
@@ -34,18 +30,57 @@ class ComboSelectionValidator
                     ]);
                 }
 
-                if ($product->disponibilidad !== DisponibilidadProducto::DISPONIBLE) {
-                    throw ValidationException::withMessages([
-                        'combo' => "{$product->nombre} no está disponible para este combo.",
-                    ]);
-                }
+                $hasMassBuckets = is_array($rawQuantity);
+                $massBuckets = $hasMassBuckets ? $rawQuantity : ['' => $rawQuantity];
 
-                $items[] = [
-                    'producto_id' => $product->getKey(),
-                    'nombre' => $product->nombre,
-                    'cantidad' => $quantity,
-                ];
-                $total += $quantity;
+                foreach ($massBuckets as $rawMass => $quantity) {
+                    $quantity = (int) $quantity;
+
+                    if ($quantity < 1) {
+                        continue;
+                    }
+
+                    $massCode = strtoupper(trim((string) $rawMass));
+                    $mass = null;
+
+                    if ($product->requiere_masa) {
+                        if ($massCode === '') {
+                            if ($hasMassBuckets) {
+                                throw ValidationException::withMessages([
+                                    'combo' => "Selecciona maíz o arroz para {$product->nombre}.",
+                                ]);
+                            }
+                        } else {
+                            $mass = MasaPupusa::tryFrom($massCode);
+
+                            if (! $mass) {
+                                throw ValidationException::withMessages([
+                                    'combo' => 'La selección contiene una masa inválida.',
+                                ]);
+                            }
+                        }
+                    } elseif ($massCode !== '') {
+                        throw ValidationException::withMessages([
+                            'combo' => "{$product->nombre} no permite selección de masa.",
+                        ]);
+                    }
+
+                    $item = [
+                        'producto_id' => $product->getKey(),
+                        'nombre' => $product->nombre,
+                        'cantidad' => $quantity,
+                    ];
+
+                    if ($mass) {
+                        $item['masa'] = [
+                            'codigo' => $mass->value,
+                            'nombre' => $mass->label(),
+                        ];
+                    }
+
+                    $items[] = $item;
+                    $total += $quantity;
+                }
             }
 
             if ($option->es_obligatorio && $total !== (int) $option->cantidad_requerida) {
@@ -70,7 +105,6 @@ class ComboSelectionValidator
 
         return $normalized;
     }
-
     public function same(?array $left, array $right): bool
     {
         return json_encode($left ?? [], JSON_UNESCAPED_UNICODE) === json_encode($right, JSON_UNESCAPED_UNICODE);

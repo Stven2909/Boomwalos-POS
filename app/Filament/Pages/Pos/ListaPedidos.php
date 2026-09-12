@@ -9,9 +9,14 @@ use App\Enums\EstadoLineaPedido;
 use App\Enums\TipoPedido;
 use App\Models\Pedido;
 use App\Services\PedidoService;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Livewire\Attributes\Computed;
+use Livewire\WithPagination;
 
 class ListaPedidos extends PosPage
 {
+    use WithPagination;
+
     protected static ?string $slug = 'pos/pedidos';
 
     protected static ?string $title = 'Pedidos';
@@ -41,12 +46,18 @@ class ListaPedidos extends PosPage
     {
         if (in_array($filtro, ['abiertos', 'pendientes', 'todos'], true)) {
             $this->filtro = $filtro;
+            $this->resetPage();
         }
+    }
+
+    public function updatedSearch(): void
+    {
+        $this->resetPage();
     }
 
     public function openOrder(int $pedidoId): void
     {
-        $this->redirect(ChargeOrder::getUrl(['pedido' => $pedidoId]));
+        $this->redirect(OrderEntry::getUrl(['pedido' => $pedidoId]));
     }
 
     public function openComanda(int $pedidoId): void
@@ -84,18 +95,18 @@ class ListaPedidos extends PosPage
         }
     }
 
-    #[\Livewire\Attributes\Computed]
-    public function orders(): \Illuminate\Support\Collection
+    #[Computed]
+    public function orders(): LengthAwarePaginator
     {
         return $this->getOrdersProperty();
     }
 
-    public function getOrdersProperty(): \Illuminate\Support\Collection
+    public function getOrdersProperty(): LengthAwarePaginator
     {
         $establishment = $this->establishmentOrNull();
 
         if (! $establishment) {
-            return collect();
+            return new LengthAwarePaginator([], 0, 50);
         }
 
         $states = match ($this->filtro) {
@@ -105,6 +116,8 @@ class ListaPedidos extends PosPage
                 EstadoComercialPedido::ABIERTO->value,
                 EstadoComercialPedido::PENDIENTE_COBRO->value,
                 EstadoComercialPedido::COBRADO->value,
+                EstadoComercialPedido::CERRADO->value,
+                EstadoComercialPedido::CANCELADO->value,
             ],
         };
 
@@ -114,6 +127,14 @@ class ListaPedidos extends PosPage
         return Pedido::query()
             ->where('establecimiento_id', $establishment->getKey())
             ->whereIn('estado_comercial', $states)
+            ->where(function ($query): void {
+                // Los pedidos ABIERTO sin líneas activas ni pago son borradores
+                // abandonados y no deben aparecer en la operación diaria.
+                $query
+                    ->where('estado_comercial', '!=', EstadoComercialPedido::ABIERTO->value)
+                    ->orWhereHas('detalles', fn ($details) => $details->where('estado_linea', EstadoLineaPedido::ACTIVA->value))
+                    ->orWhereHas('pago');
+            })
             ->when($code !== '', fn ($query) => $query->where('codigo_corto', (int) $code))
             ->when($code === '' && $search !== '', fn ($query) => $query->where(function ($inner) use ($search) {
                 $inner->where('numero_seguimiento', 'like', '%'.$search.'%')
@@ -122,7 +143,7 @@ class ListaPedidos extends PosPage
             }))
             ->with(['mesa', 'usuario', 'detalles'])
             ->orderByDesc('id')
-            ->get();
+            ->paginate(50);
     }
 
     public function orderTotal(Pedido $pedido): float

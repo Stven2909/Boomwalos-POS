@@ -2,8 +2,8 @@
 
 namespace App\Filament\Pages\Cash;
 
+use App\Contracts\EstablishmentContextInterface;
 use App\Filament\Pages\Dashboard;
-use App\Models\Establecimiento;
 use App\Models\SesionCaja;
 use App\Services\CierreCajaService;
 use Filament\Facades\Filament;
@@ -40,6 +40,15 @@ class CloseSession extends Page
     public function getHasActiveSessionProperty(): bool
     {
         return $this->activeSession() !== null;
+    }
+
+    public function getOperationContextProperty(): string
+    {
+        $establishment = app(EstablishmentContextInterface::class)->currentOrNull();
+        $session = $this->activeSession();
+
+        return mb_strtoupper($establishment?->nombre ?? 'SUCURSAL')
+            .($session ? ' · TURNO #'.$session->getKey() : ' · TURNO CERRADO');
     }
 
     public function getResumenProperty(): array
@@ -125,7 +134,7 @@ class CloseSession extends Page
 
     private function activeSession(): ?SesionCaja
     {
-        $establishmentId = app(\App\Contracts\EstablishmentContextInterface::class)->idOrNull();
+        $establishmentId = app(EstablishmentContextInterface::class)->idOrNull();
 
         return $establishmentId
             ? SesionCaja::query()

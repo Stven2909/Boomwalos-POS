@@ -1,13 +1,19 @@
 @props([
     'centerLabel' => null,
-    'rightLabel' => 'CAJA 1 · TURNO ACTIVO',
+    'rightLabel' => 'OPERACIÓN DEL POS',
     'backUrl' => null,
+    'backAction' => null,
     'backLabel' => 'Servicio',
 ])
 
 <header class="bw-pos-header">
     <div class="bw-pos-header-brand">
-        @if ($backUrl)
+        @if ($backAction)
+            <button type="button" wire:click="{{ $backAction }}" class="bw-pos-back-link">
+                <x-heroicon-o-arrow-left class="h-5 w-5" />
+                <span>{{ $backLabel }}</span>
+            </button>
+        @elseif ($backUrl)
             <a href="{{ $backUrl }}" class="bw-pos-back-link">
                 <x-heroicon-o-arrow-left class="h-5 w-5" />
                 <span>{{ $backLabel }}</span>

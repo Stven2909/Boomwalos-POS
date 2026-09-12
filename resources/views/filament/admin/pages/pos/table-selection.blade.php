@@ -5,7 +5,8 @@
                 ? \App\Filament\Pages\Dashboard::getUrl()
                 : \App\Filament\Pages\Pos\ServiceSelection::getUrl(),
             'backLabel' => $entryMode === 'mesas' ? 'Dashboard' : 'Servicio',
-            'rightLabel' => $entryMode === 'mesas' ? 'MESAS · OPERACIÓN' : 'PASO 2 DE 5 · ELEGIR MESA',
+            'centerLabel' => $this->operationContext(),
+            'rightLabel' => $this->actorName() . ' · MESAS',
         ])
 
         <main class="bw-pos-table-main">
@@ -27,6 +28,12 @@
                     </button>
                 @endforeach
             </nav>
+
+            <div class="bw-pos-state-legend" aria-label="Estados de mesa">
+                <span><i class="is-free" aria-hidden="true"></i>Libre</span>
+                <span><i class="is-occupied" aria-hidden="true"></i>Cuenta abierta</span>
+                <span><i class="is-paid" aria-hidden="true"></i>Cobrado · pendiente</span>
+            </div>
 
             <section class="bw-pos-table-grid" aria-label="Mesas disponibles">
                 @forelse ($this->tables as $mesa)

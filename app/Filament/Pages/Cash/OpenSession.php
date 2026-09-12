@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages\Cash;
 
+use App\Contracts\EstablishmentContextInterface;
 use App\Filament\Pages\Pos\ServiceSelection;
 use App\Models\Establecimiento;
 use App\Models\EventoAuditoria;
@@ -21,6 +22,18 @@ class OpenSession extends Page
     protected string $view = 'filament.admin.pages.cash.open-session';
 
     public string $montoInicial = '0.00';
+
+    public function getOperationContextProperty(): string
+    {
+        $establishment = app(EstablishmentContextInterface::class)->currentOrNull();
+
+        return mb_strtoupper($establishment?->nombre ?? 'SUCURSAL SIN SELECCIONAR').' · SIN TURNO';
+    }
+
+    public function getActorNameProperty(): string
+    {
+        return mb_strtoupper(auth()->user()?->getFilamentName() ?? 'USUARIO');
+    }
 
     public static function canAccess(): bool
     {
@@ -43,7 +56,7 @@ class OpenSession extends Page
             'montoInicial.regex' => 'El monto inicial debe ser numérico con hasta dos decimales.',
         ]);
 
-        $establecimientoId = app(\App\Contracts\EstablishmentContextInterface::class)->idOrNull();
+        $establecimientoId = app(EstablishmentContextInterface::class)->idOrNull();
 
         if (! $establecimientoId) {
             throw ValidationException::withMessages([
@@ -90,7 +103,7 @@ class OpenSession extends Page
 
     private function activeSession(): ?SesionCaja
     {
-        $establishmentId = app(\App\Contracts\EstablishmentContextInterface::class)->idOrNull();
+        $establishmentId = app(EstablishmentContextInterface::class)->idOrNull();
 
         return $establishmentId
             ? SesionCaja::query()

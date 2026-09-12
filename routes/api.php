@@ -2,7 +2,7 @@
 
 use App\Http\Controllers\Fiscal\VentasController;
 use App\Http\Controllers\Fiscal\WebhooksController;
-use App\Http\Middleware\ResolveTenant;
+
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::prefix('fiscal/v1')->middleware(ResolveTenant::class)->group(function (): void {
+Route::prefix('fiscal/v1')->group(function (): void {
     Route::post('/ventas', [VentasController::class, 'store']);
     Route::post('/webhooks', [WebhooksController::class, 'store']);
 });
@@ -33,14 +33,14 @@ use App\Http\Controllers\Api\PortalAdminController;
 use App\Http\Controllers\Api\PortalQrController;
 use App\Http\Middleware\AuthenticatePortalAdmin;
 
-Route::prefix('v1/portal-qr')->middleware(ResolveTenant::class)->group(function (): void {
+Route::prefix('v1/portal-qr')->middleware('throttle:30,1')->group(function (): void {
     Route::get('/orden/{tracking}', [PortalQrController::class, 'consultarOrden']);
     Route::get('/estado', [PortalQrController::class, 'estadoOrden']);
     Route::post('/solicitar', [PortalQrController::class, 'solicitar']);
 });
 
-Route::prefix('v1/portal-admin')->middleware(ResolveTenant::class)->group(function (): void {
-    Route::post('/login', [PortalAdminController::class, 'login']);
+Route::prefix('v1/portal-admin')->group(function (): void {
+    Route::post('/login', [PortalAdminController::class, 'login'])->middleware('throttle:6,1');
 
     Route::middleware(AuthenticatePortalAdmin::class)->group(function (): void {
         Route::get('/solicitudes', [PortalAdminController::class, 'solicitudes']);

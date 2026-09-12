@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages\Printing;
 
+use App\Contracts\EstablishmentContextInterface;
 use App\Enums\EstadoImpresion;
 use App\Enums\TipoTrabajoImpresion;
 use App\Jobs\ProcessPrintJob;
@@ -42,7 +43,8 @@ class PrintMonitor extends Page
 
     public function retryJob(int $jobId): void
     {
-        $job = TrabajoImpresion::where('id', $jobId)
+        $job = $this->scopedJobs()
+            ->whereKey($jobId)
             ->where('estado', EstadoImpresion::ERROR)
             ->first();
 
@@ -59,7 +61,7 @@ class PrintMonitor extends Page
 
     public function retryAllFailed(): void
     {
-        $failedJobs = TrabajoImpresion::where('estado', EstadoImpresion::ERROR)->get();
+        $failedJobs = $this->scopedJobs()->where('estado', EstadoImpresion::ERROR)->get();
 
         foreach ($failedJobs as $job) {
             $job->update(['estado' => EstadoImpresion::PENDIENTE]);
@@ -72,7 +74,7 @@ class PrintMonitor extends Page
 
     public function getJobsProperty(): Collection
     {
-        return TrabajoImpresion::query()
+        return $this->scopedJobs()
             ->with(['impresora', 'pedido'])
             ->when($this->filterEstado !== 'all', fn (Builder $q) => $q->where('estado', $this->filterEstado))
             ->when($this->filterTipo !== 'all', fn (Builder $q) => $q->where('tipo_trabajo', $this->filterTipo))
@@ -113,6 +115,18 @@ class PrintMonitor extends Page
 
     public function failedCount(): int
     {
-        return TrabajoImpresion::where('estado', EstadoImpresion::ERROR)->count();
+        return $this->scopedJobs()->where('estado', EstadoImpresion::ERROR)->count();
     }
+    private function scopedJobs(): Builder
+    {
+        $context = app(EstablishmentContextInterface::class);
+        $activeId = $context->idOrNull();
+        $establishmentIds = $activeId !== null
+            ? [$activeId]
+            : $context->accessible()->pluck('id')->all();
+
+        return TrabajoImpresion::query()
+            ->whereHas('pedido', fn (Builder $query) => $query->whereIn('establecimiento_id', $establishmentIds));
+    }
+
 }

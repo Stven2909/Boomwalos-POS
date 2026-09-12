@@ -1,0 +1,82 @@
+<!DOCTYPE html><html><head><meta charset="UTF-8"><style>
+        * { box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; margin: 0; padding: 0; }
+        body { background: #0f172a; color: #f8fafc; padding: 20px; }
+        .topbar { display: flex; justify-content: space-between; align-items: center; background: #1e293b; padding: 14px 20px; border-radius: 10px; border: 1px solid #334155; margin-bottom: 20px; }
+        .logo { font-size: 18px; font-weight: 800; color: #38bdf8; display: flex; align-items: center; gap: 8px; }
+        .tabs { display: flex; gap: 10px; }
+        .tab { padding: 8px 18px; border-radius: 8px; font-weight: 600; font-size: 13px; background: #334155; color: #cbd5e1; cursor: pointer; }
+        .tab.active { background: #0284c7; color: #fff; }
+        .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+        .table-card { background: #1e293b; border: 2px solid #334155; border-radius: 12px; padding: 18px; display: flex; flex-direction: column; justify-content: space-between; height: 160px; }
+        .table-card.occupied { border-color: #38bdf8; background: #1e293b; }
+        .table-card.bill { border-color: #f59e0b; background: #1e293b; }
+        .table-card.free { border-color: #10b981; }
+        .t-num { font-size: 20px; font-weight: 800; display: flex; justify-content: space-between; align-items: center; }
+        .status-badge { font-size: 11px; padding: 3px 8px; border-radius: 6px; font-weight: 700; text-transform: uppercase; }
+        .badge-free { background: #064e3b; color: #34d399; }
+        .badge-occupied { background: #0c4a6e; color: #38bdf8; }
+        .badge-bill { background: #78350f; color: #fbbf24; }
+        .t-info { font-size: 13px; color: #94a3b8; margin-top: 6px; }
+        .t-amount { font-size: 22px; font-weight: 800; color: #f8fafc; }
+        .action-bar { margin-top: 20px; display: flex; gap: 12px; justify-content: flex-end; }
+        .btn { padding: 12px 24px; border-radius: 8px; font-weight: 700; font-size: 14px; border: none; cursor: pointer; }
+        .btn-primary { background: #0284c7; color: #fff; }
+        .btn-success { background: #10b981; color: #fff; }
+        </style></head><body>
+        <div class="topbar">
+            <div class="logo">🍽️ BOOMWALOS POS &bull; Salón y Mesas</div>
+            <div class="tabs">
+                <div class="tab active">Salón Principal (12)</div>
+                <div class="tab">Terraza (8)</div>
+                <div class="tab">Barra & Balcón (6)</div>
+                <div class="tab">Para Llevar / Takeout (4)</div>
+            </div>
+            <div style="font-size:13px;color:#94a3b8;">Cajero: <strong>Moisés H.</strong> | Turno: <strong>#01</strong></div>
+        </div>
+        <div class="grid">
+            <div class="table-card occupied">
+                <div class="t-num"><span>Mesa 01</span><span class="status-badge badge-occupied">Ocupada</span></div>
+                <div class="t-info">4 Comensales &bull; 45 min</div>
+                <div class="t-amount">$28.50</div>
+            </div>
+            <div class="table-card free">
+                <div class="t-num"><span>Mesa 02</span><span class="status-badge badge-free">Libre</span></div>
+                <div class="t-info">Capacidad: 4 personas</div>
+                <div class="t-amount" style="color:#64748b;">$0.00</div>
+            </div>
+            <div class="table-card bill">
+                <div class="t-num"><span>Mesa 03</span><span class="status-badge badge-bill">Pre-Cuenta</span></div>
+                <div class="t-info">6 Comensales &bull; Esperando cobro</div>
+                <div class="t-amount" style="color:#fbbf24;">$54.25</div>
+            </div>
+            <div class="table-card free">
+                <div class="t-num"><span>Mesa 04</span><span class="status-badge badge-free">Libre</span></div>
+                <div class="t-info">Capacidad: 2 personas</div>
+                <div class="t-amount" style="color:#64748b;">$0.00</div>
+            </div>
+            <div class="table-card occupied">
+                <div class="t-num"><span>Mesa 05</span><span class="status-badge badge-occupied">Ocupada</span></div>
+                <div class="t-info">2 Comensales &bull; 15 min</div>
+                <div class="t-amount">$14.00</div>
+            </div>
+            <div class="table-card free">
+                <div class="t-num"><span>Mesa 06</span><span class="status-badge badge-free">Libre</span></div>
+                <div class="t-info">Capacidad: 8 personas</div>
+                <div class="t-amount" style="color:#64748b;">$0.00</div>
+            </div>
+            <div class="table-card occupied">
+                <div class="t-num"><span>Mesa 07</span><span class="status-badge badge-occupied">Ocupada</span></div>
+                <div class="t-info">3 Comensales &bull; Tanda 2 en cocina</div>
+                <div class="t-amount">$22.75</div>
+            </div>
+            <div class="table-card free">
+                <div class="t-num"><span>Mesa 08</span><span class="status-badge badge-free">Libre</span></div>
+                <div class="t-info">Capacidad: 4 personas</div>
+                <div class="t-amount" style="color:#64748b;">$0.00</div>
+            </div>
+        </div>
+        <div class="action-bar">
+            <button class="btn btn-primary">➕ Abrir Nueva Mesa</button>
+            <button class="btn btn-success">🛵 Pedido Para Llevar (Takeout)</button>
+        </div>
+        </body></html>

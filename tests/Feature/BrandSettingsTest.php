@@ -2,9 +2,9 @@
 
 namespace Tests\Feature;
 
-use App\Context\TenantContext;
 use App\Filament\Pages\BrandSettings;
-use App\Models\Platform\PlatformTenant;
+use App\Models\Configuracion;
+use App\Models\Establecimiento;
 use App\Models\User;
 use Database\Seeders\RolesPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -19,7 +19,7 @@ class BrandSettingsTest extends TestCase
 
     private User $cashier;
 
-    private PlatformTenant $tenant;
+    private Establecimiento $establishment;
 
     protected function setUp(): void
     {
@@ -39,9 +39,9 @@ class BrandSettingsTest extends TestCase
         ]);
         $this->cashier->assignRole('cajero');
 
-        $this->tenant = PlatformTenant::create([
-            'slug' => config('tenancy.default_slug', 'demo'),
-            'display_name' => 'Pupusería Demo',
+        $this->establishment = Establecimiento::create([
+            'nombre' => 'Pupusería Demo',
+            'direccion' => 'Centro',
         ]);
     }
 
@@ -60,11 +60,9 @@ class BrandSettingsTest extends TestCase
             ->assertForbidden();
     }
 
-    public function test_admin_can_save_brand_settings(): void
+    public function test_admin_can_save_brand_settings_for_active_establishment(): void
     {
         $this->actingAs($this->admin);
-
-        app(TenantContext::class)->set($this->tenant);
 
         Livewire::test(BrandSettings::class)
             ->set('displayName', 'Pupusería Central')
@@ -73,11 +71,13 @@ class BrandSettingsTest extends TestCase
             ->call('save')
             ->assertHasNoErrors();
 
-        $this->assertDatabaseHas('platform_tenants', [
-            'slug' => config('tenancy.default_slug', 'demo'),
-            'display_name' => 'Pupusería Central',
-            'ticket_header' => 'Sucursal Central',
-            'contact_email' => 'hola@example.test',
-        ]);
+        $branding = Configuracion::query()
+            ->where('establecimiento_id', $this->establishment->getKey())
+            ->where('clave', 'marca')
+            ->value('valor');
+
+        $this->assertSame('Pupusería Central', $branding['display_name']);
+        $this->assertSame('Sucursal Central', $branding['ticket_header']);
+        $this->assertSame('hola@example.test', $branding['contact_email']);
     }
 }

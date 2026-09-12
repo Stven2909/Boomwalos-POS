@@ -1,7 +1,7 @@
 <x-filament-panels::page>
     <div class="bw-pos-page bw-cash-closing-page">
         @include('filament.admin.components.pos-header', [
-            'rightLabel' => $this->hasActiveSession ? 'CAJA 1 · TURNO ACTIVO' : 'CAJA 1 · TURNO CERRADO',
+            'rightLabel' => $this->operationContext,
         ])
 
         <main class="bw-cash-opening-main">
@@ -19,6 +19,7 @@
                 @endif
 
                 @if ($this->hasActiveSession)
+                    <div class="bw-cash-summary-grid">
                     <div class="bw-cash-summary-row">
                         <span>Monto inicial</span>
                         <strong>{{ $this->money($this->resumen['monto_inicial']) }}</strong>
@@ -38,6 +39,7 @@
                     <div class="bw-cash-summary-row">
                         <span>Efectivo esperado (sistema)</span>
                         <strong>{{ $this->money($this->efectivoEsperado) }}</strong>
+                    </div>
                     </div>
 
                     <form wire:submit="closeSession" class="bw-cash-opening-form">

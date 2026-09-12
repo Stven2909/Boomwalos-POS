@@ -19,7 +19,6 @@ use App\Filament\Resources\VentaFiscalPos\Pages\ManageVentasFiscales;
 use App\Filament\Resources\VentaFiscalPos\VentaFiscalPosResource;
 use App\Jobs\EnviarVentasFiscalesJob;
 use App\Models\Categoria;
-use App\Models\ColaVentaFiscal;
 use App\Models\ConfiguracionFiscal;
 use App\Models\DocumentoFiscal;
 use App\Models\Establecimiento;
@@ -120,6 +119,7 @@ class FiscalAdminUiTest extends TestCase
         $pedido = $service->startOrder(TipoPedido::MESA, $this->cashier, $this->table->getKey());
         $service->addProduct($pedido, $this->product, $this->cashier);
         $service->sendPendingBatch($pedido, $this->cashier);
+        $service->sendToCashRegister($pedido, $this->cashier);
 
         $pago = app(CobroService::class)->charge(
             $pedido,

@@ -66,7 +66,7 @@ class PortalAdminController extends Controller
                 'email' => $user->email,
                 'role' => 'administrador',
             ],
-            'modo_emision' => $this->portalFiscalService->obtenerModoEmision(),
+            'modo_emision' => $this->portalFiscalService->obtenerModoEmision($request->filled('establecimiento_id') ? $request->integer('establecimiento_id') : null),
         ]);
     }
 
@@ -188,12 +188,12 @@ class PortalAdminController extends Controller
     /**
      * Consulta la configuración de emisión del portal.
      */
-    public function obtenerConfiguracion(): JsonResponse
+    public function obtenerConfiguracion(Request $request): JsonResponse
     {
         return response()->json([
             'success' => true,
             'data' => [
-                'modo_emision' => $this->portalFiscalService->obtenerModoEmision(),
+                'modo_emision' => $this->portalFiscalService->obtenerModoEmision($request->filled('establecimiento_id') ? $request->integer('establecimiento_id') : null),
                 'modos_disponibles' => [
                     [
                         'id' => PortalFiscalService::MODO_MANUAL,
@@ -222,9 +222,10 @@ class PortalAdminController extends Controller
     {
         $validated = $request->validate([
             'modo_emision' => 'required|string|in:MANUAL,AUTOMATICO,HIBRIDO,manual,automatico,hibrido',
+            'establecimiento_id' => 'nullable|integer|exists:establecimientos,id',
         ]);
 
-        $modoNuevo = $this->portalFiscalService->guardarModoEmision($validated['modo_emision']);
+        $modoNuevo = $this->portalFiscalService->guardarModoEmision($validated['modo_emision'], $validated['establecimiento_id'] ?? null);
 
         return response()->json([
             'success' => true,

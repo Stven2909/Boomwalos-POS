@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>G-002 — Definición de los Tres Sistemas de Boomwalos</title>
+    <style>
+        @page {
+            size: A4 portrait;
+            margin: 1.6cm 1.4cm 1.6cm 1.4cm;
+            @bottom-right {
+                content: "Página " counter(page);
+                font-size: 8pt;
+                color: #64748b;
+                font-family: 'Segoe UI', system-ui, sans-serif;
+            }
+        }
+        
+        * {
+            box-sizing: border-box;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            color: #1e293b;
+            line-height: 1.55;
+            font-size: 9pt;
+            background: #ffffff;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Header */
+        .doc-header {
+            border-bottom: 2px solid #0284c7;
+            padding-bottom: 10px;
+            margin-bottom: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
+
+        .doc-title-block h1 {
+            font-size: 18pt;
+            color: #0f172a;
+            margin: 0 0 4px 0;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+        }
+
+        .doc-title-block h2 {
+            font-size: 10.5pt;
+            color: #0284c7;
+            margin: 0;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .badge-container {
+            display: flex;
+            gap: 6px;
+        }
+
+        .badge {
+            background: #f1f5f9;
+            color: #334155;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 7.5pt;
+            font-weight: 700;
+            border: 1px solid #cbd5e1;
+            text-transform: uppercase;
+        }
+
+        .badge-success {
+            background: #dcfce7;
+            color: #166534;
+            border-color: #86efac;
+        }
+
+        .badge-primary {
+            background: #e0f2fe;
+            color: #0369a1;
+            border-color: #7dd3fc;
+        }
+
+        /* Metadata Box */
+        .meta-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 9px 12px;
+            margin-bottom: 18px;
+        }
+
+        .meta-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .meta-label {
+            font-size: 7pt;
+            color: #64748b;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-bottom: 2px;
+        }
+
+        .meta-value {
+            font-size: 8.5pt;
+            color: #0f172a;
+            font-weight: 600;
+        }
+
+        /* Headings */
+        h2.section-title {
+            font-size: 11.5pt;
+            color: #0f172a;
+            border-left: 4px solid #0284c7;
+            padding-left: 8px;
+            margin-top: 18px;
+            margin-bottom: 8px;
+            font-weight: 700;
+            page-break-after: avoid;
+        }
+
+        p {
+            margin-top: 0;
+            margin-bottom: 8px;
+            text-align: justify;
+        }
+
+        /* System Card */
+        .system-card {
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            padding: 10px 12px;
+            margin-bottom: 14px;
+            page-break-inside: avoid;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+        }
+
+        .system-card.pos { border-top: 4px solid #2563eb; }
+        .system-card.portal { border-top: 4px solid #059669; }
+        .system-card.fiscal { border-top: 4px solid #d97706; }
+
+        .system-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+            border-bottom: 1px solid #f1f5f9;
+            padding-bottom: 4px;
+        }
+
+        .system-title {
+            font-size: 10.5pt;
+            font-weight: 700;
+            color: #0f172a;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .system-tag {
+            font-size: 7pt;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
+
+        .tag-pos { background: #dbeafe; color: #1e40af; }
+        .tag-portal { background: #d1fae5; color: #065f46; }
+        .tag-fiscal { background: #fef3c7; color: #92400e; }
+
+        .info-row {
+            margin-bottom: 5px;
+        }
+        .info-label {
+            font-weight: 700;
+            color: #334155;
+            font-size: 8.5pt;
+        }
+
+        ul {
+            margin: 3px 0 6px 16px;
+            padding: 0;
+        }
+
+        li {
+            margin-bottom: 2px;
+        }
+
+        /* Tables */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 8px 0 14px 0;
+            font-size: 8pt;
+            page-break-inside: avoid;
+        }
+
+        th {
+            background: #0f172a;
+            color: #ffffff;
+            font-weight: 600;
+            text-align: left;
+            padding: 6px 8px;
+            font-size: 7.5pt;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        td {
+            padding: 5px 8px;
+            border-bottom: 1px solid #e2e8f0;
+            vertical-align: top;
+        }
+
+        tr:nth-child(even) td {
+            background: #f8fafc;
+        }
+
+        /* Diagram Box */
+        .diagram-container {
+            background: #f8fafc;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            padding: 12px;
+            margin: 12px 0;
+            page-break-inside: avoid;
+            text-align: center;
+        }
+
+        .flow-diagram {
+            display: flex;
+            justify-content: space-between;
+            align-items: stretch;
+            gap: 10px;
+            margin: 8px 0;
+        }
+
+        .flow-box {
+            flex: 1;
+            background: #ffffff;
+            border: 1px solid #94a3b8;
+            border-radius: 6px;
+            padding: 8px;
+            font-size: 7.5pt;
+            text-align: left;
+            position: relative;
+        }
+
+        .flow-box h4 {
+            margin: 0 0 4px 0;
+            font-size: 8pt;
+            color: #0f172a;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 3px;
+        }
+
+        .flow-box.pos-box { border-top: 3px solid #2563eb; }
+        .flow-box.portal-box { border-top: 3px solid #059669; }
+        .flow-box.fiscal-box { border-top: 3px solid #d97706; }
+
+        .flow-arrow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13pt;
+            color: #64748b;
+            font-weight: bold;
+        }
+
+        /* Sign-off box */
+        .signoff-box {
+            margin-top: 18px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            background: #f8fafc;
+            padding: 10px 14px;
+            page-break-inside: avoid;
+        }
+
+        .signoff-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 14px;
+            margin-top: 10px;
+        }
+
+        .signoff-line {
+            border-top: 1px solid #94a3b8;
+            margin-top: 24px;
+            padding-top: 3px;
+            text-align: center;
+            font-size: 7.5pt;
+            color: #334155;
+            font-weight: 600;
+        }
+
+        .page-break {
+            page-break-after: always;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- DOCUMENT HEADER -->
+    <div class="doc-header">
+        <div class="doc-title-block">
+            <h2>Ingeniería de Software & Arquitectura de Sistemas</h2>
+            <h1>Documento de Definición de Sistemas</h1>
+        </div>
+        <div class="badge-container">
+            <span class="badge badge-primary">Ref: G-002</span>
+            <span class="badge badge-success">Estado: Aprobado</span>
+            <span class="badge">Versión 1.0</span>
+        </div>
+    </div>
+
+    <!-- METADATA GRID -->
+    <div class="meta-grid">
+        <div class="meta-item">
+            <span class="meta-label">Proyecto</span>
+            <span class="meta-value">Boomwalos Suite</span>
+        </div>
+        <div class="meta-item">
+            <span class="meta-label">Autor / Líder Técnico</span>
+            <span class="meta-value">Moisés Herrera</span>
+        </div>
+        <div class="meta-item">
+            <span class="meta-label">Revisores Técnicos</span>
+            <span class="meta-value">Henrry B. / Steven R. / Jorge D.</span>
+        </div>
+        <div class="meta-item">
+            <span class="meta-label">Fecha de Emisión</span>
+            <span class="meta-value">24 de Agosto, 2026</span>
+        </div>
+    </div>
+
+    <!-- SECCIÓN 1: RESUMEN EJECUTIVO -->
+    <h2 class="section-title">1. Resumen Ejecutivo y Visión Arquitectónica</h2>
+    <p>
+        El proyecto <strong>Boomwalos</strong> es una plataforma integral de tecnología restaurantera diseñada bajo un modelo de arquitectura distribuida y modular. Su propósito principal es desacoplar las operaciones críticas de piso de venta de la interacción digital del cliente y del cumplimiento fiscal tributario.
+    </p>
+    <p>
+        Para garantizar <strong>alta disponibilidad, tolerancia a fallos y escalabilidad</strong>, la solución se compone formalmente de tres productos independientes pero estrechamente integrados:
+    </p>
+    <ol style="margin: 3px 0 8px 16px; padding: 0; font-size: 8.5pt;">
+        <li><strong>Boomwalos POS:</strong> El núcleo transaccional de punto de venta y control operativo en piso.</li>
+        <li><strong>Portal Cliente QR (WebFact):</strong> Aplicación web de autoservicio para consulta de consumo y captura de datos tributarios por el comensal.</li>
+        <li><strong>API Fiscal Externa:</strong> Microservicio / Motor de emisión, firma criptográfica (.p12) y transmisión de DTEs ante el Ministerio de Hacienda.</li>
+    </ol>
+
+    <!-- SECCIÓN 2: FICHAS TÉCNICAS -->
+    <h2 class="section-title">2. Fichas Técnicas de los Tres Sistemas</h2>
+
+    <!-- CARD 1: POS -->
+    <div class="system-card pos">
+        <div class="system-header">
+            <div class="system-title">
+                <span>🖥️ Sistema 1: Boomwalos POS (Core Operativo)</span>
+            </div>
+            <span class="system-tag tag-pos">Transaccional / Local & Cloud</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Propósito:</span>
+            <span>Centralizar y agilizar la operación diaria del establecimiento gastronómico, administrando órdenes, tandas de cocina, cobranza, turnos de caja y periféricos físicos.</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Usuarios Destino:</span>
+            <span>Cajeros, Meseros, Capitanes de Piso, Cocineros / Jefe de Cocina y Administrador del Restaurante.</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Responsabilidades Principales:</span>
+            <ul>
+                <li><strong>Gestión de Mesas y Salón:</strong> Control de zonas, ocupación, cuentas abiertas y pedidos para llevar (Takeout).</li>
+                <li><strong>Comandero y Tandas de Cocina:</strong> Despacho secuencial de pedidos a cocina con notas específicas de preparación.</li>
+                <li><strong>Control de Cajas y Auditoría:</strong> Apertura de turno, arqueos, retiros/ingresos, cálculo de diferencias y cierre de sesión de caja.</li>
+                <li><strong>Motor de Pagos:</strong> Cobro con medios múltiples (Efectivo, Tarjeta, Transferencia, Mixto) y cálculo de cambio.</li>
+                <li><strong>Impresión Térmica ESC/POS:</strong> Despacho directo a impresoras de red (TCP/IP) y USB para comandas, pre-cuentas y tickets.</li>
+                <li><strong>Generación de Tracking Fiscal:</strong> Creación del código único de seguimiento (<code>tracking_code</code>) plasmado en código QR impreso.</li>
+            </ul>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Entradas:</span> Comandas capturadas por meseros, asignación de pagos, apertura/cierre de turnos de caja, catálogo de menú.
+        </div>
+        <div class="info-row">
+            <span class="info-label">Salidas:</span> Comandas físicas en cocina/barra, pre-cuentas, tickets de pago con QR, eventos de auditoría y payload de venta para facturación.
+        </div>
+        <div class="info-row">
+            <span class="info-label">Integraciones:</span> Impresoras térmicas ESC/POS (LAN/USB), Portal Cliente QR (API REST), API Fiscal Externa.
+        </div>
+    </div>
+
+    <!-- CARD 2: PORTAL QR -->
+    <div class="system-card portal">
+        <div class="system-header">
+            <div class="system-title">
+                <span>📱 Sistema 2: Portal Cliente QR (WebFact / Autoservicio)</span>
+            </div>
+            <span class="system-tag tag-portal">Web Responsive / Cliente Final</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Propósito:</span>
+            <span>Brindar al comensal una experiencia digital autónoma para consultar el desglose de su cuenta y solicitar su Documento Tributario Electrónico (Factura o Crédito Fiscal) sin depender de atención manual del cajero.</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Usuarios Destino:</span>
+            <span>Comensales / Clientes finales del establecimiento y Encargado de Facturación / Administración.</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Responsabilidades Principales:</span>
+            <ul>
+                <li><strong>Resolución Inmediata por QR:</strong> Búsqueda y visualización de la orden mediante el código de seguimiento (<code>/v1/portal-qr/orden/{tracking}</code>).</li>
+                <li><strong>Captura de Información Tributaria:</strong> Formulario guiado con validaciones estrictas de DUI/NIT, NRC, Razón Social, Giro y Correo.</li>
+                <li><strong>Selección del Tipo de Comprobante:</strong> Emisión de Factura Consumidor Final o Comprobante de Crédito Fiscal (CCF).</li>
+                <li><strong>Seguimiento de Estado:</strong> Monitor en vivo del estatus de la solicitud (Registrada &rarr; En Proceso &rarr; Aprobada &rarr; Rechazada).</li>
+                <li><strong>Descarga de Documentos Oficiales:</strong> Visualizador embebido y descarga directa del archivo JSON firmado y la representación gráfica en PDF con QR de Hacienda.</li>
+                <li><strong>Panel de Gestión Administrativa:</strong> Dashboard para revisar y procesar solicitudes de crédito fiscal con observaciones.</li>
+            </ul>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Entradas:</span> Lectura del QR del ticket de venta, datos tributarios y fiscales suministrados por el usuario.
+        </div>
+        <div class="info-row">
+            <span class="info-label">Salidas:</span> Solicitud formal de timbrado tributario, consulta de estado, descarga de PDF y JSON oficial.
+        </div>
+        <div class="info-row">
+            <span class="info-label">Integraciones:</span> API Backend de Boomwalos (para resolución de orden), API Fiscal Externa (consulta de DTE).
+        </div>
+    </div>
+
+    <div class="page-break"></div>
+
+    <!-- CARD 3: API FISCAL -->
+    <div class="system-card fiscal">
+        <div class="system-header">
+            <div class="system-title">
+                <span>🏛️ Sistema 3: API Fiscal Externa (Motor DTE / Ministerio de Hacienda)</span>
+            </div>
+            <span class="system-tag tag-fiscal">Microservicio M2M / Criptografía</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Propósito:</span>
+            <span>Aislar la complejidad legal, esquemas tributarios JSON, procesos criptográficos de firma digital (.p12) y comunicación con el Ministerio de Hacienda, protegiendo al POS de caídas externas.</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Usuarios / Consumidores:</span>
+            <span>Servicios automatizados (M2M): Boomwalos POS, Portal Cliente QR y Webhooks de la Administración Tributaria.</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Responsabilidades Principales:</span>
+            <ul>
+                <li><strong>Construcción de Esquemas DTE:</strong> Mapeo de la venta a esquemas normados (Facturas, Comprobantes de Crédito Fiscal, Notas de Débito/Crédito).</li>
+                <li><strong>Firma Digital Certificada:</strong> Sellado criptográfico del documento JSON mediante certificados privados PKCS#12 (<code>.p12</code>).</li>
+                <li><strong>Transmisión Segura a Hacienda:</strong> Envío bajo protocolos de seguridad establecidos por la autoridad tributaria.</li>
+                <li><strong>Gestión del Sello de Recepción:</strong> Almacenamiento inmutable del Sello de Recepción y Código de Generación (UUID fiscal).</li>
+                <li><strong>Motor de Resiliencia y Contingencia:</strong> Detección de fallos en Hacienda, conmutación automática a modo contingencia y cola de reintentos asíncronos.</li>
+                <li><strong>Renderizado de PDF Fiscal Oficial:</strong> Generación del formato legal exigido con el código QR normativo de validación gubernamental.</li>
+                <li><strong>Notificaciones Asíncronas (Webhooks):</strong> Emisión de eventos (<code>/fiscal/v1/webhooks</code>) para sincronizar el estado del DTE en el POS y Portal.</li>
+            </ul>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Entradas:</span> Payloads JSON de ventas confirmadas desde el POS o aprobadas desde el Portal (<code>POST /fiscal/v1/ventas</code>).
+        </div>
+        <div class="info-row">
+            <span class="info-label">Salidas:</span> Documento JSON firmado, Sello de Recepción, PDF legal con QR tributario, eventos Webhook de estado.
+        </div>
+        <div class="info-row">
+            <span class="info-label">Integraciones:</span> Servidores de Recepción de Hacienda, Enclave de Certificados Criptográficos (.p12).
+        </div>
+    </div>
+
+    <!-- SECCIÓN 3: DIAGRAMA DE ARQUITECTURA Y FLUJO -->
+    <h2 class="section-title">3. Diagrama de Relación y Flujo de Interacción</h2>
+    <div class="diagram-container">
+        <div style="font-weight: 700; font-size: 8.5pt; color: #0f172a; margin-bottom: 6px;">
+            Flujo Operativo y de Datos Tripartito
+        </div>
+        <div class="flow-diagram">
+            <div class="flow-box pos-box">
+                <h4>1. BOOMWALOS POS</h4>
+                <div style="color: #475569; font-size: 7pt;">
+                    &bull; Registro de orden y cobro<br>
+                    &bull; Impresión comanda y ticket<br>
+                    &bull; Genera <code>tracking_code</code><br>
+                    &bull; Encola evento fiscal
+                </div>
+            </div>
+            <div class="flow-arrow">&rarr;</div>
+            <div class="flow-box portal-box">
+                <h4>2. PORTAL CLIENTE QR</h4>
+                <div style="color: #475569; font-size: 7pt;">
+                    &bull; Escaneo QR de comensal<br>
+                    &bull; Resuelve detalle consumo<br>
+                    &bull; Captura datos (NIT/NRC)<br>
+                    &bull; Solicita emisión DTE
+                </div>
+            </div>
+            <div class="flow-arrow">&rarr;</div>
+            <div class="flow-box fiscal-box">
+                <h4>3. API FISCAL EXTERNA</h4>
+                <div style="color: #475569; font-size: 7pt;">
+                    &bull; Firma con llave <code>.p12</code><br>
+                    &bull; Transmisión a Hacienda<br>
+                    &bull; Obtiene Sello Recepción<br>
+                    &bull; Genera PDF oficial & QR
+                </div>
+            </div>
+        </div>
+        <div style="font-size: 7pt; color: #64748b; margin-top: 4px;">
+            <em>Notificaciones asíncronas vía Webhook retornan el estado y el PDF/JSON sellado al POS y al Portal del Cliente.</em>
+        </div>
+    </div>
+
+    <!-- SECCIÓN 4: MATRIZ DE LÍMITES -->
+    <h2 class="section-title">4. Matriz de Entradas, Salidas y Límites de Responsabilidad (Boundary Matrix)</h2>
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 20%;">Sistema</th>
+                <th style="width: 25%;">Entradas Principales</th>
+                <th style="width: 25%;">Salidas Principales</th>
+                <th style="width: 30%;">Límites (Lo que NO hace)</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Boomwalos POS</strong></td>
+                <td>Comandas de meseros, pagos en caja, aperturas/cierres de turnos, catálogo de productos.</td>
+                <td>Tickets con QR, comandas de cocina, pre-cuentas, auditorías, payload de venta.</td>
+                <td><strong>No firma criptográficamente DTEs</strong> ni se comunica directamente con Hacienda. No almacena llaves privadas <code>.p12</code>.</td>
+            </tr>
+            <tr>
+                <td><strong>Portal Cliente QR</strong></td>
+                <td>Escaneo QR (<code>tracking_code</code>), datos fiscales de cliente (NIT, NRC, Razón Social, Email).</td>
+                <td>Solicitud de facturación validada, consulta de estado, descarga de PDF y JSON oficial.</td>
+                <td><strong>No gestiona inventarios, mesas ni cobros en piso</strong>. No procesa anulaciones de ventas operativas.</td>
+            </tr>
+            <tr>
+                <td><strong>API Fiscal Externa</strong></td>
+                <td>Payload de venta JSON normalizado, solicitudes de timbrado, respuestas de Hacienda.</td>
+                <td>DTE firmado (.json), Sello de Recepción, PDF oficial tributario, Webhooks de estado.</td>
+                <td><strong>No interactúa con clientes finales</strong>, no administra usuarios de restaurante ni hardware de salón.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- SECCIÓN 5: GLOSARIO DE TÉRMINOS OFICIALES -->
+    <h2 class="section-title">5. Glosario Oficial Unificado de Términos</h2>
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 25%;">Término Canónico</th>
+                <th style="width: 75%;">Definición en el Proyecto Boomwalos</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Pedido (Order)</strong></td>
+                <td>Instancia transaccional que agrupa los platillos y bebidas solicitados para una mesa o servicio para llevar.</td>
+            </tr>
+            <tr>
+                <td><strong>Tanda (Batch)</strong></td>
+                <td>Envío específico y secuencial de platillos hacia las estaciones de producción (cocina/barra) dentro de un pedido.</td>
+            </tr>
+            <tr>
+                <td><strong>Pre-cuenta (Bill Request)</strong></td>
+                <td>Comprobante informativo no fiscal impreso a solicitud del cliente antes del cobro para verificar su consumo.</td>
+            </tr>
+            <tr>
+                <td><strong>Ticket de Pago con QR</strong></td>
+                <td>Comprobante emitido por la impresora térmica al cobrar, con el código QR y código de seguimiento para el cliente.</td>
+            </tr>
+            <tr>
+                <td><strong>Tracking Code (Código de Seguimiento)</strong></td>
+                <td>Cadena alfanumérica única e inviolable generada por el POS que vincula la venta física con el Portal Cliente QR.</td>
+            </tr>
+            <tr>
+                <td><strong>DTE (Documento Tributario Electrónico)</strong></td>
+                <td>Documento digital legal regulado por el Ministerio de Hacienda (Factura, Crédito Fiscal, Nota de Crédito/Débito).</td>
+            </tr>
+            <tr>
+                <td><strong>Código de Generación (UUID)</strong></td>
+                <td>Identificador global único universal generado para cada DTE conforme a la normativa tributaria antes de ser firmado.</td>
+            </tr>
+            <tr>
+                <td><strong>Sello de Recepción</strong></td>
+                <td>Cadena de autorización criptográfica emitida por los servidores del Ministerio de Hacienda que valida el DTE.</td>
+            </tr>
+            <tr>
+                <td><strong>Contingencia Fiscal</strong></td>
+                <td>Protocolo de resiliencia activado ante fallos de conexión o indisponibilidad de Hacienda, reteniendo DTEs para reintento.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- SECCIÓN 6: APROBACIÓN Y CIERRE DE TAREA -->
+    <div class="signoff-box">
+        <div style="font-weight: 700; font-size: 8.5pt; color: #0f172a;">
+            Aprobación Técnica y Cumplimiento de Criterios (Task G-002)
+        </div>
+        <p style="font-size: 7.5pt; margin: 3px 0 0 0; color: #475569;">
+            El presente documento satisface al 100% los entregables y criterios de aceptación definidos para la tarea <strong>G-002 — Definir los tres sistemas del proyecto</strong> en ClickUp. Los tres sistemas quedan formalmente aprobados como componentes desacoplados con contratos e interfaces definidos.
+        </p>
+        <div class="signoff-grid">
+            <div>
+                <div class="signoff-line">Moisés Herrera<br><span style="font-size: 7pt; color: #64748b; font-weight: normal;">Líder Técnico / Arquitecto</span></div>
+            </div>
+            <div>
+                <div class="signoff-line">Henrry Barrientos<br><span style="font-size: 7pt; color: #64748b; font-weight: normal;">Líder de QA / Procesos</span></div>
+            </div>
+            <div>
+                <div class="signoff-line">Steven Rivera<br><span style="font-size: 7pt; color: #64748b; font-weight: normal;">Desarrollador / Portal QR</span></div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

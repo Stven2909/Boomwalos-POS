@@ -1,0 +1,467 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Atlas funcional y técnico de SystemPos: ERP operativo para una empresa de pupusería con múltiples sucursales.">
+  <title>SystemPos · Atlas ERP operativo</title>
+  <style>
+    :root {
+      --ink: #29232d;
+      --muted: #736878;
+      --plum: #6f526b;
+      --plum-dark: #4c3849;
+      --plum-soft: #f1eaf1;
+      --orange: #ff7138;
+      --orange-soft: #fff0e9;
+      --green: #247a58;
+      --green-soft: #eaf7f0;
+      --amber: #986815;
+      --amber-soft: #fff5dc;
+      --red: #ad3c4c;
+      --red-soft: #fff0f1;
+      --paper: #fffdfb;
+      --canvas: #f7f4f7;
+      --line: #dfd7e0;
+      --shadow: 0 14px 32px rgba(54, 39, 53, .08);
+      --radius: 14px;
+      --max: 1440px;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { margin: 0; color: var(--ink); background: var(--canvas); font: 15px/1.6 Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; }
+    a { color: var(--plum-dark); text-decoration-thickness: 1px; text-underline-offset: 3px; }
+    a:hover { color: var(--orange); }
+    .skip { position: fixed; left: 12px; top: -50px; z-index: 10; padding: 8px 12px; background: var(--ink); color: #fff; }
+    .skip:focus { top: 12px; }
+    .topbar { position: sticky; top: 0; z-index: 5; border-bottom: 1px solid var(--line); background: rgba(255,253,251,.96); backdrop-filter: blur(14px); }
+    .topbar-inner { max-width: var(--max); margin: auto; min-height: 66px; display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 10px 28px; }
+    .brand { display: flex; align-items: center; gap: 12px; font-weight: 800; letter-spacing: -.02em; }
+    .brand-mark { width: 34px; height: 34px; display: grid; place-items: center; background: var(--plum); color: white; border-radius: 10px; font-weight: 900; }
+    .brand small { display: block; color: var(--muted); font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; }
+    .toolbar { display: flex; gap: 8px; align-items: center; }
+    .toolbar button { border: 1px solid var(--line); background: white; color: var(--ink); border-radius: 8px; min-height: 36px; padding: 0 12px; cursor: pointer; font: inherit; }
+    .toolbar button:hover, .toolbar button:focus-visible { border-color: var(--plum); outline: 3px solid var(--plum-soft); }
+    .layout { max-width: var(--max); margin: auto; display: grid; grid-template-columns: 244px minmax(0, 1fr); gap: 32px; padding: 32px 28px 80px; }
+    .toc { position: sticky; top: 92px; align-self: start; max-height: calc(100vh - 116px); overflow: auto; padding-right: 8px; }
+    .toc-title { margin: 0 0 12px; color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .12em; font-weight: 800; }
+    .toc a { display: block; padding: 7px 10px; border-left: 2px solid transparent; color: var(--muted); text-decoration: none; font-size: 13px; }
+    .toc a:hover { border-left-color: var(--orange); color: var(--ink); background: var(--orange-soft); }
+    main { min-width: 0; }
+    .hero { padding: 36px 0 28px; border-bottom: 1px solid var(--line); }
+    .eyebrow { margin: 0 0 12px; color: var(--plum); text-transform: uppercase; letter-spacing: .14em; font-weight: 800; font-size: 12px; }
+    h1, h2, h3 { margin: 0; letter-spacing: -.035em; line-height: 1.12; }
+    h1 { max-width: 850px; font-size: clamp(42px, 6vw, 78px); }
+    h2 { margin-top: 52px; padding-top: 16px; border-top: 1px solid var(--line); font-size: clamp(28px, 3.3vw, 42px); }
+    h3 { margin-top: 26px; font-size: 21px; }
+    .lead { max-width: 850px; margin: 18px 0 0; color: var(--muted); font-size: 19px; line-height: 1.55; }
+    .meta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 22px; }
+    .tag, .status { display: inline-flex; align-items: center; gap: 6px; min-height: 26px; padding: 3px 9px; border: 1px solid var(--line); border-radius: 999px; background: white; color: var(--muted); font-size: 11px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
+    .tag.actual { color: var(--green); background: var(--green-soft); border-color: #bfe8d0; }
+    .tag.target { color: var(--plum-dark); background: var(--plum-soft); border-color: #ddcddd; }
+    .tag.pending { color: var(--amber); background: var(--amber-soft); border-color: #ecd79a; }
+    .callout { margin: 24px 0; padding: 17px 18px; border-left: 4px solid var(--plum); background: white; box-shadow: var(--shadow); }
+    .callout strong { color: var(--plum-dark); }
+    .callout.warning { border-left-color: var(--orange); background: #fffaf7; }
+    .callout.danger { border-left-color: var(--red); background: var(--red-soft); }
+    .grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 16px; margin: 20px 0; }
+    .span-4 { grid-column: span 4; }
+    .span-5 { grid-column: span 5; }
+    .span-6 { grid-column: span 6; }
+    .span-7 { grid-column: span 7; }
+    .span-8 { grid-column: span 8; }
+    .span-12 { grid-column: 1 / -1; }
+    .panel { min-width: 0; padding: 20px; border: 1px solid var(--line); background: var(--paper); box-shadow: 0 4px 14px rgba(54,39,53,.035); }
+    .panel h3 { margin-top: 0; }
+    .panel p:last-child { margin-bottom: 0; }
+    .panel.plum { border-top: 4px solid var(--plum); }
+    .panel.orange { border-top: 4px solid var(--orange); }
+    .panel.green { border-top: 4px solid var(--green); }
+    .panel.amber { border-top: 4px solid var(--amber); }
+    .panel.red { border-top: 4px solid var(--red); }
+    .muted { color: var(--muted); }
+    .small { font-size: 13px; }
+    .flow { display: grid; grid-template-columns: repeat(7, minmax(110px, 1fr)); gap: 8px; align-items: stretch; margin: 20px 0; overflow-x: auto; padding-bottom: 4px; }
+    .flow-step { position: relative; min-width: 118px; padding: 13px 12px; border: 1px solid var(--line); background: white; }
+    .flow-step:not(:last-child)::after { content: "→"; position: absolute; right: -12px; top: 50%; z-index: 1; transform: translateY(-50%); color: var(--orange); font-size: 20px; font-weight: 800; }
+    .flow-step strong { display: block; font-size: 14px; line-height: 1.25; }
+    .flow-step span { display: block; margin-top: 5px; color: var(--muted); font-size: 12px; line-height: 1.35; }
+    .flow-step.actual { border-top: 3px solid var(--green); }
+    .flow-step.target { border-top: 3px solid var(--plum); }
+    .flow-step.risk { border-top: 3px solid var(--red); }
+    .legend { display: flex; flex-wrap: wrap; gap: 14px; margin: 12px 0; color: var(--muted); font-size: 12px; }
+    .legend span::before { content: ""; display: inline-block; width: 10px; height: 10px; margin-right: 5px; border-radius: 50%; background: var(--line); }
+    .legend .l-actual::before { background: var(--green); }
+    .legend .l-target::before { background: var(--plum); }
+    .legend .l-risk::before { background: var(--red); }
+    table { width: 100%; border-collapse: collapse; margin: 18px 0 24px; background: var(--paper); font-size: 13px; }
+    th, td { padding: 12px 11px; border: 1px solid var(--line); vertical-align: top; text-align: left; }
+    th { color: var(--plum-dark); background: var(--plum-soft); font-size: 11px; text-transform: uppercase; letter-spacing: .06em; }
+    tr:nth-child(even) td { background: #fffefa; }
+    code { padding: 2px 5px; background: #f0ebf0; color: var(--plum-dark); border-radius: 4px; font: 12px ui-monospace, SFMono-Regular, Consolas, monospace; }
+    pre { overflow: auto; padding: 16px; background: #302834; color: #f8f0f7; font: 13px/1.55 ui-monospace, SFMono-Regular, Consolas, monospace; }
+    .state-list { display: flex; flex-wrap: wrap; gap: 6px; margin: 14px 0; }
+    .state { padding: 5px 8px; border: 1px solid var(--line); background: white; color: var(--muted); font-size: 12px; }
+    .state.done { color: var(--green); border-color: #bfe8d0; background: var(--green-soft); }
+    .state.open { color: var(--plum-dark); border-color: #ddcddd; background: var(--plum-soft); }
+    .state.wait { color: var(--amber); border-color: #ecd79a; background: var(--amber-soft); }
+    .state.fail { color: var(--red); border-color: #efc3c8; background: var(--red-soft); }
+    .checklist { margin: 12px 0; padding: 0; list-style: none; }
+    .checklist li { position: relative; padding: 7px 0 7px 24px; border-bottom: 1px solid #eee8ed; }
+    .checklist li::before { content: "□"; position: absolute; left: 0; color: var(--plum); font-size: 17px; line-height: 1.25; }
+    .num { display: inline-grid; place-items: center; width: 26px; height: 26px; margin-right: 8px; background: var(--orange); color: white; font-weight: 900; border-radius: 50%; }
+    .section-note { margin: 8px 0 20px; color: var(--muted); }
+    .search { width: min(260px, 42vw); min-height: 36px; padding: 0 11px; border: 1px solid var(--line); border-radius: 8px; color: var(--ink); background: white; font: inherit; }
+    .section-hidden { display: none; }
+    footer { max-width: var(--max); margin: 0 auto; padding: 24px 28px 60px; border-top: 1px solid var(--line); color: var(--muted); font-size: 13px; }
+    @media (max-width: 980px) {
+      .layout { grid-template-columns: 1fr; padding-top: 10px; }
+      .toc { position: static; max-height: none; display: flex; flex-wrap: wrap; gap: 4px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+      .toc-title { width: 100%; margin-bottom: 2px; }
+      .toc a { padding: 5px 8px; border: 1px solid var(--line); background: white; }
+      .span-4, .span-5, .span-6, .span-7, .span-8 { grid-column: span 6; }
+    }
+    @media (max-width: 640px) {
+      .topbar-inner { padding: 10px 16px; }
+      .toolbar .search { display: none; }
+      .layout { padding: 18px 16px 60px; }
+      h1 { font-size: 42px; }
+      h2 { margin-top: 38px; font-size: 30px; }
+      .span-4, .span-5, .span-6, .span-7, .span-8 { grid-column: 1 / -1; }
+      .flow { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: 150px; }
+      .flow-step:not(:last-child)::after { right: -11px; }
+      table { display: block; overflow-x: auto; white-space: normal; }
+    }
+    @media print {
+      body { background: white; font-size: 10pt; }
+      .topbar, .toc, .toolbar { display: none; }
+      .layout { display: block; padding: 0; }
+      .hero { padding-top: 0; }
+      h2 { break-before: page; }
+      .panel, .callout, table { box-shadow: none; }
+      a { color: inherit; text-decoration: none; }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip" href="#contenido">Saltar al contenido</a>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand"><span class="brand-mark">S</span><div>SystemPos<small>Atlas ERP operativo</small></div></div>
+      <div class="toolbar"><input class="search" id="search" type="search" placeholder="Filtrar esta página" aria-label="Filtrar esta página"><button type="button" onclick="window.print()">Imprimir / PDF</button></div>
+    </div>
+  </header>
+
+  <div class="layout">
+    <nav class="toc" aria-label="Índice del atlas">
+      <p class="toc-title">Mapa del documento</p>
+      <a href="#criterio">Cómo leerlo</a><a href="#modelo">Modelo ERP</a><a href="#alcance">Alcance</a><a href="#actores">Actores</a><a href="#catalogo">Catálogo y combos</a><a href="#flujos">Flujos</a><a href="#estados">Estados</a><a href="#caja">Caja y cobro</a><a href="#fiscal">Facturación</a><a href="#cocina">Cocina</a><a href="#control">Centro de control</a><a href="#seguridad">Seguridad</a><a href="#auditoria">Auditoría actual</a><a href="#construccion">Construcción</a><a href="#aceptacion">Aceptación</a><a href="#decisiones">Decisiones</a>
+    </nav>
+
+    <main id="contenido">
+      <section class="hero">
+        <p class="eyebrow">Documento maestro · línea funcional única</p>
+        <h1>Atlas completo de SystemPos</h1>
+        <p class="lead">Definición visual, funcional y técnica para entender desde cero el ERP operativo de una pupusería: sucursales, catálogo, pedidos, combos, cocina, cobro, caja, facturación, permisos y control seguro de capacidades.</p>
+        <div class="meta"><span class="tag actual">Base de código auditada</span><span class="tag target">Diseño objetivo ERP</span><span class="tag target">Una empresa · varias sucursales</span><span class="tag pending">Decisiones pendientes visibles</span></div>
+        <div class="callout warning"><strong>Regla de lectura.</strong> Este atlas no presenta una pantalla bonita como si fuera un sistema terminado. Cada bloque indica si describe conducta observada en el repositorio, una conducta objetivo para cerrar el producto o una decisión que todavía debe aprobarse.</div>
+      </section>
+
+      <section id="criterio">
+        <h2>Cómo leer este atlas</h2>
+        <p class="section-note">La finalidad es que propietario, analista, diseñador y programadores trabajen con los mismos recorridos y puedan detectar cuándo una pantalla contradice el negocio.</p>
+        <div class="grid">
+          <article class="panel green span-4"><span class="tag actual">Confirmado</span><h3>Base real</h3><p>Comportamiento localizado en clases, servicios, vistas, modelos, migraciones o permisos del proyecto actual. No significa que el flujo completo esté libre de defectos.</p></article>
+          <article class="panel plum span-4"><span class="tag target">Objetivo</span><h3>Línea de producto</h3><p>Regla que debe cumplir el ERP final. Se define aquí para que una implementación no improvise estados, botones o permisos distintos.</p></article>
+          <article class="panel amber span-4"><span class="tag pending">Pendiente</span><h3>Decisión / integración</h3><p>Aspecto que requiere una elección del negocio, equipo fiscal, proveedor de pagos, impresora o infraestructura antes de declararlo operativo.</p></article>
+        </div>
+        <div class="callout"><strong>Decisión central de esta versión:</strong> no se implementará multiempresa. SystemPos operará una empresa con varias sucursales. La separación obligatoria será por sucursal, caja, usuario, impresora, pedido y configuración fiscal.</div>
+      </section>
+
+      <section id="modelo">
+        <h2>1. Modelo ERP desde cero</h2>
+        <p class="section-note">ERP aquí significa una operación integrada: la venta nace en el POS, pasa por cocina y caja, queda disponible para reportes y, si se habilita, entra al flujo fiscal. No significa agregar contabilidad, nómina o inventario sin alcance.</p>
+        <div class="grid">
+          <article class="panel plum span-5"><h3>La jerarquía del negocio</h3><pre>Empresa única
+  ├─ Sucursal Centro
+  │   ├─ Caja / sesión
+  │   ├─ Mesas
+  │   ├─ Impresoras o KDS
+  │   └─ Configuración fiscal
+  └─ Sucursal Norte
+      ├─ Caja / sesión
+      ├─ Mesas
+      ├─ Impresoras o KDS
+      └─ Configuración fiscal
+
+Catálogo compartido
+Pedidos y pagos pertenecen a una sucursal</pre></article>
+          <article class="panel orange span-7"><h3>Mapa de módulos</h3><table><thead><tr><th>Módulo</th><th>Responsabilidad</th><th>Alcance</th></tr></thead><tbody>
+            <tr><td>Organización</td><td>Identidad operativa, sucursales y contexto activo.</td><td>Empresa única; sucursal obligatoria.</td></tr>
+            <tr><td>Acceso</td><td>Usuarios, roles, permisos y asignaciones.</td><td>Persona y sucursal autorizada.</td></tr>
+            <tr><td>Catálogo</td><td>Categorías, productos, opciones, combos, disponibilidad.</td><td>Definición compartida; disponibilidad local cuando aplique.</td></tr>
+            <tr><td>POS</td><td>Pedido, mesa, comanda, pago y ticket.</td><td>Terminal y sesión de caja.</td></tr>
+            <tr><td>Cocina</td><td>Comanda impresa; KDS opcional.</td><td>Configuración por sucursal.</td></tr>
+            <tr><td>Caja</td><td>Apertura, cobros, movimientos, arqueo y cierre.</td><td>Una sesión activa por caja según regla acordada.</td></tr>
+            <tr><td>Fiscal</td><td>Registro y emisión fiscal cuando esté habilitada.</td><td>Configuración y credenciales por sucursal.</td></tr>
+            <tr><td>Control</td><td>Reportes, auditoría, capacidades y salud operativa.</td><td>Administrador según permisos.</td></tr>
+          </tbody></table></article>
+        </div>
+      </section>
+
+      <section id="alcance">
+        <h2>2. Qué entra y qué no entra</h2>
+        <table><thead><tr><th>Área</th><th>Base del ERP</th><th>Opcional habilitable</th><th>Fuera de esta línea</th></tr></thead><tbody>
+          <tr><td>Sucursales</td><td>Varias sucursales de una empresa, con datos aislados.</td><td>Reportes consolidados del mismo negocio.</td><td>Administrar empresas independientes desde la misma operación.</td></tr>
+          <tr><td>Servicio</td><td>Mostrador / para llevar y comer aquí / mesa.</td><td>Asignación avanzada a meseros.</td><td>Delivery, QR o kiosco hasta definirlos.</td></tr>
+          <tr><td>Catálogo</td><td>Productos, categorías, imágenes, masa maíz/arroz, combos.</td><td>Precios y disponibilidad diferenciados por sucursal.</td><td>Inventario real sin módulo de existencias y recetas aprobado.</td></tr>
+          <tr><td>Cocina</td><td>Comanda por impresora.</td><td>KDS por sucursal y modo mixto.</td><td>Suponer que existe una pantalla de cocina si no fue instalada.</td></tr>
+          <tr><td>Cobro</td><td>Efectivo, tarjeta registrada, cambio, sesión de caja.</td><td>Terminal bancaria, pagos divididos, reembolsos avanzados.</td><td>Crédito o cobro duplicado.</td></tr>
+          <tr><td>Fiscal</td><td>Configuración y registro según integración disponible.</td><td>Emisión fiscal real, reintentos y monitoreo de outbox.</td><td>Presentar ticket operativo como autorización fiscal.</td></tr>
+          <tr><td>Administración</td><td>Productos, combos, usuarios, mesas, impresoras, fiscal y reportes.</td><td>Centro de funcionalidades con dependencias.</td><td>Interruptores que simulen capacidades no construidas.</td></tr>
+        </tbody></table>
+      </section>
+
+      <section id="actores">
+        <h2>3. Actores y responsabilidades</h2>
+        <table><thead><tr><th>Actor</th><th>Puede hacer</th><th>No debe poder hacer</th></tr></thead><tbody>
+          <tr><td>Administrador</td><td>Configurar sucursales, usuarios, catálogo, mesas, impresoras, fiscal y reportes permitidos.</td><td>Saltarse el alcance de empresa/sucursal sin auditoría.</td></tr>
+          <tr><td>Encargado de sucursal</td><td>Abrir/cerrar jornada, revisar incidencias, disponibilidad y operación local.</td><td>Modificar permisos globales o consultar otra sucursal no asignada.</td></tr>
+          <tr><td>Cajero</td><td>Tomar pedido, agregar opciones, enviar comanda, cobrar y consultar pedidos operativos.</td><td>Cambiar roles, borrar ventas, alterar configuración fiscal o cerrar una caja ajena.</td></tr>
+          <tr><td>Mesero / toma de orden</td><td>Crear pedido de mesa, agregar productos y solicitar envío a cocina o cuenta.</td><td>Cobrar si no tiene permiso de cobro.</td></tr>
+          <tr><td>Cocina</td><td>Leer comanda o KDS y marcar preparación si el módulo existe.</td><td>Ver dinero innecesario, cobrar o modificar precios.</td></tr>
+          <tr><td>Soporte técnico</td><td>Diagnosticar una capacidad autorizada y dejar trazabilidad.</td><td>Entrar a datos comerciales sin alcance, duración y registro.</td></tr>
+        </tbody></table>
+        <div class="callout"><strong>Regla doble:</strong> permiso responde “qué puede hacer”; asignación responde “dónde puede hacerlo”. Ocultar un botón no sustituye la validación en servidor.</div>
+      </section>
+
+      <section id="catalogo">
+        <h2>4. Catálogo, masa y combos</h2>
+        <p class="section-note">La venta debe conservar exactamente las opciones seleccionadas. Una comanda ambigua produce una preparación incorrecta aunque el total sea correcto.</p>
+        <div class="grid">
+          <article class="panel span-6"><span class="tag actual">Base confirmada</span><h3>Producto individual</h3><p>El producto puede requerir una selección de masa. Para una pupusa vendible, la línea debe guardar producto, cantidad, precio unitario y opción: <code>Maíz</code> o <code>Arroz</code>. La opción visible en el carrito debe llegar también a la comanda.</p></article>
+          <article class="panel span-6"><span class="tag actual">Implementado</span><h3>Combo configurable</h3><p>Un combo tiene una cantidad o composición definida, pero cada pupusa que lo integra puede tener su propia masa. El operador configura el combo, revisa el resumen y la comanda desglosa cada elección; no se muestra únicamente “Combo 10”.</p></article>
+        </div>
+        <div class="flow">
+          <div class="flow-step target"><strong>Elegir combo</strong><span>El producto indica que es combo.</span></div>
+          <div class="flow-step target"><strong>Configurar</strong><span>Se muestran sus pupusas y opciones permitidas.</span></div>
+          <div class="flow-step target"><strong>Masa por línea</strong><span>Cada integrante: maíz o arroz.</span></div>
+          <div class="flow-step target"><strong>Revisar</strong><span>Nombre completo y resumen legible.</span></div>
+          <div class="flow-step target"><strong>Agregar</strong><span>Se conserva la composición en el pedido.</span></div>
+          <div class="flow-step target"><strong>Comanda</strong><span>Detalle desglosado para cocina.</span></div>
+          <div class="flow-step target"><strong>Ticket / fiscal</strong><span>Importe y producto coherentes.</span></div>
+        </div>
+        <table><thead><tr><th>Problema que se evita</th><th>Comportamiento requerido</th><th>Prueba</th></tr></thead><tbody>
+          <tr><td>El carrito corta el nombre.</td><td>La línea tiene espacio para nombre, composición y masa; controles quedan separados.</td><td>Nombre largo y combo con varias líneas.</td></tr>
+          <tr><td>La masa se pierde en cocina.</td><td>La opción viaja en detalle de línea y renderer de comanda.</td><td>Combo con maíz y arroz mezclados.</td></tr>
+          <tr><td>Se agrega un combo incompleto.</td><td>Configurar bloquea hasta completar mínimos y máximos.</td><td>Intentar confirmar sin una selección obligatoria.</td></tr>
+          <tr><td>Se cobra una cantidad distinta.</td><td>El total se recalcula desde líneas persistidas, no desde texto de pantalla.</td><td>Editar cantidades y volver a revisar.</td></tr>
+        </tbody></table>
+      </section>
+
+      <section id="flujos">
+        <h2>5. Atlas de flujos operativos</h2>
+        <p class="section-note">Estos son los recorridos que deben explicar el sistema. Los dos primeros son los principales; el flujo de mesa corrige la contradicción entre “comer aquí” y el cobro posterior que se ha definido para el negocio.</p>
+
+        <article class="panel orange"><h3><span class="num">A</span>Mostrador / para llevar · cobra primero</h3><span class="tag actual">Implementado</span>
+          <div class="flow"><div class="flow-step target"><strong>Abrir sesión</strong><span>Sucursal, caja y operador válidos.</span></div><div class="flow-step target"><strong>Servicio</strong><span>Para llevar / mostrador.</span></div><div class="flow-step target"><strong>Pedido</strong><span>Productos, masa, combo, nota.</span></div><div class="flow-step target"><strong>Revisar</strong><span>Total, opciones y cliente.</span></div><div class="flow-step target"><strong>Cobrar</strong><span>Efectivo o tarjeta.</span></div><div class="flow-step target"><strong>Comanda</strong><span>Se genera después del pago.</span></div><div class="flow-step target"><strong>Cerrar</strong><span>Ticket, fiscal si aplica, entrega.</span></div></div>
+          <p><strong>Regla:</strong> si el pago falla, el pedido no se manda a cocina ni se marca como cobrado. Si el cobro se repite por doble toque o reconexión, se devuelve el resultado existente y no se duplica dinero ni comanda.</p>
+        </article>
+
+        <article class="panel plum"><h3><span class="num">B</span>Comer aquí / mesa · cobra después</h3><span class="tag actual">Implementado</span>
+          <div class="flow"><div class="flow-step target"><strong>Elegir mesa</strong><span>Mesa libre de la sucursal.</span></div><div class="flow-step target"><strong>Abrir pedido</strong><span>Mesa ocupada, estado abierto.</span></div><div class="flow-step target"><strong>Tomar orden</strong><span>Productos, masa, combo, notas.</span></div><div class="flow-step target"><strong>Enviar comanda</strong><span>Solo líneas nuevas.</span></div><div class="flow-step target"><strong>Consumir / agregar</strong><span>El pedido sigue abierto.</span></div><div class="flow-step target"><strong>Enviar a caja</strong><span>Pasa a pendiente de cobro.</span></div><div class="flow-step target"><strong>Pagar y cerrar</strong><span>Fiscal, ticket y liberar mesa.</span></div></div>
+          <p><strong>Regla:</strong> la mesa no se libera cuando se manda la comanda; se libera después del pago cerrado. Si se agregan productos, se crea una nueva tanda de cocina relacionada y no se reimprime toda la orden.</p>
+        </article>
+
+        <article class="panel span-12"><h3><span class="num">C</span>Adición a una mesa</h3><span class="tag actual">Implementado</span><p>Buscar el pedido abierto de la mesa, añadir las nuevas líneas, validar masa/combo, enviar únicamente la tanda pendiente y conservar un historial de qué se comunicó. Al cobrar, el total incluye todas las líneas activas; una línea ya enviada no vuelve a convertirse en comanda por el mero hecho de cobrar.</p></article>
+        <article class="panel span-12"><h3><span class="num">D</span>Cancelación y corrección</h3><span class="tag target">Flujo objetivo</span><p>Antes de comanda: editar o cancelar el borrador según permiso. Después de comanda: registrar motivo, enviar aviso de cancelación o corrección y conservar la trazabilidad. Después de pago: no borrar ni reescribir; registrar devolución o ajuste autorizado vinculado al pago original.</p></article>
+        <article class="panel span-12"><h3><span class="num">E</span>Impresión con resultado incierto</h3><span class="tag target">Flujo objetivo</span><p>El pago y el pedido quedan registrados aunque la impresora no confirme. El operador ve “pendiente”, “error” o “resultado incierto”, verifica físicamente y puede reimprimir una copia identificada. Nunca se crea una venta nueva para resolver una falla de impresión.</p></article>
+      </section>
+
+      <section id="estados">
+        <h2>6. Estados que deben permanecer separados</h2>
+        <div class="grid">
+          <article class="panel span-6"><h3>Pedido comercial</h3><div class="state-list"><span class="state open">ABIERTO</span><span class="state wait">PENDIENTE_COBRO</span><span class="state done">COBRADO</span><span class="state done">CERRADO</span><span class="state fail">CANCELADO</span></div><p><strong>ABIERTO:</strong> se está tomando o completando una orden. <strong>PENDIENTE_COBRO:</strong> mesa enviada a caja. <strong>COBRADO:</strong> pago registrado. <strong>CERRADO:</strong> finalización del flujo. <strong>CANCELADO:</strong> no continúa como venta activa, pero conserva historial.</p></article>
+          <article class="panel span-6"><h3>Mesa</h3><div class="state-list"><span class="state done">LIBRE</span><span class="state open">OCUPADA</span><span class="state wait">PENDIENTE DE COBRO</span></div><p>La mesa ocupada significa que tiene una orden activa. La selección de mesa no debe crear otro pedido si ya existe uno abierto o pendiente. Se libera únicamente con la regla de cierre establecida.</p></article>
+          <article class="panel span-6"><h3>Comanda / preparación</h3><div class="state-list"><span class="state open">NO ENVIADA</span><span class="state wait">EN COLA</span><span class="state done">ENVIADA</span><span class="state wait">EN PREPARACIÓN</span><span class="state done">LISTA</span><span class="state fail">ERROR / INCIERTA</span></div><p>La impresora confirma una operación de comunicación, no necesariamente que el papel fue retirado. En KDS los estados deben ser explícitos; en papel solo se marca lo que el personal confirma.</p></article>
+          <article class="panel span-6"><h3>Pago y fiscal</h3><div class="state-list"><span class="state open">NO INICIADO</span><span class="state fail">RECHAZADO</span><span class="state done">PAGADO</span><span class="state wait">PENDIENTE FISCAL</span><span class="state done">ACEPTADO</span><span class="state fail">RECHAZADO FISCAL</span></div><p>Un rechazo fiscal no borra ni deshace automáticamente una venta cobrada. El reintento debe reutilizar la identidad fiscal correspondiente y dejar bitácora.</p></article>
+        </div>
+      </section>
+
+      <section id="caja">
+        <h2>7. Caja, cobro y cierre</h2>
+        <div class="flow"><div class="flow-step target"><strong>Abrir sesión</strong><span>Fondo inicial y responsable.</span></div><div class="flow-step target"><strong>Operar</strong><span>Cobros y movimientos.</span></div><div class="flow-step target"><strong>Revisar</strong><span>Pedidos pendientes reales.</span></div><div class="flow-step target"><strong>Arqueo</strong><span>Efectivo físico contado.</span></div><div class="flow-step target"><strong>Comparar</strong><span>Esperado versus contado.</span></div><div class="flow-step target"><strong>Registrar diferencia</strong><span>Motivo y responsable.</span></div><div class="flow-step target"><strong>Cerrar</strong><span>Sesión inmutable.</span></div></div>
+        <div class="grid">
+          <article class="panel span-6"><h3>Fórmula operativa</h3><pre>efectivo esperado
+= fondo inicial
+ + ventas en efectivo
+ + ingresos autorizados
+ - retiros
+ - devoluciones en efectivo
+
+diferencia = efectivo contado - esperado</pre><p class="small muted">La fórmula final debe coincidir con el criterio vigente de la implementación. Una devolución posterior no debe reescribir un cierre ya realizado; debe crear un movimiento vinculado.</p></article>
+          <article class="panel span-6"><h3>Bloqueo correcto</h3><ul class="checklist"><li>No bloquear el cierre por borradores vacíos sin líneas, total cero y sin pago.</li><li>Sí bloquear por pedidos reales pendientes de cobro o por incidencias que el negocio haya definido como críticas.</li><li>Mostrar cuántos pedidos bloquean y abrirlos desde la misma sucursal.</li><li>Después de cerrar, impedir nuevos cobros con esa sesión.</li><li>La pantalla debe mantener el botón de finalizar visible sin desplazarlo fuera del monitor táctil.</li></ul></article>
+        </div>
+      </section>
+
+      <section id="fiscal">
+        <h2>8. Facturación y registro fiscal</h2>
+        <p class="section-note">La venta, el ticket operativo y el documento fiscal son conceptos relacionados, pero no son el mismo documento.</p>
+        <div class="flow"><div class="flow-step actual"><strong>Pedido</strong><span>Detalle y total persistidos.</span></div><div class="flow-step actual"><strong>Pago</strong><span>Pago asociado a sesión.</span></div><div class="flow-step actual"><strong>Venta fiscal</strong><span>Se evita duplicar por pago.</span></div><div class="flow-step actual"><strong>Outbox</strong><span>Cola para emisión/reintento.</span></div><div class="flow-step target"><strong>Proveedor fiscal</strong><span>Respuesta externa.</span></div><div class="flow-step target"><strong>Resultado</strong><span>Aceptado, rechazado o pendiente.</span></div><div class="flow-step target"><strong>Comprobante</strong><span>Ticket y documento según regla.</span></div></div>
+        <table><thead><tr><th>Momento</th><th>Qué debe ocurrir</th><th>Qué no debe ocurrir</th></tr></thead><tbody>
+          <tr><td>Antes del pago</td><td>Se prepara el pedido y se calcula el total.</td><td>Emitir factura definitiva con una orden que aún no tiene pago aprobado.</td></tr>
+          <tr><td>Pago aprobado</td><td>Registrar pago una sola vez y cerrar la condición monetaria.</td><td>Duplicar el pago por reintento o doble toque.</td></tr>
+          <tr><td>Registro fiscal</td><td>Tomar configuración fiscal de la sucursal y enviar a la cola correspondiente.</td><td>Usar credenciales o códigos de otra sucursal.</td></tr>
+          <tr><td>Rechazo / caída</td><td>Conservar venta cobrada, informar estado y permitir reintento trazable.</td><td>Eliminar la venta, inventar autorización o cobrar otra vez.</td></tr>
+        </tbody></table>
+        <div class="callout"><strong>Configuración pendiente de gobernanza:</strong> el repositorio tiene códigos de establecimiento/punto de venta en más de un lugar. El atlas exige elegir una única fuente canónica y que el outbox use solo esa fuente para evitar discrepancias.</div>
+      </section>
+
+      <section id="cocina">
+        <h2>9. Cocina: comanda base y pantalla opcional</h2>
+        <div class="grid">
+          <article class="panel green span-6"><span class="tag actual">Modo base</span><h3>Comanda impresa</h3><p>La sucursal pequeña imprime instrucciones. La comanda debe mostrar producto, cantidad, masa, composición del combo, extras y notas. No necesita mostrar al cocinero información financiera que no usa.</p></article>
+          <article class="panel plum span-6"><span class="tag target">Modo opcional</span><h3>KDS por sucursal</h3><p>Una sucursal puede habilitar pantalla de cocina si tiene estación, usuarios y configuración. Otra sucursal puede continuar con impresora. Activar KDS no cambia el pedido ni la política de cobro; cambia el destino operativo de la comanda.</p></article>
+        </div>
+        <h3>Tandas y duplicación</h3>
+        <p>Una orden de mesa puede producir varias tandas. Cada tanda debe identificarse con las líneas nuevas y su momento de envío. El renderer no debe imprimir automáticamente todas las líneas activas cuando solo se envía una tanda. El cobro no debe volver a generar la comanda completa si ya fue comunicada.</p>
+        <div class="callout"><strong>Corrección aplicada:</strong> el servicio bloquea y entrega al renderer solamente las líneas pendientes. Cada trabajo usa una identidad determinista basada en pedido y líneas; el cobro no genera otra comanda cuando todo ya fue comunicado.</div>
+      </section>
+
+      <section id="control">
+        <h2>10. Centro de control para programadores y administradores</h2>
+        <p class="section-note">El sistema necesita una zona visible para saber qué capacidades existen, cuáles están configuradas y cuáles pueden activarse sin tocar código por cliente.</p>
+        <table><thead><tr><th>Capacidad</th><th>Estado</th><th>Requisitos antes de activar</th><th>Alcance</th></tr></thead><tbody>
+          <tr><td>Comanda por impresora</td><td>Base operativa</td><td>Impresora probada, función cocina, sucursal asignada.</td><td>Sucursal.</td></tr>
+          <tr><td>KDS</td><td>Opcional; no simular si no está construido.</td><td>Estación, usuarios de cocina, categorías y prueba.</td><td>Sucursal.</td></tr>
+          <tr><td>Facturación fiscal</td><td>Según configuración y proveedor.</td><td>Ambiente, credenciales, códigos canónicos y prueba.</td><td>Sucursal.</td></tr>
+          <tr><td>Variantes de masa</td><td>Catálogo habilitado.</td><td>Opciones permitidas, precio y salida en comanda.</td><td>Producto / combo.</td></tr>
+          <tr><td>Inventario</td><td>Futuro / separado.</td><td>Unidades, saldos, recetas, mermas y responsables.</td><td>Sucursal.</td></tr>
+          <tr><td>Pagos integrados</td><td>Opcional.</td><td>Proveedor, terminal, conciliación e idempotencia.</td><td>Sucursal / caja.</td></tr>
+        </tbody></table>
+        <div class="grid">
+          <article class="panel span-6"><h3>Ciclo seguro de una capacidad</h3><div class="flow"><div class="flow-step target"><strong>No disponible</strong><span>No existe o no está validada.</span></div><div class="flow-step target"><strong>Disponible</strong><span>Construida pero sin configuración.</span></div><div class="flow-step target"><strong>Lista</strong><span>Requisitos completos.</span></div><div class="flow-step target"><strong>Activa</strong><span>Operable en alcance elegido.</span></div><div class="flow-step target"><strong>Desactivada</strong><span>Sin borrar historial.</span></div></div></article>
+          <article class="panel span-6"><h3>Reglas de activación</h3><ul class="checklist"><li>Validar requisitos antes de mostrar “activar”.</li><li>Registrar quién, cuándo, alcance y motivo.</li><li>Desactivar solo después de revisar dependencias y operaciones activas.</li><li>No cambiar datos históricos al cambiar una capacidad.</li><li>Si una función no está construida, mostrar “no disponible”, no un interruptor decorativo.</li></ul></article>
+        </div>
+        <p><span class="tag actual">Implementado</span> La página <code>TI → Operación del POS</code> habilita Mostrador prepago y Mesa postpago por sucursal, muestra dependencias, conserva historial y bloquea desactivaciones con operaciones activas. El acceso depende del permiso <code>gestionar_configuracion_pos</code>, no del nombre del rol.</p>
+      </section>
+
+      <section id="seguridad">
+        <h2>11. Seguridad e integridad de datos</h2>
+        <div class="grid">
+          <article class="panel span-4"><h3>Identidad</h3><p>Cada operador usa su cuenta. Cambio de operador, bloqueo y reautenticación deben atribuir correctamente la siguiente acción.</p></article>
+          <article class="panel span-4"><h3>Alcance</h3><p>La sesión activa determina la sucursal. Todas las lecturas y escrituras deben validar sucursal, permiso y relación con el pedido.</p></article>
+          <article class="panel span-4"><h3>Idempotencia</h3><p>Reintentar cobro, impresión, cierre o fiscal no debe crear un segundo resultado para la misma operación.</p></article>
+          <article class="panel span-4"><h3>Historial</h3><p>No borrar ventas, pagos, cierres o configuraciones usadas. Corregir mediante reversión o evento vinculado.</p></article>
+          <article class="panel span-4"><h3>Secretos</h3><p>Credenciales fiscales y de infraestructura no aparecen en interfaz, tickets, exportaciones ni logs.</p></article>
+          <article class="panel span-4"><h3>Auditoría</h3><p>Guardar operador, fecha, sucursal, objeto afectado, acción, motivo y resultado en cambios sensibles.</p></article>
+        </div>
+        <table><thead><tr><th>Riesgo</th><th>Control mínimo</th><th>Prueba de aceptación</th></tr></thead><tbody>
+          <tr><td>Consultar pedidos de otra sucursal</td><td>Scope en consulta, servicio y autorización de servidor.</td><td>Modificar URL o identificador no concede acceso.</td></tr>
+          <tr><td>Cobro doble</td><td>Bloqueo transaccional, estado final e idempotencia.</td><td>Dos dispositivos intentan cobrar una orden.</td></tr>
+          <tr><td>Comanda duplicada</td><td>Identidad de tanda y renderer por líneas pendientes.</td><td>Enviar, agregar, enviar, cobrar.</td></tr>
+          <tr><td>Pedido vacío bloqueando caja</td><td>Consulta operativa excluye únicamente ABIERTO sin líneas, cero y sin pago.</td><td>El histórico permanece, pero no bloquea ni aparece como operación real.</td></tr>
+          <tr><td>Configuración peligrosa</td><td>Permiso, dependencias, validación, bloqueo transaccional y auditoría.</td><td>Desactivar un flujo POS con pedidos activos queda bloqueado.</td></tr>
+        </tbody></table>
+      </section>
+
+      <section id="auditoria">
+        <h2>12. Auditoría del sistema actual</h2>
+        <p class="section-note">Esta sección evita confundir “hay una clase” con “el flujo completo está terminado”.</p>
+        <table><thead><tr><th>Área</th><th>Lo observado en el repositorio</th><th>Conclusión</th></tr></thead><tbody>
+          <tr><td>Contexto de sucursal</td><td><code>EstablishmentContext</code> usa la sucursal activa en sesión y los servicios principales filtran por ella.</td><td><span class="tag actual">Base presente</span> Mantener y probar en cada ruta.</td></tr>
+          <tr><td>Catálogo</td><td>Productos, categorías y combos existen; el catálogo no está modelado por sucursal.</td><td><span class="tag pending">Decidir</span> Si cada local necesita precio/disponibilidad propia, agregar diseño explícito; no improvisarlo.</td></tr>
+          <tr><td>Pedidos</td><td>Estados comerciales: ABIERTO, PENDIENTE_COBRO, COBRADO, CERRADO y CANCELADO.</td><td><span class="tag actual">Base presente</span> Alinear botones con los estados.</td></tr>
+          <tr><td>Mostrador</td><td><code>CobroService</code> registra pago, cola de comanda/ticket, fiscal y cierre.</td><td><span class="tag actual">Coherente</span> Verificar duplicación e idempotencia en pruebas.</td></tr>
+          <tr><td>Mesa / pago posterior</td><td>La interfaz separa comanda, consumo, solicitud de cuenta, cobro y liberación de mesa.</td><td><span class="tag actual">Implementado</span> El servidor impide cobrar una mesa antes de solicitar cuenta.</td></tr>
+          <tr><td>Acción de cocina</td><td>El botón aparece en mesa cuando existen líneas pendientes y permanece protegido en el servicio.</td><td><span class="tag actual">Implementado</span> La cuenta sigue abierta después del envío.</td></tr>
+          <tr><td>Comanda por tandas</td><td>El renderer recibe únicamente las líneas bloqueadas del envío actual.</td><td><span class="tag actual">Implementado</span> Identidad determinista y sin repetición al cobrar.</td></tr>
+          <tr><td>Fiscal</td><td>Configuración de sucursal, registro fiscal y outbox están separados y evitan duplicar por pago.</td><td><span class="tag actual">Base presente</span> Resolver fuente canónica de códigos.</td></tr>
+          <tr><td>KDS</td><td>No se observó una pantalla de cocina operativa equivalente a la comanda impresa.</td><td><span class="tag target">Opcional</span> Activarlo solo cuando exista módulo y configuración.</td></tr>
+          <tr><td>Centro de funcionalidades</td><td>Existe el módulo TI por sucursal para los dos flujos POS, sus dependencias y auditoría.</td><td><span class="tag actual">Implementado</span> Permiso dedicado y bloqueo transaccional.</td></tr>
+        </tbody></table>
+
+        <div class="callout"><strong>Fuentes revisadas para esta auditoría:</strong> <code>ServiceSelection.php</code>, <code>TableSelection.php</code>, <code>OrderEntry.php</code>, <code>ChargeOrder.php</code>, <code>ListaPedidos.php</code>, <code>PedidoService.php</code>, <code>CobroService.php</code>, <code>FiscalSaleRegistrar.php</code>, <code>FiscalOutboxService.php</code>, <code>EstablishmentContext.php</code>, recursos de establecimientos, usuarios, productos, combos, mesas, impresoras y configuración fiscal, además de las vistas Blade del POS y sus migraciones relacionadas.</div></section>
+
+      <section id="construccion">
+        <h2>13. Construcción del ERP por fases</h2>
+        <div class="grid">
+          <article class="panel plum span-4"><h3>Fase 0 · Congelar reglas</h3><p>Validar empresa única, sucursales, los dos momentos de cobro, estados, catálogo compartido y política fiscal. Registrar decisiones y no esconder conflictos.</p></article>
+          <article class="panel plum span-4"><h3>Fase 1 · Núcleo operativo</h3><p>Contexto de sucursal, usuarios, caja, catálogo, productos, masa, combos, pedido, cobro y consulta de pedidos.</p></article>
+          <article class="panel plum span-4"><h3>Fase 2 · Cocina confiable</h3><p>Renderer por tanda, comanda adicional, cancelación, reimpresión identificada, errores y eventual KDS por sucursal.</p></article>
+          <article class="panel orange span-4"><h3>Fase 3 · Caja y fiscal</h3><p>Cierre sin falsos pendientes, movimientos, outbox, reintentos, estados fiscales y fuente canónica de códigos.</p></article>
+          <article class="panel orange span-4"><h3>Fase 4 · Centro de control</h3><p>Capacidades, dependencias, activación por sucursal, auditoría, diagnóstico y seguridad administrativa.</p></article>
+          <article class="panel orange span-4"><h3>Fase 5 · Ampliaciones</h3><p>Inventario, recetas, precios locales, pagos integrados, reportes avanzados o nuevos canales solo con alcance propio.</p></article>
+        </div>
+        <h3>Orden técnico de implementación</h3>
+        <ol class="checklist"><li>Documentar pruebas de estado y contratos actuales antes de tocar la lógica.</li><li>Corregir pedidos vacíos y criterio de bloqueo de cierre.</li><li>Hacer visible y seguro el envío de mesa a cocina/caja.</li><li>Separar tandas de comanda de la orden completa.</li><li>Impedir que el cobro reimprima instrucciones ya enviadas.</li><li>Completar combo con masa por integrante y salida legible en carrito/comanda.</li><li>Validar facturación por sucursal, reintentos y códigos canónicos.</li><li>Agregar Centro de funcionalidades con estados reales, no interruptores decorativos.</li><li>Ejecutar pruebas táctiles en 1024 × 768 y 1366 × 768, además de permisos y concurrencia.</li></ol>
+      </section>
+
+      <section id="aceptacion">
+        <h2>14. Matriz de aceptación</h2>
+        <table><thead><tr><th>ID</th><th>Escenario</th><th>Debe pasar</th></tr></thead><tbody>
+          <tr><td>AC-01</td><td>Mostrador en efectivo</td><td>Pedido válido, pago único, cambio correcto, comanda una vez, ticket y cierre.</td></tr>
+          <tr><td>AC-02</td><td>Mostrador con pago rechazado</td><td>No se manda a cocina, no se duplica pedido y se puede corregir o cancelar según permiso.</td></tr>
+          <tr><td>AC-03</td><td>Mesa cobra después</td><td>Mesa ocupada durante consumo; comanda antes del pago; cuenta pasa a caja; pago libera mesa.</td></tr>
+          <tr><td>AC-04</td><td>Adición a mesa</td><td>Solo nuevas líneas en segunda comanda; el cobro incluye todo; no se repite lo anterior.</td></tr>
+          <tr><td>AC-05</td><td>Combo mixto</td><td>Un combo puede tener pupusas de maíz y arroz; carrito, comanda y ticket muestran la selección.</td></tr>
+          <tr><td>AC-06</td><td>Dos sucursales</td><td>Usuarios, mesas, caja, impresoras y fiscal no cruzan datos; el catálogo compartido se comporta según regla aprobada.</td></tr>
+          <tr><td>AC-07</td><td>Fiscal caído</td><td>Venta cobrada permanece; estado fiscal pendiente/rechazado visible; reintento no cobra otra vez.</td></tr>
+          <tr><td>AC-08</td><td>Cierre</td><td>Pedidos reales pendientes bloquean; vacíos de cero no bloquean ni se muestran como operación activa.</td></tr>
+          <tr><td>AC-09</td><td>Acceso</td><td>Cajero sin permiso no cobra; usuario no ve otra sucursal por URL, búsqueda o reporte.</td></tr>
+          <tr><td>AC-10</td><td>Pantalla táctil</td><td>Controles principales alcanzables, sin scroll de página para cobrar, nombres largos sin corte y estados legibles.</td></tr>
+        </tbody></table>
+      </section>
+
+
+      <section id="tactil">
+        <h2>15. Estándar visual y táctil</h2>
+        <p class="section-note">La interfaz se diseña para el monitor táctil POS de referencia: 15 pulgadas, relación 4:3 y resolución 1024 × 768. La versión inicial es horizontal; portrait no forma parte de esta entrega.</p>
+        <div class="grid">
+          <article class="panel plum span-4"><h3>Distribución</h3><p>Contexto de sucursal y servicio arriba; categorías a la izquierda; productos al centro; pedido actual y cobro en panel derecho fijo.</p></article>
+          <article class="panel orange span-4"><h3>Interacción</h3><p>Objetivos táctiles de al menos 44 × 44 px, separación clara, tarjeta completa seleccionable y feedback después de agregar, cambiar cantidad o cobrar.</p></article>
+          <article class="panel green span-4"><h3>Continuidad</h3><p>El carrito tiene scroll independiente. Total, método de pago y acción principal permanecen accesibles. La página completa no debe desplazarse para cobrar.</p></article>
+          <article class="panel span-6"><h3>Responsive comprobable</h3><ul class="checklist"><li>1024 × 768: dos columnas de productos y carrito reducido sin cortar nombre ni botón.</li><li>1280 × 768 o superior: tres o cuatro columnas según el espacio real.</li><li>Los nombres largos pasan a varias líneas sin invadir precio o controles.</li><li>El borde y la sombra de cada tarjeta quedan dentro del viewport; ningún producto aparece cortado arriba.</li></ul></article>
+          <article class="panel span-6"><h3>Jerarquía de lectura</h3><ul class="checklist"><li>Primero: servicio, sucursal, mesa y pedido activo.</li><li>Después: producto, composición, masa y cantidad.</li><li>Luego: subtotal, impuestos si aplican, total y medio de pago.</li><li>Estados siempre combinan texto, contraste y estructura; nunca dependen solo del color.</li></ul></article>
+        </div>
+      </section>
+      <section id="decisiones">
+        <h2>16. Decisiones que deben quedar firmadas</h2>
+        <p class="section-note">Mientras una decisión esté pendiente, no debe convertirse en una bandera escondida ni en comportamiento diferente entre programadores.</p>
+        <table><thead><tr><th>Decisión</th><th>Base propuesta en este atlas</th><th>Quién debe validar</th></tr></thead><tbody>
+          <tr><td>Empresa</td><td>Una empresa con varias sucursales; no multiempresa.</td><td>Propietario / producto.</td></tr>
+          <tr><td>Mostrador</td><td>Cobro inmediato antes de comanda.</td><td>Operación.</td></tr>
+          <tr><td>Comer aquí</td><td>Mesa abierta, comanda, cobro posterior y liberación al cerrar.</td><td>Operación / encargado.</td></tr>
+          <tr><td>Catálogo por sucursal</td><td>Base compartida; precio/disponibilidad local solo si se diseña formalmente.</td><td>Producto / contabilidad.</td></tr>
+          <tr><td>Impuesto y documento</td><td>Dependen del régimen, proveedor y configuración legal del negocio.</td><td>Responsable fiscal.</td></tr>
+          <tr><td>Pagos</td><td>Un medio por cobro en la base; pagos divididos requieren extensión.</td><td>Operación / finanzas.</td></tr>
+          <tr><td>KDS</td><td>Opcional por sucursal; comanda impresa sigue siendo el respaldo base.</td><td>Operación / infraestructura.</td></tr>
+          <tr><td>Inventario</td><td>No asumir existencias por vender; módulo separado cuando tenga recetas y movimientos.</td><td>Producto / compras.</td></tr>
+        </tbody></table>
+        <div class="callout"><strong>Regla de control de cambios:</strong> si una solicitud modifica el momento de cobro, el estado de mesa, la salida de cocina, el alcance por sucursal o el registro fiscal, debe actualizar este atlas y sus pruebas antes de implementarse.</div>
+      </section>
+
+      <section id="glosario">
+        <h2>17. Glosario mínimo</h2>
+        <div class="grid"><article class="panel span-4"><h3>Sucursal</h3><p>Local operativo de la empresa. Determina datos, caja, mesas, dispositivos y configuración local.</p></article><article class="panel span-4"><h3>Pedido</h3><p>Conjunto identificable de líneas, opciones, totales, estados y eventos. No debe confundirse con ticket o comanda.</p></article><article class="panel span-4"><h3>Tanda</h3><p>Grupo de líneas nuevas enviado a cocina en un momento concreto, especialmente importante en mesas.</p></article><article class="panel span-4"><h3>Comanda</h3><p>Instrucción de preparación. Puede ser impresa o mostrada en KDS.</p></article><article class="panel span-4"><h3>Pago</h3><p>Registro monetario asociado al pedido y a la sesión de caja. Su idempotencia evita duplicados.</p></article><article class="panel span-4"><h3>Outbox</h3><p>Cola persistente para integrar una venta con un servicio externo, como fiscal, con reintentos trazables.</p></article></div>
+      </section>
+
+      <section id="cierre">
+        <h2>Cierre de la definición</h2>
+        <p>SystemPos será una línea única cuando el equipo pueda responder, para cualquier operación, cinco preguntas: en qué sucursal ocurrió, quién la hizo, qué pidió el cliente, qué se comunicó a cocina y qué dinero/documento resultó. El diseño táctil es la forma de operar; los estados, permisos, transacciones e historiales son lo que protege el negocio.</p>
+        <div class="callout"><strong>Próximo paso recomendado:</strong> aprobar primero las ocho decisiones de la sección 15 y después ejecutar la matriz AC-01 a AC-10 contra el código actual. Las correcciones deben cerrar los hallazgos de mesa, tandas, pedidos vacíos y fuente fiscal antes de agregar nuevas capacidades.</div>
+      </section>
+    </main>
+  </div>
+  <footer>SystemPos · Atlas ERP operativo · Documento de trabajo para producto, diseño, desarrollo y operación. El contenido distingue base real, objetivo y pendientes; debe actualizarse mediante control de cambios.</footer>
+  <script>
+    const input = document.getElementById('search');
+    input.addEventListener('input', () => {
+      const q = input.value.trim().toLowerCase();
+      document.querySelectorAll('main section').forEach(section => {
+        section.classList.toggle('section-hidden', q.length > 1 && !section.innerText.toLowerCase().includes(q));
+      });
+    });
+  </script>
+</body>
+</html>

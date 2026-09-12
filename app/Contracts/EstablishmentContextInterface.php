@@ -16,11 +16,11 @@ use Illuminate\Support\Collection;
  *   seleccionada; `idOrNull()` / `currentOrNull()` devuelven `null`.
  * - `idOrNull()` auto-selecciona la única sucursal accesible cuando el modo
  *   `single` no exige selección explícita
- *   (`config('tenancy.require_explicit_establishment') === false`).
+ *   (`config('pos.require_explicit_establishment') === false`).
  * - El contexto se persiste en `session('pos.establishment_id')` solo cuando
  *   la petición tiene sesión; en consola queda únicamente en el singleton.
- * - `ResolveTenant` (prependido al grupo `web`) resetea el contexto al
- *   finalizar cada request; no arrastrar contexto entre peticiones.
+ * - El contexto se limpia explícitamente al cambiar de sesión o sucursal;
+ *   no se debe arrastrar contexto entre peticiones.
  */
 interface EstablishmentContextInterface
 {

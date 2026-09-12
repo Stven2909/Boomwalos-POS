@@ -1,14 +1,15 @@
 <x-filament-panels::page>
     <div class="bw-pos-page bw-pos-service-page">
         @include('filament.admin.components.pos-header', [
-            'rightLabel' => $this->actorName() . ' · CAJA 1',
+            'centerLabel' => $this->operationContext(),
+            'rightLabel' => $this->actorName(),
         ])
 
         <main class="bw-pos-service-main">
             <section class="bw-pos-service-intro" aria-labelledby="service-title">
-                <span class="bw-pos-step-label">PUNTO DE VENTA · MOSTRADOR</span>
-                <h1 id="service-title">¿Qué quieres hacer?</h1>
-                <p>Toca una opción para continuar</p>
+                <span class="bw-pos-step-label">PUNTO DE VENTA</span>
+                <h1 id="service-title">¿Cómo será este pedido?</h1>
+                <p>Selecciona el flujo autorizado para esta sucursal.</p>
             </section>
 
             @foreach ($this->cashAlerts as $alert)
@@ -38,16 +39,21 @@
                 </div>
             </section>
 
-            <section class="bw-pos-service-options bw-pos-service-options-five" aria-label="Acciones del punto de venta">
-                <button type="button" wire:click="startNewOrder" class="bw-pos-service-card">
+            <section
+                class="bw-pos-service-options bw-pos-service-options-five {{ ($this->flowSettings->mostradorPrepago xor $this->flowSettings->mesaPostpago) ? 'has-single-flow' : '' }}"
+                aria-label="Acciones del punto de venta"
+            >
+                @if ($this->flowSettings->mostradorPrepago)
+                <button type="button" wire:click="startNewOrder" class="bw-pos-service-card bw-pos-service-primary bw-pos-service-flow bw-pos-service-flow-counter {{ $this->flowSettings->predeterminado === \App\Enums\FlujoPos::MOSTRADOR_PREPAGO ? 'is-default' : '' }}">
                     <span class="bw-pos-service-icon" aria-hidden="true">
                         <x-heroicon-o-plus-circle class="h-9 w-9" />
                     </span>
-                    <strong>Nuevo pedido</strong>
-                    <span>Abre el catálogo directamente</span>
+                    <strong>Mostrador</strong>
+                    <span>Tomar pedido · cobrar ahora · enviar comanda</span>
                 </button>
+                @endif
 
-                <button type="button" wire:click="openOrderSearch" class="bw-pos-service-card">
+                <button type="button" wire:click="openOrderSearch" class="bw-pos-service-card bw-pos-service-secondary bw-pos-service-utility bw-pos-service-search">
                     <span class="bw-pos-service-icon" aria-hidden="true">
                         <x-heroicon-o-magnifying-glass class="h-9 w-9" />
                     </span>
@@ -60,15 +66,17 @@
                     </span>
                 </button>
 
-                <button type="button" wire:click="openTables" class="bw-pos-service-card">
+                @if ($this->flowSettings->mesaPostpago)
+                <button type="button" wire:click="openTables" class="bw-pos-service-card bw-pos-service-primary bw-pos-service-flow bw-pos-service-flow-table {{ $this->flowSettings->predeterminado === \App\Enums\FlujoPos::MESA_POSTPAGO ? 'is-default' : '' }}">
                     <span class="bw-pos-service-icon" aria-hidden="true">
                         <x-heroicon-o-table-cells class="h-9 w-9" />
                     </span>
-                    <strong>Mesas</strong>
-                    <span>Asignar mesas del local</span>
+                    <strong>Comer aquí</strong>
+                    <span>Tomar pedido · enviar a cocina · cobrar después</span>
                 </button>
+                @endif
 
-                <button type="button" wire:click="openPendingList" class="bw-pos-service-card">
+                <button type="button" wire:click="openPendingList" class="bw-pos-service-card bw-pos-service-secondary bw-pos-service-utility bw-pos-service-pending">
                     <span class="bw-pos-service-icon" aria-hidden="true">
                         <x-heroicon-o-banknotes class="h-9 w-9" />
                     </span>
@@ -81,7 +89,7 @@
                     </span>
                 </button>
 
-                <button type="button" wire:click="openCashState" class="bw-pos-service-card">
+                <button type="button" wire:click="openCashState" class="bw-pos-service-card bw-pos-service-secondary bw-pos-service-utility bw-pos-service-cash">
                     <span class="bw-pos-service-icon" aria-hidden="true">
                         <x-heroicon-o-wallet class="h-9 w-9" />
                     </span>

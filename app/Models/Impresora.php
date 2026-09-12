@@ -62,9 +62,9 @@ class Impresora extends Model
         return $query->where('tipo', $tipo);
     }
 
-    public static function buscar(TipoImpresora $tipo): ?self
+    public static function buscar(TipoImpresora $tipo, ?int $establecimientoId = null): ?self
     {
-        $establecimientoId = app(EstablishmentContextInterface::class)->idOrNull();
+        $establecimientoId ??= app(EstablishmentContextInterface::class)->idOrNull();
 
         if ($establecimientoId) {
             $printer = static::activas()

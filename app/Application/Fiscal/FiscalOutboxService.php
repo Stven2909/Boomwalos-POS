@@ -3,7 +3,6 @@
 namespace App\Application\Fiscal;
 
 use App\Contracts\FiscalGatewayInterface;
-use App\Context\TenantContext;
 use App\Enums\EstadoColaVentaFiscal;
 use App\Enums\EstadoDocumentoFiscal;
 use App\Enums\EstadoVentaFiscal;
@@ -22,13 +21,35 @@ class FiscalOutboxService
 {
     public function __construct(
         private readonly FiscalGatewayInterface $fiscalGateway,
-        private readonly TenantContext $tenantContext,
     ) {}
 
     public function registrarVenta(Pedido $pedido, Pago $pago, ConfiguracionFiscal $config): VentaFiscalPos
     {
         $establecimiento = $config->establecimiento;
         $clave = $this->claveReintento($establecimiento, $pedido, $pago);
+        $receptor = $this->receptorPendiente($pedido);
+        $tipoDte = (! empty($receptor['nrc'])) ? '03' : '01';
+
+        $items = [];
+        $pedido->loadMissing(['detalles.producto', 'detalles.combo']);
+        foreach ($pedido->detalles as $detalle) {
+            if ($detalle->estado_linea && $detalle->estado_linea->value === 'CANCELADA') {
+                continue;
+            }
+            $items[] = [
+                'nombre' => $detalle->combo?->nombre ?? $detalle->producto?->nombre ?? 'Consumo en Restaurante',
+                'cantidad' => (float) ($detalle->cantidad ?? 1),
+                'precio_unitario' => (float) ($detalle->precio_unitario ?? 0),
+            ];
+        }
+
+        if (empty($items)) {
+            $items[] = [
+                'nombre' => 'Consumo de Alimentos y Bebidas',
+                'cantidad' => 1,
+                'precio_unitario' => (float) $this->neto($pago),
+            ];
+        }
 
         $venta = VentaFiscalPos::create([
             'establecimiento_id' => $establecimiento->getKey(),
@@ -37,13 +58,26 @@ class FiscalOutboxService
             'referencia' => $pedido->numero_seguimiento,
             'monto_total' => $this->neto($pago),
             'metodo_pago' => $pago->metodo_pago->value,
-            'receptor' => $this->receptorPendiente($pedido),
+            'receptor' => $receptor,
             'estado' => EstadoVentaFiscal::NO->value,
         ]);
 
         $venta->cola()->create([
             'clave_reintento' => $clave,
             'payload_envio' => [
+                'establecimiento' => (string) ($config->codigo_establecimiento ?: 'M001'),
+                'puntoVenta' => (string) ($config->codigo_punto_venta ?: 'P001'),
+                'tipoDte' => $tipoDte,
+                'propina' => 0.0,
+                'condicionOperacion' => 1,
+                'metodoPago' => match ($venta->metodo_pago) {
+                    'EFECTIVO' => '01',
+                    'TARJETA' => '02',
+                    'TRANSFERENCIA' => '04',
+                    default => '01',
+                },
+                'cliente' => $receptor,
+                'items' => $items,
                 'clave_reintento' => $clave,
                 'referencia' => $venta->referencia,
                 'fecha_emision' => $venta->created_at?->toIso8601String() ?? now()->toIso8601String(),
@@ -54,7 +88,7 @@ class FiscalOutboxService
             'estado' => EstadoColaVentaFiscal::PENDIENTE->value,
         ]);
 
-        dispatch(new EnviarVentasFiscalesJob($venta->getKey(), $this->tenantContext->current()?->slug));
+        dispatch(new EnviarVentasFiscalesJob($venta->getKey()));
 
         return $venta;
     }
@@ -90,7 +124,7 @@ class FiscalOutboxService
 
         $cola->ventaFiscalPos()->update(['estado' => EstadoVentaFiscal::NO->value]);
 
-        dispatch(new EnviarVentasFiscalesJob($cola->venta_fiscal_pos_id, $this->tenantContext->current()?->slug));
+        dispatch(new EnviarVentasFiscalesJob($cola->venta_fiscal_pos_id));
     }
 
     private function enviar(ColaVentaFiscal $cola): bool
@@ -109,7 +143,7 @@ class FiscalOutboxService
 
             DB::transaction(function () use ($cola, $venta, $respuesta): void {
                 $venta->update([
-                    'fiscal_sale_id' => $respuesta['fiscal_sale_id'] ?? $venta->fiscal_sale_id,
+                    'fiscal_sale_id' => $respuesta['codigoGeneracion'] ?? $respuesta['codigo_generacion'] ?? $respuesta['fiscal_sale_id'] ?? $venta->fiscal_sale_id,
                     'estado' => EstadoVentaFiscal::SINCRONIZADO->value,
                     'receptor' => null,
                     'sincronizado_at' => now(),

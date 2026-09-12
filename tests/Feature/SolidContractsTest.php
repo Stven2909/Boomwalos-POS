@@ -8,9 +8,7 @@ use App\Contracts\CustomerTicketDispatcherInterface;
 use App\Contracts\EstablishmentContextInterface;
 use App\Contracts\FiscalGatewayInterface;
 use App\Contracts\KitchenDispatcherInterface;
-use App\Contracts\TenantConnectionResolverInterface;
 use App\Services\AuditLogger;
-use App\Services\Platform\TenantConnectionResolver;
 use Tests\TestCase;
 
 class SolidContractsTest extends TestCase
@@ -21,7 +19,6 @@ class SolidContractsTest extends TestCase
         $this->assertInstanceOf(KitchenDispatcherInterface::class, app(KitchenDispatcherInterface::class));
         $this->assertInstanceOf(CustomerTicketDispatcherInterface::class, app(CustomerTicketDispatcherInterface::class));
         $this->assertInstanceOf(AuditLogger::class, app(AuditLoggerInterface::class));
-        $this->assertInstanceOf(TenantConnectionResolver::class, app(TenantConnectionResolverInterface::class));
         $this->assertInstanceOf(EstablishmentContextInterface::class, app(EstablishmentContextInterface::class));
     }
 }

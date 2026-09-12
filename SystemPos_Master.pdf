@@ -1,0 +1,961 @@
+%PDF-1.4
+%SystemPos
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R 5 0 R 7 0 R 9 0 R 11 0 R 13 0 R 15 0 R 17 0 R 19 0 R 21 0 R 23 0 R 25 0 R 27 0 R 29 0 R 31 0 R 33 0 R 35 0 R 37 0 R 39 0 R] /Count 19 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 41 0 R /F2 42 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 969 >>
+stream
+q 0.10 0.16 0.24 rg 0 0 595 842 re f Q
+0.91 0.70 0.18 rg BT /F2 30 Tf 50 720 Td (SystemPos) Tj ET
+0.98 0.98 0.98 rg BT /F1 14 Tf 50 680 Td (Master funcional y arquitectonico) Tj ET
+BT /F1 10 Tf 50 620 Td (POS especializado para pupuserias y restaurantes pequenos) Tj ET
+BT /F1 10 Tf 50 600 Td (Modelo multiempresa, sucursales y modulos habilitables) Tj ET
+BT /F1 10 Tf 50 580 Td () Tj ET
+BT /F1 10 Tf 50 560 Td (Documento maestro de analisis y direccion de producto) Tj ET
+BT /F1 10 Tf 50 540 Td (Fecha de auditoria: 05 de septiembre de 2026) Tj ET
+BT /F1 10 Tf 50 520 Td (Repositorio analizado: G:/POSYSTEM/Boomwalos-POS) Tj ET
+BT /F1 10 Tf 50 500 Td () Tj ET
+BT /F1 10 Tf 50 480 Td (Estado: MVP avanzado - preparado para evolucion controlada) Tj ET
+BT /F1 10 Tf 50 460 Td (Objetivo: operar negocios pequenos y cadenas con configuracion por sucursal) Tj ET
+0.91 0.70 0.18 rg 50 72 495 2 re f
+0.70 0.76 0.84 rg BT /F1 8 Tf 50 48 Td (SystemPos - Documento maestro) Tj ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 41 0 R /F2 42 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 2289 >>
+stream
+q 0.10 0.16 0.24 rg 0 810 595 32 re f Q
+0.91 0.70 0.18 rg BT /F2 15 Tf 42 820 Td (SystemPos) Tj ET
+0.24 0.32 0.42 rg BT /F1 8 Tf 470 820 Td (02) Tj ET
+0.10 0.16 0.24 rg BT /F2 16 Tf 42 778 Td (1. Resumen ejecutivo) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 748 Td (SystemPos posee un nucleo de POS tactil funcional y una base transaccional relevante.) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 736 Td (Incluye pedidos, mesas, combos, caja, pagos, auditoria, impresion, fiscalizacion) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 724 Td (y una estructura inicial de empresa, sucursal y aislamiento por tenant.) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 712 Td () Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 700 Td (El sistema aun no debe declararse como plataforma productiva tipo Odoo sin cerrar) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 688 Td (los bloqueadores de seguridad, multiempresa, colas de impresion y fiscalizacion.) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 676 Td () Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 664 Td (La decision central de este master es:) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 652 Td (La comanda impresa sera el comportamiento predeterminado.) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 640 Td (El KDS de cocina sera una capacidad opcional por sucursal.) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 628 Td () Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 616 Td (Una empresa podra tener varias sucursales y cada sucursal podra operar distinto:) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 604 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 604 Td (Sucursal pequena: comanda impresa.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 592 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 592 Td (Sucursal mediana: comanda y pantalla KDS.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 580 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 580 Td (Sucursal grande: KDS, varias estaciones y reglas avanzadas.) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 568 Td () Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 556 Td (Clasificacion actual: MVP avanzado / piloto controlado.) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 544 Td (Clasificacion objetivo: plataforma POS multiempresa modular) Tj ET
+0.82 0.84 0.87 rg 42 46 511 1 re f
+BT /F1 7 Tf 42 32 Td (SystemPos | Master funcional y arquitectonico | 05-09-2026) Tj ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 41 0 R /F2 42 0 R >> >> /Contents 8 0 R >>
+endobj
+8 0 obj
+<< /Length 3116 >>
+stream
+q 0.10 0.16 0.24 rg 0 810 595 32 re f Q
+0.91 0.70 0.18 rg BT /F2 15 Tf 42 820 Td (SystemPos) Tj ET
+0.24 0.32 0.42 rg BT /F1 8 Tf 470 820 Td (03) Tj ET
+0.10 0.16 0.24 rg BT /F2 16 Tf 42 778 Td (2. Modelo de negocio y jerarquia) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 748 Td (La jerarquia recomendada para SystemPos es:) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 736 Td () Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 724 Td (EMPRESA \(PlatformTenant\)) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 712 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 712 Td (Plan contratado) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 700 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 700 Td (Marca y datos comerciales) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 688 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 688 Td (Modulos permitidos) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 676 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 676 Td (Usuarios de la empresa) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 664 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 664 Td (Catalogo compartido) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 652 Td () Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 640 Td (SUCURSAL \(Establecimiento\)) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 628 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 628 Td (Direccion y datos fiscales) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 616 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 616 Td (Caja y sesiones) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 604 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 604 Td (Mesas) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 592 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 592 Td (Impresoras) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 580 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 580 Td (Configuracion operativa) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 568 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 568 Td (Modo de cocina) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 556 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 556 Td (Usuarios asignados) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 544 Td () Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 532 Td (OPERADOR) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 520 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 520 Td (Rol) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 508 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 508 Td (Permisos) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 496 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 496 Td (Sucursales autorizadas) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 484 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 484 Td (Sucursal activa) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 472 Td () Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 460 Td (Regla fundamental:) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 448 Td (Una empresa no es lo mismo que una sucursal.) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 436 Td (Una empresa puede consolidar reportes y catalogo.) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 424 Td (Una sucursal debe aislar caja, mesas, pedidos e impresoras.) Tj ET
+0.82 0.84 0.87 rg 42 46 511 1 re f
+BT /F1 7 Tf 42 32 Td (SystemPos | Master funcional y arquitectonico | 05-09-2026) Tj ET
+endstream
+endobj
+9 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 41 0 R /F2 42 0 R >> >> /Contents 10 0 R >>
+endobj
+10 0 obj
+<< /Length 3328 >>
+stream
+q 0.10 0.16 0.24 rg 0 810 595 32 re f Q
+0.91 0.70 0.18 rg BT /F2 15 Tf 42 820 Td (SystemPos) Tj ET
+0.24 0.32 0.42 rg BT /F1 8 Tf 470 820 Td (04) Tj ET
+0.10 0.16 0.24 rg BT /F2 16 Tf 42 778 Td (3. Multiempresa y sucursales) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 748 Td (La implementacion actual ya contiene una base compatible con este modelo:) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 736 Td () Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 724 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 724 Td (PlatformTenant representa la empresa o tenant.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 712 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 712 Td (TenantConnectionResolver resuelve la empresa por host o subdominio.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 700 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 700 Td (En modo database cada empresa puede tener una base operativa separada.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 688 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 688 Td (EstablishmentContext controla la sucursal activa.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 676 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 676 Td (Los usuarios pueden asignarse a una o varias sucursales.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 664 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 664 Td (Producto y Combo no tienen establecimiento_id: catalogo compartido.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 652 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 652 Td (Impresora, Pedido, Mesa y SesionCaja si pertenecen a sucursal.) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 640 Td () Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 628 Td (Recomendacion de produccion:) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 616 Td (Usar TENANT_DATABASE_MODE=database para varias empresas reales.) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 604 Td (El modo single debe reservarse para una sola empresa con varias sucursales.) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 592 Td () Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 580 Td (Si se desea una sola base para varias empresas, habria que agregar tenant_id) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 568 Td (a todas las tablas operativas y aplicar reglas globales de seguridad.) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 556 Td (No se recomienda mezclar ambos enfoques parcialmente.) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 544 Td () Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 532 Td (Controles obligatorios:) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 520 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 520 Td (Empresa activa.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 508 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 508 Td (Sucursal activa.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 496 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 496 Td (Sucursal por defecto.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 484 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 484 Td (Sucursales permitidas por usuario.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 472 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 472 Td (Filtros de tenant en portal, reportes, jobs e impresion.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 460 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 460 Td (Auditoria con empresa y sucursal.) Tj ET
+0.82 0.84 0.87 rg 42 46 511 1 re f
+BT /F1 7 Tf 42 32 Td (SystemPos | Master funcional y arquitectonico | 05-09-2026) Tj ET
+endstream
+endobj
+11 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 41 0 R /F2 42 0 R >> >> /Contents 12 0 R >>
+endobj
+12 0 obj
+<< /Length 3244 >>
+stream
+q 0.10 0.16 0.24 rg 0 810 595 32 re f Q
+0.91 0.70 0.18 rg BT /F2 15 Tf 42 820 Td (SystemPos) Tj ET
+0.24 0.32 0.42 rg BT /F1 8 Tf 470 820 Td (05) Tj ET
+0.10 0.16 0.24 rg BT /F2 16 Tf 42 778 Td (4. Sistema de modulos habilitables) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 748 Td (SystemPos debe incorporar cuatro niveles de habilitacion:) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 736 Td () Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 724 Td (1. Disponibilidad tecnica) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 712 Td (El modulo existe en el codigo y esta instalado.) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 700 Td () Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 688 Td (2. Entitlement del plan) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 676 Td (El plan de la empresa permite usar el modulo.) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 664 Td () Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 652 Td (3. Activacion de empresa) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 640 Td (La empresa decide utilizarlo.) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 628 Td () Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 616 Td (4. Activacion de sucursal y permiso) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 604 Td (La sucursal lo activa y el usuario tiene autorizacion.) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 592 Td () Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 580 Td (Regla de acceso:) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 568 Td (Feature disponible + plan permitido + empresa activa + sucursal activa) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 556 Td (+ permiso del usuario = funcionalidad disponible.) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 544 Td () Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 532 Td (No se debe ocultar solamente el boton.) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 520 Td (La misma regla debe proteger paginas, servicios, rutas, jobs y consultas.) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 508 Td () Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 496 Td (Panel tecnico para programadores:) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 484 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 484 Td (Catalogo de modulos.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 472 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 472 Td (Estado global.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 460 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 460 Td (Dependencias.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 448 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 448 Td (Planes compatibles.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 436 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 436 Td (Activacion por empresa.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 424 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 424 Td (Activacion por sucursal.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 412 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 412 Td (Version y estado experimental.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 400 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 400 Td (Auditoria de cambios.) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 388 Td () Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 376 Td (El panel tecnico debe ser distinto de la configuracion que ve el cliente.) Tj ET
+0.82 0.84 0.87 rg 42 46 511 1 re f
+BT /F1 7 Tf 42 32 Td (SystemPos | Master funcional y arquitectonico | 05-09-2026) Tj ET
+endstream
+endobj
+13 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 41 0 R /F2 42 0 R >> >> /Contents 14 0 R >>
+endobj
+14 0 obj
+<< /Length 2478 >>
+stream
+q 0.10 0.16 0.24 rg 0 810 595 32 re f Q
+0.91 0.70 0.18 rg BT /F2 15 Tf 42 820 Td (SystemPos) Tj ET
+0.24 0.32 0.42 rg BT /F1 8 Tf 470 820 Td (06) Tj ET
+0.10 0.16 0.24 rg BT /F2 16 Tf 42 778 Td (5. Catalogo inicial de modulos) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 748 Td (MODULOS BASE Y OPCIONALES) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 736 Td () Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 724 Td (POS y ventas .................... Obligatorio) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 712 Td (Caja ............................ Obligatorio) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 700 Td (Mesas ........................... Opcional operativo) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 688 Td (Combos .......................... Disponible) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 676 Td (Comanda impresa ................. Predeterminado) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 664 Td (KDS cocina ...................... Opcional por sucursal) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 652 Td (Portal QR ....................... Opcional) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 640 Td (Fiscalizacion ................... Opcional por configuracion) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 628 Td (Reportes ......................... Disponible) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 616 Td (Multi-sucursal .................. Plan cadena) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 604 Td (Inventario ...................... Futuro) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 592 Td (Recetas y costos ................ Futuro) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 580 Td (Compras y proveedores ........... Futuro) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 568 Td (CRM y fidelizacion .............. Futuro) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 556 Td (Operacion offline ................ Futuro) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 544 Td () Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 532 Td (Planes sugeridos:) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 520 Td (Basico: POS, caja y comanda.) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 508 Td (Pro: fiscalizacion, QR y reportes avanzados.) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 496 Td (Cadena: sucursales, KDS e inventario.) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 484 Td () Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 472 Td (El plan no debe ser un simple texto. Debe tener reglas de capacidad.) Tj ET
+0.82 0.84 0.87 rg 42 46 511 1 re f
+BT /F1 7 Tf 42 32 Td (SystemPos | Master funcional y arquitectonico | 05-09-2026) Tj ET
+endstream
+endobj
+15 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 41 0 R /F2 42 0 R >> >> /Contents 16 0 R >>
+endobj
+16 0 obj
+<< /Length 3463 >>
+stream
+q 0.10 0.16 0.24 rg 0 810 595 32 re f Q
+0.91 0.70 0.18 rg BT /F2 15 Tf 42 820 Td (SystemPos) Tj ET
+0.24 0.32 0.42 rg BT /F1 8 Tf 470 820 Td (07) Tj ET
+0.10 0.16 0.24 rg BT /F2 16 Tf 42 778 Td (6. Cocina y KDS opcional) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 748 Td (Modo COMANDA:) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 736 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 736 Td (Se crea el pedido.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 724 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 724 Td (Se imprime la comanda.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 712 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 712 Td (No aparece pantalla de cocina.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 700 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 700 Td (No se exige operar estados KDS.) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 688 Td () Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 676 Td (Modo KDS:) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 664 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 664 Td (Se crea una tanda real de cocina.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 652 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 652 Td (La orden aparece en pantalla tactil.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 640 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 640 Td (Cocina avanza por estados.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 628 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 628 Td (Se registra tiempo y auditoria.) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 616 Td () Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 604 Td (Modo COMANDA_KDS:) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 592 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 592 Td (La orden aparece en pantalla.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 580 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 580 Td (Tambien se imprime la comanda.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 568 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 568 Td (Permite continuidad si falla la pantalla.) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 556 Td () Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 544 Td (Estados recomendados:) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 532 Td (PENDIENTE -> EN_PREPARACION -> LISTA -> ENTREGADA) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 520 Td () Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 508 Td (Configuracion por sucursal:) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 496 Td (cocina.modo = COMANDA | KDS | COMANDA_KDS) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 484 Td () Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 472 Td (Configuracion adicional tipo Odoo:) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 460 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 460 Td (Estacion: cocina, plancha, bebidas o despacho.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 448 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 448 Td (Categorias que llegan a cada estacion.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 436 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 436 Td (Etapas personalizadas.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 424 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 424 Td (Tiempo de alerta.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 412 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 412 Td (Auto-limpieza de pedidos terminados.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 400 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 400 Td (Filtros por tipo de pedido y prioridad.) Tj ET
+0.82 0.84 0.87 rg 42 46 511 1 re f
+BT /F1 7 Tf 42 32 Td (SystemPos | Master funcional y arquitectonico | 05-09-2026) Tj ET
+endstream
+endobj
+17 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 41 0 R /F2 42 0 R >> >> /Contents 18 0 R >>
+endobj
+18 0 obj
+<< /Length 2477 >>
+stream
+q 0.10 0.16 0.24 rg 0 810 595 32 re f Q
+0.91 0.70 0.18 rg BT /F2 15 Tf 42 820 Td (SystemPos) Tj ET
+0.24 0.32 0.42 rg BT /F1 8 Tf 470 820 Td (08) Tj ET
+0.10 0.16 0.24 rg BT /F2 16 Tf 42 778 Td (7. Hallazgo tecnico de cocina) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 748 Td (El KDS no puede activarse actualmente con un simple interruptor.) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 736 Td () Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 724 Td (Existe KitchenService con transiciones de cocina, pero no existe una pagina) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 712 Td (operativa KitchenDisplay para que cocina trabaje en pantalla.) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 700 Td () Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 688 Td (Tambien existe una inconsistencia de dominio:) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 676 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 676 Td (TandaPedido representa la tanda de cocina.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 664 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 664 Td (TrabajoImpresion representa el trabajo de impresion.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 652 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 652 Td (DetallePedido utiliza tanda_id para apuntar a TrabajoImpresion.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 640 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 640 Td (PedidoService guarda el ID del trabajo de impresion en tanda_id.) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 628 Td () Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 616 Td (Para habilitar KDS correctamente hay que separar las relaciones:) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 604 Td () Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 592 Td (DetallePedido -> TandaPedido) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 580 Td (TrabajoImpresion -> TandaPedido) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 568 Td () Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 556 Td (La impresion debe ser un resultado de la tanda, no la tanda misma.) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 544 Td () Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 532 Td (Tambien falta terminar el permiso operar_cocina en el seeder de roles.) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 520 Td () Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 508 Td (Conclusion:) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 496 Td (El modelo de cocina debe corregirse antes de exponer el modulo KDS.) Tj ET
+0.82 0.84 0.87 rg 42 46 511 1 re f
+BT /F1 7 Tf 42 32 Td (SystemPos | Master funcional y arquitectonico | 05-09-2026) Tj ET
+endstream
+endobj
+19 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 41 0 R /F2 42 0 R >> >> /Contents 20 0 R >>
+endobj
+20 0 obj
+<< /Length 3509 >>
+stream
+q 0.10 0.16 0.24 rg 0 810 595 32 re f Q
+0.91 0.70 0.18 rg BT /F2 15 Tf 42 820 Td (SystemPos) Tj ET
+0.24 0.32 0.42 rg BT /F1 8 Tf 470 820 Td (09) Tj ET
+0.10 0.16 0.24 rg BT /F2 16 Tf 42 778 Td (8. POS tactil y operacion) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 748 Td (El POS actual contempla funcionalidades apropiadas para pantallas tactiles:) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 736 Td () Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 724 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 724 Td (Categorias y busqueda.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 712 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 712 Td (Botones de productos.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 700 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 700 Td (Combos y opciones.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 688 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 688 Td (Notas de cocina.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 676 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 676 Td (Seleccion de mesa.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 664 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 664 Td (Pedido para llevar.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 652 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 652 Td (Teclado numerico.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 640 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 640 Td (Recuperacion por codigo.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 628 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 628 Td (Pago en efectivo.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 616 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 616 Td (Pago con tarjeta.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 604 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 604 Td (Carga rapida.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 592 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 592 Td (Envio de comanda.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 580 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 580 Td (Reimpresion y pedidos.) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 568 Td () Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 556 Td (Mejoras recomendadas:) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 544 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 544 Td (Confirmaciones visuales grandes.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 532 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 532 Td (Bloqueo contra doble toque.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 520 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 520 Td (Estado de red visible.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 508 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 508 Td (Recuperacion de sesion.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 496 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 496 Td (Modo horizontal y vertical.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 484 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 484 Td (Prueba en tablet de 10 pulgadas.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 472 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 472 Td (Soporte para guantes o manos humedas.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 460 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 460 Td (Atajos para productos repetitivos.) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 448 Td () Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 436 Td (El POS debe mantener siempre visible:) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 424 Td (sucursal activa, caja activa, usuario, pedido, total y estado de impresion.) Tj ET
+0.82 0.84 0.87 rg 42 46 511 1 re f
+BT /F1 7 Tf 42 32 Td (SystemPos | Master funcional y arquitectonico | 05-09-2026) Tj ET
+endstream
+endobj
+21 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 41 0 R /F2 42 0 R >> >> /Contents 22 0 R >>
+endobj
+22 0 obj
+<< /Length 3005 >>
+stream
+q 0.10 0.16 0.24 rg 0 810 595 32 re f Q
+0.91 0.70 0.18 rg BT /F2 15 Tf 42 820 Td (SystemPos) Tj ET
+0.24 0.32 0.42 rg BT /F1 8 Tf 470 820 Td (10) Tj ET
+0.10 0.16 0.24 rg BT /F2 16 Tf 42 778 Td (9. Caja, pedidos y pagos) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 748 Td (Fortalezas actuales:) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 736 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 736 Td (Apertura y cierre de caja.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 724 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 724 Td (Control de sesion activa.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 712 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 712 Td (Precision decimal.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 700 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 700 Td (Bloqueo de cierre con pedidos abiertos.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 688 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 688 Td (Efectivo y tarjeta.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 676 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 676 Td (Cambio calculado.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 664 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 664 Td (Auditoria de operaciones.) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 652 Td () Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 640 Td (Faltantes para madurez comercial:) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 628 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 628 Td (Entradas y salidas de efectivo.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 616 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 616 Td (Retiros parciales.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 604 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 604 Td (Devoluciones.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 592 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 592 Td (Reembolsos.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 580 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 580 Td (Pagos divididos.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 568 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 568 Td (Descuentos controlados.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 556 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 556 Td (Propinas.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 544 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 544 Td (Anulaciones posteriores al pago.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 532 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 532 Td (Notas de credito fiscales.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 520 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 520 Td (Conciliacion de tarjeta.) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 508 Td () Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 496 Td (Debe definirse una politica clara de mesa:) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 484 Td (si se libera al cobrar o si se libera al entregar.) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 472 Td (Para KDS conviene separar el estado comercial del estado de cocina.) Tj ET
+0.82 0.84 0.87 rg 42 46 511 1 re f
+BT /F1 7 Tf 42 32 Td (SystemPos | Master funcional y arquitectonico | 05-09-2026) Tj ET
+endstream
+endobj
+23 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 41 0 R /F2 42 0 R >> >> /Contents 24 0 R >>
+endobj
+24 0 obj
+<< /Length 2968 >>
+stream
+q 0.10 0.16 0.24 rg 0 810 595 32 re f Q
+0.91 0.70 0.18 rg BT /F2 15 Tf 42 820 Td (SystemPos) Tj ET
+0.24 0.32 0.42 rg BT /F1 8 Tf 470 820 Td (11) Tj ET
+0.10 0.16 0.24 rg BT /F2 16 Tf 42 778 Td (10. Impresion y hardware) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 748 Td (La arquitectura incluye adaptadores para red, USB y PDF, cola de impresion,) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 736 Td (reintentos y estados de trabajo.) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 724 Td () Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 712 Td (Riesgo actual:) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 700 Td (QueueKitchenBatch y QueueCustomerTicket buscan la primera impresora global) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 688 Td (por tipo y no siempre aplican el establecimiento actual.) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 676 Td () Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 664 Td (Regla requerida:) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 652 Td (Toda impresora debe pertenecer a una sucursal o ser una impresora global) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 640 Td (explicitamente marcada como compartida.) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 628 Td () Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 616 Td (El monitor de impresion debe filtrar por:) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 604 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 604 Td (Tenant.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 592 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 592 Td (Sucursal activa.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 580 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 580 Td (Tipo de trabajo.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 568 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 568 Td (Usuario autorizado.) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 556 Td () Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 544 Td (Los jobs deben transportar contexto de tenant y sucursal.) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 532 Td (No se debe confiar en la conexion por defecto del worker.) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 520 Td () Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 508 Td (Pruebas necesarias:) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 496 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 496 Td (Dos sucursales con impresoras diferentes.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 484 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 484 Td (Desconexion de impresora.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 472 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 472 Td (Reintento.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 460 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 460 Td (Duplicacion.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 448 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 448 Td (Reimpresion autorizada.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 436 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 436 Td (PDF sin acceso cruzado.) Tj ET
+0.82 0.84 0.87 rg 42 46 511 1 re f
+BT /F1 7 Tf 42 32 Td (SystemPos | Master funcional y arquitectonico | 05-09-2026) Tj ET
+endstream
+endobj
+25 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 41 0 R /F2 42 0 R >> >> /Contents 26 0 R >>
+endobj
+26 0 obj
+<< /Length 2692 >>
+stream
+q 0.10 0.16 0.24 rg 0 810 595 32 re f Q
+0.91 0.70 0.18 rg BT /F2 15 Tf 42 820 Td (SystemPos) Tj ET
+0.24 0.32 0.42 rg BT /F1 8 Tf 470 820 Td (12) Tj ET
+0.10 0.16 0.24 rg BT /F2 16 Tf 42 778 Td (11. Fiscalizacion y portal) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 748 Td (La base fiscal tiene elementos valiosos:) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 736 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 736 Td (Outbox.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 724 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 724 Td (Reintentos.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 712 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 712 Td (Idempotencia.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 700 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 700 Td (HMAC.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 688 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 688 Td (Webhooks.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 676 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 676 Td (Estados de sincronizacion.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 664 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 664 Td (Configuracion por establecimiento.) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 652 Td () Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 640 Td (Bloqueador:) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 628 Td (PortalFiscalService puede crear datos MOCK y guardarlos como EMITIDO) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 616 Td (cuando no existe configuracion fiscal habilitada.) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 604 Td () Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 592 Td (En produccion debe ocurrir lo contrario:) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 580 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 580 Td (Rechazar la emision.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 568 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 568 Td (Marcar como pendiente.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 556 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 556 Td (Mostrar claramente que no es un DTE valido.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 544 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 544 Td (Permitir mock solo en pruebas o desarrollo.) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 532 Td () Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 520 Td (El portal QR debe usar tracking no enumerable.) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 508 Td (No debe depender unicamente de un codigo corto numerico.) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 496 Td () Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 484 Td (La configuracion del portal debe tomar siempre la empresa y sucursal activas.) Tj ET
+0.82 0.84 0.87 rg 42 46 511 1 re f
+BT /F1 7 Tf 42 32 Td (SystemPos | Master funcional y arquitectonico | 05-09-2026) Tj ET
+endstream
+endobj
+27 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 41 0 R /F2 42 0 R >> >> /Contents 28 0 R >>
+endobj
+28 0 obj
+<< /Length 2467 >>
+stream
+q 0.10 0.16 0.24 rg 0 810 595 32 re f Q
+0.91 0.70 0.18 rg BT /F2 15 Tf 42 820 Td (SystemPos) Tj ET
+0.24 0.32 0.42 rg BT /F1 8 Tf 470 820 Td (13) Tj ET
+0.10 0.16 0.24 rg BT /F2 16 Tf 42 778 Td (12. Seguridad y aislamiento) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 748 Td (Bloqueador critico encontrado:) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 736 Td (routes/web.php contiene /auto-login sin autenticacion y loginUsingId\(1\).) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 724 Td (Debe eliminarse o quedar restringido exclusivamente a entorno local.) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 712 Td () Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 700 Td (Controles obligatorios antes de produccion:) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 688 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 688 Td (Eliminar accesos de desarrollo.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 676 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 676 Td (Aplicar tenant y sucursal en cada consulta sensible.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 664 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 664 Td (Proteger PDF y monitor de impresion.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 652 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 652 Td (Validar productos, combos y lineas desde servicios.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 640 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 640 Td (Vincular tokens del portal a tenant y sucursal.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 628 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 628 Td (Usar rate limiting.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 616 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 616 Td (No exponer excepciones internas al cliente.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 604 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 604 Td (Registrar cambios de permisos.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 592 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 592 Td (Activar asignacion explicita de sucursal.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 580 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 580 Td (Revisar CORS, sesiones y cookies.) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 568 Td () Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 556 Td (Principio de seguridad:) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 544 Td (La interfaz filtra, pero el servicio y la base de datos tambien deben validar.) Tj ET
+0.82 0.84 0.87 rg 42 46 511 1 re f
+BT /F1 7 Tf 42 32 Td (SystemPos | Master funcional y arquitectonico | 05-09-2026) Tj ET
+endstream
+endobj
+29 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 41 0 R /F2 42 0 R >> >> /Contents 30 0 R >>
+endobj
+30 0 obj
+<< /Length 2456 >>
+stream
+q 0.10 0.16 0.24 rg 0 810 595 32 re f Q
+0.91 0.70 0.18 rg BT /F2 15 Tf 42 820 Td (SystemPos) Tj ET
+0.24 0.32 0.42 rg BT /F1 8 Tf 470 820 Td (14) Tj ET
+0.10 0.16 0.24 rg BT /F2 16 Tf 42 778 Td (13. Inventario y ERP) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 748 Td (SystemPos es actualmente un POS especializado, no un ERP completo.) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 736 Td () Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 724 Td (No se evidencia en la capa de aplicacion un modulo completo de:) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 712 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 712 Td (Inventario.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 700 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 700 Td (Movimientos de stock.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 688 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 688 Td (Mermas y desperdicio.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 676 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 676 Td (Recetas.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 664 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 664 Td (Ingredientes.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 652 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 652 Td (Costos.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 640 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 640 Td (Compras.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 628 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 628 Td (Proveedores.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 616 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 616 Td (Recepcion de mercaderia.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 604 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 604 Td (Transferencias entre sucursales.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 592 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 592 Td (Margen por producto.) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 580 Td () Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 568 Td (Para una pupuseria, el modulo futuro debe contemplar:) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 556 Td (masa, queso, frijol, chicharron, loroco, curtido, salsa, bebidas y empaques.) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 544 Td () Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 532 Td (El catalogo comercial puede seguir compartido por empresa.) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 520 Td (El stock y costo deben ser por sucursal o almacen.) Tj ET
+0.82 0.84 0.87 rg 42 46 511 1 re f
+BT /F1 7 Tf 42 32 Td (SystemPos | Master funcional y arquitectonico | 05-09-2026) Tj ET
+endstream
+endobj
+31 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 41 0 R /F2 42 0 R >> >> /Contents 32 0 R >>
+endobj
+32 0 obj
+<< /Length 2313 >>
+stream
+q 0.10 0.16 0.24 rg 0 810 595 32 re f Q
+0.91 0.70 0.18 rg BT /F2 15 Tf 42 820 Td (SystemPos) Tj ET
+0.24 0.32 0.42 rg BT /F1 8 Tf 470 820 Td (15) Tj ET
+0.10 0.16 0.24 rg BT /F2 16 Tf 42 778 Td (14. Roles y permisos) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 748 Td (Roles recomendados:) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 736 Td () Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 724 Td (Administrador de plataforma) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 712 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 712 Td (Gestiona tenants, planes y modulos.) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 700 Td () Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 688 Td (Administrador de empresa) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 676 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 676 Td (Gestiona marca, catalogo, sucursales y reportes consolidados.) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 664 Td () Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 652 Td (Administrador de sucursal) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 640 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 640 Td (Gestiona caja, mesas, impresoras y configuracion local.) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 628 Td () Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 616 Td (Cajero) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 604 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 604 Td (Crea pedidos, cobra y opera su caja.) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 592 Td () Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 580 Td (Cocina) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 568 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 568 Td (Solo opera KDS de sus sucursales autorizadas.) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 556 Td () Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 544 Td (Supervisor) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 532 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 532 Td (Autoriza descuentos, anulaciones, devoluciones y reimpresiones.) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 520 Td () Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 508 Td (Permisos de modulo y permisos de accion deben ser distintos.) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 496 Td (Tener acceso al POS no debe otorgar acceso a fiscalizacion, usuarios o caja.) Tj ET
+0.82 0.84 0.87 rg 42 46 511 1 re f
+BT /F1 7 Tf 42 32 Td (SystemPos | Master funcional y arquitectonico | 05-09-2026) Tj ET
+endstream
+endobj
+33 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 41 0 R /F2 42 0 R >> >> /Contents 34 0 R >>
+endobj
+34 0 obj
+<< /Length 2530 >>
+stream
+q 0.10 0.16 0.24 rg 0 810 595 32 re f Q
+0.91 0.70 0.18 rg BT /F2 15 Tf 42 820 Td (SystemPos) Tj ET
+0.24 0.32 0.42 rg BT /F1 8 Tf 470 820 Td (16) Tj ET
+0.10 0.16 0.24 rg BT /F2 16 Tf 42 778 Td (15. Roadmap de correccion) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 748 Td (P0 - Seguridad y base multiempresa) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 736 Td (1. Eliminar /auto-login.) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 724 Td (2. Definir modo database para varias empresas.) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 712 Td (3. Corregir aislamiento de impresion, PDF y monitor.) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 700 Td (4. Deshabilitar DTE falso en produccion.) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 688 Td (5. Transportar tenant y sucursal en jobs.) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 676 Td () Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 664 Td (P1 - Modularidad y cocina) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 652 Td (1. Crear FeatureGate.) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 640 Td (2. Crear catalogo de modulos y planes.) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 628 Td (3. Agregar cocina.modo por sucursal.) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 616 Td (4. Separar TandaPedido de TrabajoImpresion.) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 604 Td (5. Crear KitchenDisplay.) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 592 Td (6. Crear permiso operar_cocina.) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 580 Td () Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 568 Td (P2 - Operacion comercial) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 556 Td (1. Inventario y recetas.) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 544 Td (2. Compras y proveedores.) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 532 Td (3. Devoluciones y caja avanzada.) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 520 Td (4. Clientes y promociones.) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 508 Td (5. Offline y sincronizacion.) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 496 Td () Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 484 Td (P3 - Producto SaaS) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 472 Td (1. Onboarding de empresas.) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 460 Td (2. Planes y limites.) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 448 Td (3. Soporte y monitoreo.) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 436 Td (4. Actualizaciones controladas.) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 424 Td (5. Matriz de hardware.) Tj ET
+0.82 0.84 0.87 rg 42 46 511 1 re f
+BT /F1 7 Tf 42 32 Td (SystemPos | Master funcional y arquitectonico | 05-09-2026) Tj ET
+endstream
+endobj
+35 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 41 0 R /F2 42 0 R >> >> /Contents 36 0 R >>
+endobj
+36 0 obj
+<< /Length 3899 >>
+stream
+q 0.10 0.16 0.24 rg 0 810 595 32 re f Q
+0.91 0.70 0.18 rg BT /F2 15 Tf 42 820 Td (SystemPos) Tj ET
+0.24 0.32 0.42 rg BT /F1 8 Tf 470 820 Td (17) Tj ET
+0.10 0.16 0.24 rg BT /F2 16 Tf 42 778 Td (16. Criterios de aceptacion) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 748 Td (Multiempresa:) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 736 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 736 Td (Empresa A nunca ve pedidos de empresa B.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 724 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 724 Td (Empresa A puede tener varias sucursales.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 712 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 712 Td (Usuario puede tener acceso a varias sucursales.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 700 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 700 Td (Administrador consolida reportes autorizados.) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 688 Td () Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 676 Td (Cocina:) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 664 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 664 Td (COMANDA no muestra KDS.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 652 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 652 Td (KDS muestra solo la sucursal activa.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 640 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 640 Td (COMANDA_KDS mantiene ambos canales.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 628 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 628 Td (Las transiciones quedan auditadas.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 616 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 616 Td (Cocina no puede operar otra sucursal.) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 604 Td () Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 592 Td (Impresion:) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 580 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 580 Td (Cada sucursal imprime en su propio dispositivo.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 568 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 568 Td (Los fallos generan reintento seguro.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 556 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 556 Td (El PDF respeta tenant y sucursal.) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 544 Td () Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 532 Td (Fiscal:) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 520 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 520 Td (Nunca se marca MOCK como DTE emitido.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 508 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 508 Td (El retry es idempotente.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 496 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 496 Td (La configuracion fiscal pertenece a la sucursal correcta.) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 484 Td () Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 472 Td (Pruebas finales:) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 460 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 460 Td (php artisan test.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 448 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 448 Td (Migracion limpia.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 436 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 436 Td (Seed controlado.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 424 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 424 Td (Prueba tactil real.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 412 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 412 Td (Dos sucursales.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 400 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 400 Td (Dos impresoras.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 388 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 388 Td (Prueba de desconexion.) Tj ET
+0.91 0.70 0.18 rg BT /F2 8 Tf 48 376 Td (-) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 62 376 Td (Backup y restauracion.) Tj ET
+0.82 0.84 0.87 rg 42 46 511 1 re f
+BT /F1 7 Tf 42 32 Td (SystemPos | Master funcional y arquitectonico | 05-09-2026) Tj ET
+endstream
+endobj
+37 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 41 0 R /F2 42 0 R >> >> /Contents 38 0 R >>
+endobj
+38 0 obj
+<< /Length 2010 >>
+stream
+q 0.10 0.16 0.24 rg 0 810 595 32 re f Q
+0.91 0.70 0.18 rg BT /F2 15 Tf 42 820 Td (SystemPos) Tj ET
+0.24 0.32 0.42 rg BT /F1 8 Tf 470 820 Td (18) Tj ET
+0.10 0.16 0.24 rg BT /F2 16 Tf 42 778 Td (17. Dictamen final) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 748 Td (SystemPos tiene una base adecuada para convertirse en un POS modular.) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 736 Td () Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 724 Td (La estrategia recomendada es:) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 712 Td () Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 700 Td (Empresa separada de sucursal.) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 688 Td (Catalogo compartido por empresa.) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 676 Td (Operacion, caja e impresion por sucursal.) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 664 Td (Comanda como funcionalidad base.) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 652 Td (KDS como modulo opcional.) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 640 Td (Permisos separados de capacidades.) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 628 Td (Panel tecnico separado del panel del cliente.) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 616 Td () Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 604 Td (No debemos simular una instalacion o desinstalacion de codigo por cada cliente.) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 592 Td (Debemos desplegar un codigo comun y controlar sus capacidades con reglas seguras.) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 580 Td () Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 568 Td (El siguiente trabajo debe comenzar por FeatureGate, tenant/sucursal y cocina.) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 556 Td (Despues se puede implementar inventario y el resto del ERP.) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 544 Td () Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 532 Td (Este documento es el master funcional y arquitectonico de SystemPos.) Tj ET
+0.82 0.84 0.87 rg 42 46 511 1 re f
+BT /F1 7 Tf 42 32 Td (SystemPos | Master funcional y arquitectonico | 05-09-2026) Tj ET
+endstream
+endobj
+39 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 41 0 R /F2 42 0 R >> >> /Contents 40 0 R >>
+endobj
+40 0 obj
+<< /Length 3143 >>
+stream
+q 0.10 0.16 0.24 rg 0 810 595 32 re f Q
+0.91 0.70 0.18 rg BT /F2 15 Tf 42 820 Td (SystemPos) Tj ET
+0.24 0.32 0.42 rg BT /F1 8 Tf 470 820 Td (19) Tj ET
+0.10 0.16 0.24 rg BT /F2 16 Tf 42 778 Td (18. Referencias y evidencia) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 748 Td (Documentacion oficial consultada:) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 736 Td () Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 724 Td (Odoo Apps y modulos:) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 712 Td (https://www.odoo.com/documentation/18.0/applications/general/apps_modules.html) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 700 Td () Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 688 Td (Odoo Preparation Display:) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 676 Td (https://www.odoo.com/documentation/19.0/applications/sales/point_of_sale/preparation.html) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 664 Td () Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 652 Td (Odoo permisos y grupos:) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 640 Td (https://www.odoo.com/documentation/18.0/applications/general/users/access_rights.html) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 628 Td () Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 616 Td (Odoo empresas y sucursales:) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 604 Td (https://www.odoo.com/documentation/18.0/applications/general/companies.html) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 592 Td () Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 580 Td (Odoo guia tecnica multiempresa:) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 568 Td (https://www.odoo.com/documentation/18.0/developer/howtos/company.html) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 556 Td () Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 544 Td (Archivos principales revisados:) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 532 Td (app/Services/PedidoService.php) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 520 Td (app/Services/KitchenService.php) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 508 Td (app/Services/ConfiguracionService.php) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 496 Td (app/Services/Platform/TenantConnectionResolver.php) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 484 Td (app/Services/Portal/PortalFiscalService.php) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 472 Td (app/Application/Kitchen/QueueKitchenBatch.php) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 460 Td (app/Application/Printing/QueueCustomerTicket.php) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 448 Td (app/Context/EstablishmentContext.php) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 436 Td (routes/web.php) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 424 Td () Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 412 Td (Nota metodologica:) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 400 Td (El analisis de codigo fue realizado sin modificar el repositorio.) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 388 Td (La ejecucion de comandos locales y pruebas quedo pendiente por una restriccion) Tj ET
+0.12 0.14 0.18 rg BT /F1 8.7 Tf 42 376 Td (del entorno de herramientas, por lo que este master no declara tests ejecutados.) Tj ET
+0.82 0.84 0.87 rg 42 46 511 1 re f
+BT /F1 7 Tf 42 32 Td (SystemPos | Master funcional y arquitectonico | 05-09-2026) Tj ET
+endstream
+endobj
+41 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+42 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>
+endobj
+xref
+0 43
+0000000000 65535 f 
+0000000020 00000 n 
+0000000069 00000 n 
+0000000250 00000 n 
+0000000388 00000 n 
+0000001408 00000 n 
+0000001546 00000 n 
+0000003887 00000 n 
+0000004025 00000 n 
+0000007193 00000 n 
+0000007332 00000 n 
+0000010713 00000 n 
+0000010853 00000 n 
+0000014150 00000 n 
+0000014290 00000 n 
+0000016821 00000 n 
+0000016961 00000 n 
+0000020477 00000 n 
+0000020617 00000 n 
+0000023147 00000 n 
+0000023287 00000 n 
+0000026849 00000 n 
+0000026989 00000 n 
+0000030047 00000 n 
+0000030187 00000 n 
+0000033208 00000 n 
+0000033348 00000 n 
+0000036093 00000 n 
+0000036233 00000 n 
+0000038753 00000 n 
+0000038893 00000 n 
+0000041402 00000 n 
+0000041542 00000 n 
+0000043908 00000 n 
+0000044048 00000 n 
+0000046631 00000 n 
+0000046771 00000 n 
+0000050723 00000 n 
+0000050863 00000 n 
+0000052926 00000 n 
+0000053066 00000 n 
+0000056262 00000 n 
+0000056333 00000 n 
+trailer
+<< /Size 43 /Root 1 0 R >>
+startxref
+56409
+%%EOF
+

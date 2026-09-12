@@ -13,7 +13,7 @@
 
             <div class="bw-cashier-session-group">
                 <p class="bw-cashier-session">
-                    {{ mb_strtoupper(auth()->user()?->getFilamentName() ?? 'CAJERO') }} <span aria-hidden="true">·</span> CAJA 1
+                    {{ mb_strtoupper(auth()->user()?->getFilamentName() ?? 'CAJERO') }} <span aria-hidden="true">·</span> {{ $this->operationContext }}
                 </p>
 
                 <form action="{{ filament()->getLogoutUrl() }}" method="post" class="bw-cashier-logout-form">

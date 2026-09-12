@@ -13,7 +13,6 @@ use App\Enums\ZonaMesa;
 use App\Jobs\EnviarVentasFiscalesJob;
 use App\Models\Categoria;
 use App\Models\ConfiguracionFiscal;
-use App\Models\DocumentoFiscal;
 use App\Models\Establecimiento;
 use App\Models\Impresora;
 use App\Models\Mesa;
@@ -113,6 +112,7 @@ class FiscalDocumentoServiceTest extends TestCase
         $pedido = $service->startOrder(TipoPedido::MESA, $this->cashier, $this->table->getKey());
         $service->addProduct($pedido, $this->product, $this->cashier);
         $service->sendPendingBatch($pedido, $this->cashier);
+        $service->sendToCashRegister($pedido, $this->cashier);
 
         $pago = app(CobroService::class)->charge(
             $pedido,

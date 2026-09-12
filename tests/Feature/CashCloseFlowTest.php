@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Enums\EstadoComercialPedido;
 use App\Enums\EstadoMesa;
 use App\Enums\MetodoPago;
 use App\Enums\TipoPedido;
@@ -82,6 +83,17 @@ class CashCloseFlowTest extends TestCase
 
     private function cobrar(Pedido $pedido, MetodoPago $metodo, ?string $montoRecibido): void
     {
+        $pedido->refresh();
+        if ($pedido->tipo_pedido === TipoPedido::MESA && $pedido->estado_comercial === EstadoComercialPedido::ABIERTO) {
+            $service = app(PedidoService::class);
+
+            if ($pedido->detalles()->where('estado_linea', 'ACTIVA')->whereNull('tanda_id')->exists()) {
+                $service->sendPendingBatch($pedido, $this->cashier);
+            }
+
+            $service->sendToCashRegister($pedido, $this->cashier);
+        }
+
         $tarjeta = $metodo === MetodoPago::TARJETA ? ['aprobada' => true, 'referencia' => 'TEST-REF'] : null;
         app(CobroService::class)->charge($pedido, $metodo, $montoRecibido, $this->cashier, $tarjeta);
     }
@@ -198,7 +210,8 @@ class CashCloseFlowTest extends TestCase
         $sesion = $this->openSession('100.00');
 
         $service = app(PedidoService::class);
-        $service->startOrder(TipoPedido::MESA, $this->cashier, $this->table->getKey());
+        $pedido = $service->startOrder(TipoPedido::MESA, $this->cashier, $this->table->getKey());
+        $service->addProduct($pedido, $this->product, $this->cashier);
 
         try {
             app(CierreCajaService::class)->cerrar($sesion, '100.00', $this->cashier);
@@ -214,6 +227,20 @@ class CashCloseFlowTest extends TestCase
             'entidad_id' => $sesion->getKey(),
             'tipo_evento' => 'caja_cerrada',
         ]);
+    }
+
+    public function test_close_cancels_empty_drafts_without_blocking_the_turn(): void
+    {
+        $sesion = $this->openSession('100.00');
+
+        $service = app(PedidoService::class);
+        $emptyDraft = $service->startOrder(TipoPedido::MESA, $this->cashier, $this->table->getKey());
+
+        $closed = app(CierreCajaService::class)->cerrar($sesion, '100.00', $this->cashier);
+
+        $this->assertSame('CANCELADO', $emptyDraft->fresh()->estado_comercial->value);
+        $this->assertSame(EstadoMesa::LIBRE, $this->table->fresh()->estado);
+        $this->assertNotNull($closed->fecha_cierre);
     }
 
     public function test_close_session_persists_payment_totals(): void
@@ -271,6 +298,7 @@ class CashCloseFlowTest extends TestCase
         $pedido = $service->startOrder(TipoPedido::MESA, $this->cashier, $this->table->getKey());
         $service->addProduct($pedido, $this->product, $this->cashier);
         $service->sendPendingBatch($pedido, $this->cashier);
+        $service->sendToCashRegister($pedido, $this->cashier);
 
         SesionCaja::query()->delete();
 
@@ -296,6 +324,7 @@ class CashCloseFlowTest extends TestCase
         $pedido = $service->startOrder(TipoPedido::MESA, $this->cashier, $this->table->getKey());
         $service->addProduct($pedido, $this->product, $this->cashier);
         $service->sendPendingBatch($pedido, $this->cashier);
+        $service->sendToCashRegister($pedido, $this->cashier);
 
         $this->expectException(ValidationException::class);
 

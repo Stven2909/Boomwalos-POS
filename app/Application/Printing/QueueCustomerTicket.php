@@ -25,10 +25,7 @@ class QueueCustomerTicket implements CustomerTicketDispatcherInterface
 
     public function handle(Pedido $pedido, Pago $pago, User $actor): QueueTicketResult
     {
-        $printer = Impresora::query()
-            ->where('tipo', TipoImpresora::TICKET->value)
-            ->orderBy('id')
-            ->first();
+        $printer = Impresora::buscar(TipoImpresora::TICKET, $pedido->establecimiento_id);
 
         if (! $printer) {
             return QueueTicketResult::noPrinter();
@@ -79,10 +76,18 @@ class QueueCustomerTicket implements CustomerTicketDispatcherInterface
 
             $name = $detail->combo?->nombre ?? $detail->producto?->nombre ?? 'Producto';
             $lines[] = $detail->cantidad . ' x ' . $name;
+            $lineMass = data_get($detail->configuracion_producto, 'masa.nombre');
+
+            if (! $detail->combo_id && $lineMass) {
+                $lines[] = '  Masa: ' . $lineMass;
+            }
 
             foreach ($detail->seleccion_combo ?? [] as $group) {
                 foreach ($group['items'] ?? [] as $item) {
-                    $lines[] = '  - ' . $item['cantidad'] . ' ' . $item['nombre'];
+                    $itemQuantity = (int) $detail->cantidad * (int) ($item['cantidad'] ?? 0);
+                    $itemMass = data_get($item, 'masa.nombre') ?: $lineMass;
+                    $massLabel = $itemMass ? ' · ' . $itemMass : '';
+                    $lines[] = '  - ' . $itemQuantity . ' ' . $item['nombre'] . $massLabel;
                 }
             }
 

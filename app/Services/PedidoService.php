@@ -10,6 +10,7 @@ use App\Enums\EstadoComercialPedido;
 use App\Enums\EstadoImpresion;
 use App\Enums\EstadoLineaPedido;
 use App\Enums\EstadoMesa;
+use App\Enums\MasaPupusa;
 use App\Enums\OrigenPedido;
 use App\Enums\TipoImpresora;
 use App\Enums\TipoPedido;
@@ -17,6 +18,7 @@ use App\Enums\TipoTrabajoImpresion;
 use App\Jobs\ProcessPrintJob;
 use App\Models\Combo;
 use App\Models\DetallePedido;
+use App\Models\Establecimiento;
 use App\Models\Impresora;
 use App\Models\Mesa;
 use App\Models\Pedido;
@@ -39,12 +41,16 @@ class PedidoService
         private readonly ComboSelectionValidator $comboSelectionValidator,
         private readonly PedidoNumberService $pedidoNumberService,
         private readonly RenderKitchenComanda $comandaRenderer,
+        private readonly PoliticaFlujosPos $flowPolicy,
     ) {}
 
     public function startOrder(TipoPedido $tipo, User $actor, ?int $mesaId = null, OrigenPedido $origen = OrigenPedido::CAJA): Pedido
     {
         return DB::transaction(function () use ($tipo, $actor, $mesaId, $origen): Pedido {
             $establecimientoId = $this->establishmentId();
+
+            Establecimiento::query()->lockForUpdate()->findOrFail($establecimientoId);
+            $this->flowPolicy->assertPuedeIniciar($tipo, true);
 
             $this->ensureActiveCashSession($establecimientoId);
 
@@ -67,11 +73,18 @@ class PedidoService
                 }
 
                 $activeOrder = $mesa->pedidos()
-                    ->whereIn('estado_comercial', [
-                        EstadoComercialPedido::ABIERTO->value,
-                        EstadoComercialPedido::PENDIENTE_COBRO->value,
-                        EstadoComercialPedido::COBRADO->value,
-                    ])
+                    ->where(function ($query): void {
+                        $query
+                            ->whereIn('estado_comercial', [
+                                EstadoComercialPedido::PENDIENTE_COBRO->value,
+                                EstadoComercialPedido::COBRADO->value,
+                            ])
+                            ->orWhere(function ($query): void {
+                                $query
+                                    ->where('estado_comercial', EstadoComercialPedido::ABIERTO->value)
+                                    ->whereHas('detalles', fn ($details) => $details->where('estado_linea', EstadoLineaPedido::ACTIVA->value));
+                            });
+                    })
                     ->latest('id')
                     ->first();
 
@@ -80,9 +93,7 @@ class PedidoService
                 }
 
                 if ($mesa->estado !== EstadoMesa::LIBRE) {
-                    throw ValidationException::withMessages([
-                        'mesa' => 'La mesa acaba de ser ocupada. Actualiza la pantalla e inténtalo de nuevo.',
-                    ]);
+                    $mesa->update(['estado' => EstadoMesa::LIBRE]);
                 }
             }
 
@@ -115,9 +126,80 @@ class PedidoService
         });
     }
 
-    public function addProduct(Pedido $pedido, Producto $producto, User $actor): DetallePedido
+    public function discardEmptyDraft(Pedido $pedido, User $actor, string $motivo = 'Borrador vacío abandonado'): bool
     {
-        return DB::transaction(function () use ($pedido, $producto, $actor): DetallePedido {
+        return DB::transaction(function () use ($pedido, $actor, $motivo): bool {
+            $pedido = $this->lockPedido($pedido);
+
+            if ($pedido->estado_comercial !== EstadoComercialPedido::ABIERTO) {
+                return false;
+            }
+
+            $hasActiveLines = $pedido->detalles()
+                ->where('estado_linea', EstadoLineaPedido::ACTIVA->value)
+                ->exists();
+
+            if ($hasActiveLines || $pedido->pago()->exists()) {
+                return false;
+            }
+
+            $pedido->update(['estado_comercial' => EstadoComercialPedido::CANCELADO]);
+
+            if ($pedido->mesa_id) {
+                $pedido->mesa()->update(['estado' => EstadoMesa::LIBRE]);
+            }
+
+            $this->audit($pedido, $actor, 'borrador_vacio_cancelado', [
+                'motivo' => $motivo,
+                'codigo_corto' => $pedido->codigo_corto,
+            ]);
+
+            return true;
+        });
+    }
+
+    public function discardEmptyDraftsForUser(User $actor): int
+    {
+        return $this->discardEmptyDrafts($actor, $actor->getKey());
+    }
+
+    public function discardEmptyDraftsForEstablishment(User $actor): int
+    {
+        return $this->discardEmptyDrafts($actor);
+    }
+
+    private function discardEmptyDrafts(User $actor, ?int $userId = null): int
+    {
+        return DB::transaction(function () use ($actor, $userId): int {
+            $drafts = Pedido::query()
+                ->where('establecimiento_id', $this->establishmentId())
+                ->where('estado_comercial', EstadoComercialPedido::ABIERTO->value)
+                ->when($userId !== null, fn ($query) => $query->where('usuario_id', $userId))
+                ->whereDoesntHave('detalles', fn ($query) => $query->where('estado_linea', EstadoLineaPedido::ACTIVA->value))
+                ->whereDoesntHave('pago')
+                ->lockForUpdate()
+                ->get();
+
+            foreach ($drafts as $draft) {
+                $draft->update(['estado_comercial' => EstadoComercialPedido::CANCELADO]);
+
+                if ($draft->mesa_id) {
+                    $draft->mesa()->update(['estado' => EstadoMesa::LIBRE]);
+                }
+
+                $this->audit($draft, $actor, 'borrador_vacio_cancelado', [
+                    'motivo' => 'Borrador vacío limpiado al regresar al POS.',
+                    'codigo_corto' => $draft->codigo_corto,
+                ]);
+            }
+
+            return $drafts->count();
+        });
+    }
+
+    public function addProduct(Pedido $pedido, Producto $producto, User $actor, ?string $masa = null): DetallePedido
+    {
+        return DB::transaction(function () use ($pedido, $producto, $actor, $masa): DetallePedido {
             $pedido = $this->lockPedido($pedido);
             $this->ensureEditable($pedido);
 
@@ -129,13 +211,15 @@ class PedidoService
                 ]);
             }
 
+            $configuracion = $this->productConfiguration($producto, $masa);
             $detalle = $pedido->detalles()
                 ->whereNull('tanda_id')
                 ->where('estado_linea', EstadoLineaPedido::ACTIVA->value)
                 ->where('producto_id', $producto->getKey())
                 ->whereNull('combo_id')
                 ->lockForUpdate()
-                ->first();
+                ->get()
+                ->first(fn (DetallePedido $line): bool => $this->sameConfiguration($line->configuracion_producto, $configuracion));
 
             if ($detalle) {
                 $detalle->increment('cantidad');
@@ -147,21 +231,23 @@ class PedidoService
                     'combo_id' => null,
                     'cantidad' => 1,
                     'precio_unitario' => $producto->precio,
+                    'configuracion_producto' => $configuracion,
                 ]);
             }
 
             $this->audit($pedido, $actor, 'producto_agregado', [
                 'producto_id' => $producto->getKey(),
                 'detalle_id' => $detalle->getKey(),
+                'configuracion_producto' => $configuracion,
             ]);
 
             return $detalle->fresh(['producto', 'tanda']);
         });
     }
 
-    public function addCombo(Pedido $pedido, Combo $combo, array $selection, User $actor): DetallePedido
+    public function addCombo(Pedido $pedido, Combo $combo, array $selection, User $actor, ?string $masa = null): DetallePedido
     {
-        return DB::transaction(function () use ($pedido, $combo, $selection, $actor): DetallePedido {
+        return DB::transaction(function () use ($pedido, $combo, $selection, $actor, $masa): DetallePedido {
             $pedido = $this->lockPedido($pedido);
             $this->ensureEditable($pedido);
 
@@ -177,6 +263,7 @@ class PedidoService
             }
 
             $normalized = $this->comboSelectionValidator->normalize($combo, $selection);
+            $configuracion = $this->comboConfiguration($combo, $normalized, $masa);
             $sameLine = $pedido->detalles()
                 ->whereNull('tanda_id')
                 ->where('estado_linea', EstadoLineaPedido::ACTIVA->value)
@@ -184,7 +271,8 @@ class PedidoService
                 ->whereNull('producto_id')
                 ->lockForUpdate()
                 ->get()
-                ->first(fn (DetallePedido $line): bool => $this->comboSelectionValidator->same($line->seleccion_combo, $normalized));
+                ->first(fn (DetallePedido $line): bool => $this->comboSelectionValidator->same($line->seleccion_combo, $normalized)
+                    && $this->sameConfiguration($line->configuracion_producto, $configuracion));
 
             if ($sameLine) {
                 $sameLine->increment('cantidad');
@@ -198,6 +286,7 @@ class PedidoService
                     'cantidad' => 1,
                     'precio_unitario' => $combo->precio_fijo,
                     'seleccion_combo' => $normalized,
+                    'configuracion_producto' => $configuracion,
                 ])->load(['combo', 'tanda']);
             }
 
@@ -205,15 +294,16 @@ class PedidoService
                 'combo_id' => $combo->getKey(),
                 'detalle_id' => $detail->getKey(),
                 'seleccion_combo' => $normalized,
+                'configuracion_producto' => $configuracion,
             ]);
 
             return $detail;
         });
     }
 
-    public function updatePendingCombo(Pedido $pedido, DetallePedido $detail, array $selection, User $actor): DetallePedido
+    public function updatePendingCombo(Pedido $pedido, DetallePedido $detail, array $selection, User $actor, ?string $masa = null): DetallePedido
     {
-        return DB::transaction(function () use ($pedido, $detail, $selection, $actor): DetallePedido {
+        return DB::transaction(function () use ($pedido, $detail, $selection, $actor, $masa): DetallePedido {
             $pedido = $this->lockPedido($pedido);
             $this->ensureEditable($pedido);
 
@@ -227,6 +317,7 @@ class PedidoService
 
             $combo = Combo::query()->with('opcionesCombo.productos')->lockForUpdate()->findOrFail($detail->combo_id);
             $normalized = $this->comboSelectionValidator->normalize($combo, $selection);
+            $configuracion = $this->comboConfiguration($combo, $normalized, $masa);
 
             $otherLine = $pedido->detalles()
                 ->whereNull('tanda_id')
@@ -236,14 +327,18 @@ class PedidoService
                 ->where('id', '<>', $detail->getKey())
                 ->lockForUpdate()
                 ->get()
-                ->first(fn (DetallePedido $line): bool => $this->comboSelectionValidator->same($line->seleccion_combo, $normalized));
+                ->first(fn (DetallePedido $line): bool => $this->comboSelectionValidator->same($line->seleccion_combo, $normalized)
+                    && $this->sameConfiguration($line->configuracion_producto, $configuracion));
 
             if ($otherLine) {
                 $otherLine->increment('cantidad', $detail->cantidad);
                 $detail->delete();
                 $updated = $otherLine->fresh(['combo', 'tanda']);
             } else {
-                $detail->update(['seleccion_combo' => $normalized]);
+                $detail->update([
+                    'seleccion_combo' => $normalized,
+                    'configuracion_producto' => $configuracion,
+                ]);
                 $updated = $detail->fresh(['combo', 'tanda']);
             }
 
@@ -251,19 +346,21 @@ class PedidoService
                 'combo_id' => $combo->getKey(),
                 'detalle_id' => $updated->getKey(),
                 'seleccion_combo' => $normalized,
+                'configuracion_producto' => $configuracion,
             ]);
 
             return $updated;
         });
     }
 
-    public function restorePendingCombo(Pedido $pedido, int $comboId, int $quantity, string $price, array $selection): DetallePedido
+    public function restorePendingCombo(Pedido $pedido, int $comboId, int $quantity, string $price, array $selection, ?string $masa = null): DetallePedido
     {
-        return DB::transaction(function () use ($pedido, $comboId, $quantity, $price, $selection): DetallePedido {
+        return DB::transaction(function () use ($pedido, $comboId, $quantity, $price, $selection, $masa): DetallePedido {
             $pedido = $this->lockPedido($pedido);
             $this->ensureEditable($pedido);
             $combo = Combo::query()->with('opcionesCombo.productos')->findOrFail($comboId);
             $normalized = $this->comboSelectionValidator->normalize($combo, $selection);
+            $configuracion = $this->comboConfiguration($combo, $normalized, $masa);
 
             $sameLine = $pedido->detalles()
                 ->whereNull('tanda_id')
@@ -272,7 +369,8 @@ class PedidoService
                 ->whereNull('producto_id')
                 ->lockForUpdate()
                 ->get()
-                ->first(fn (DetallePedido $line): bool => $this->comboSelectionValidator->same($line->seleccion_combo, $normalized));
+                ->first(fn (DetallePedido $line): bool => $this->comboSelectionValidator->same($line->seleccion_combo, $normalized)
+                    && $this->sameConfiguration($line->configuracion_producto, $configuracion));
 
             if ($sameLine) {
                 $sameLine->increment('cantidad', $quantity);
@@ -288,7 +386,51 @@ class PedidoService
                 'cantidad' => $quantity,
                 'precio_unitario' => $price,
                 'seleccion_combo' => $normalized,
+                'configuracion_producto' => $configuracion,
             ])->load('combo');
+        });
+    }
+
+    public function updatePendingProduct(Pedido $pedido, DetallePedido $detail, string $masa, User $actor): DetallePedido
+    {
+        return DB::transaction(function () use ($pedido, $detail, $masa): DetallePedido {
+            $pedido = $this->lockPedido($pedido);
+            $this->ensureEditable($pedido);
+
+            $detail = $pedido->detalles()
+                ->whereKey($detail->getKey())
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            if (! $detail->isPending() || ! $detail->producto_id) {
+                throw ValidationException::withMessages([
+                    'producto' => 'Solo puedes editar productos pendientes.',
+                ]);
+            }
+
+            $producto = Producto::query()->lockForUpdate()->findOrFail($detail->producto_id);
+            $configuracion = $this->productConfiguration($producto, $masa);
+
+            $otherLine = $pedido->detalles()
+                ->whereNull('tanda_id')
+                ->where('estado_linea', EstadoLineaPedido::ACTIVA->value)
+                ->where('producto_id', $producto->getKey())
+                ->whereNull('combo_id')
+                ->where('id', '<>', $detail->getKey())
+                ->lockForUpdate()
+                ->get()
+                ->first(fn (DetallePedido $line): bool => $this->sameConfiguration($line->configuracion_producto, $configuracion));
+
+            if ($otherLine) {
+                $otherLine->increment('cantidad', $detail->cantidad);
+                $detail->delete();
+
+                return $otherLine->fresh(['producto', 'tanda']);
+            }
+
+            $detail->update(['configuracion_producto' => $configuracion]);
+
+            return $detail->fresh(['producto', 'tanda']);
         });
     }
 
@@ -324,11 +466,13 @@ class PedidoService
         $this->updatePendingQuantity($pedido, $detalle, 0);
     }
 
-    public function restorePendingLine(Pedido $pedido, int $productoId, int $cantidad, string $precioUnitario): DetallePedido
+    public function restorePendingLine(Pedido $pedido, int $productoId, int $cantidad, string $precioUnitario, ?string $masa = null): DetallePedido
     {
-        return DB::transaction(function () use ($pedido, $productoId, $cantidad, $precioUnitario): DetallePedido {
+        return DB::transaction(function () use ($pedido, $productoId, $cantidad, $precioUnitario, $masa): DetallePedido {
             $pedido = $this->lockPedido($pedido);
             $this->ensureEditable($pedido);
+            $producto = Producto::query()->findOrFail($productoId);
+            $configuracion = $this->productConfiguration($producto, $masa);
 
             $detalle = $pedido->detalles()
                 ->whereNull('tanda_id')
@@ -336,7 +480,8 @@ class PedidoService
                 ->where('producto_id', $productoId)
                 ->whereNull('combo_id')
                 ->lockForUpdate()
-                ->first();
+                ->get()
+                ->first(fn (DetallePedido $line): bool => $this->sameConfiguration($line->configuracion_producto, $configuracion));
 
             if ($detalle) {
                 $detalle->increment('cantidad', $cantidad);
@@ -348,6 +493,7 @@ class PedidoService
                     'combo_id' => null,
                     'cantidad' => $cantidad,
                     'precio_unitario' => $precioUnitario,
+                    'configuracion_producto' => $configuracion,
                 ]);
             }
 
@@ -373,9 +519,11 @@ class PedidoService
                 ]);
             }
 
-            $printer = Impresora::buscar(TipoImpresora::COMANDA);
-            $contenido = $this->comandaRenderer->render($pedido);
-            $uid = hash('sha256', $pedido->getKey() . '|COMANDA|' . now()->timestamp . '|' . uniqid('', true));
+            $printer = Impresora::buscar(TipoImpresora::COMANDA, $pedido->establecimiento_id);
+            $contenido = $this->comandaRenderer->render($pedido, $pendingLines);
+            $lineIds = $pendingLines->pluck('id')->map(fn ($id): int => (int) $id)->all();
+            sort($lineIds);
+            $uid = hash('sha256', $pedido->getKey().'|COMANDA|'.implode(',', $lineIds));
 
             $job = TrabajoImpresion::create([
                 'impresora_id' => $printer?->getKey(),
@@ -415,6 +563,12 @@ class PedidoService
         return DB::transaction(function () use ($pedido, $actor): Pedido {
             $pedido = $this->lockPedido($pedido);
 
+            if ($pedido->tipo_pedido !== TipoPedido::MESA) {
+                throw ValidationException::withMessages([
+                    'pedido' => 'Solo las cuentas de mesa se envían a caja para cobrar después.',
+                ]);
+            }
+
             if ($pedido->estado_comercial !== EstadoComercialPedido::ABIERTO) {
                 throw ValidationException::withMessages([
                     'pedido' => 'Este pedido ya fue enviado a caja.',
@@ -429,6 +583,12 @@ class PedidoService
             if ($activeLines->isEmpty()) {
                 throw ValidationException::withMessages([
                     'pedido' => 'Agrega al menos un producto antes de enviar la cuenta a caja.',
+                ]);
+            }
+
+            if ($activeLines->contains(fn (DetallePedido $line): bool => $line->tanda_id === null)) {
+                throw ValidationException::withMessages([
+                    'pedido' => 'Envía primero todos los productos pendientes a cocina.',
                 ]);
             }
 
@@ -447,11 +607,14 @@ class PedidoService
     public function assignTable(Pedido $pedido, Mesa $mesa, User $actor): Pedido
     {
         return DB::transaction(function () use ($pedido, $mesa, $actor): Pedido {
+            $establishmentId = $this->establishmentId();
+            Establecimiento::query()->lockForUpdate()->findOrFail($establishmentId);
+            $this->flowPolicy->assertPuedeIniciar(TipoPedido::MESA, true);
             $pedido = $this->lockPedido($pedido);
             $this->ensureEditable($pedido);
 
             $mesa = Mesa::query()
-                ->where('establecimiento_id', $this->establishmentId())
+                ->where('establecimiento_id', $establishmentId)
                 ->lockForUpdate()
                 ->findOrFail($mesa->getKey());
 
@@ -574,6 +737,80 @@ class PedidoService
                 'motivo' => $motivo,
             ]);
         });
+    }
+
+    private function productConfiguration(Producto $producto, ?string $masa): ?array
+    {
+        if (! $producto->requiere_masa) {
+            if ($masa !== null && trim($masa) !== '') {
+                throw ValidationException::withMessages([
+                    'masa' => 'Este producto no requiere selección de masa.',
+                ]);
+            }
+
+            return null;
+        }
+
+        return $this->masaConfiguration($masa);
+    }
+
+    private function comboConfiguration(Combo $combo, array $selection, ?string $masa): ?array
+    {
+        $allowedProducts = $combo->opcionesCombo
+            ->flatMap(fn ($option) => $option->productos)
+            ->keyBy(fn (Producto $product): string => (string) $product->getKey());
+
+        $massItems = collect($selection)
+            ->flatMap(fn (array $group): array => $group['items'] ?? [])
+            ->filter(fn (array $item): bool => (bool) $allowedProducts->get((string) ($item['producto_id'] ?? ''))?->requiere_masa);
+
+        if ($massItems->isEmpty()) {
+            if ($masa !== null && trim($masa) !== '') {
+                throw ValidationException::withMessages([
+                    'masa' => 'Este combo no requiere selección de masa.',
+                ]);
+            }
+
+            return null;
+        }
+
+        $missingItemMass = $massItems->contains(fn (array $item): bool => ! data_get($item, 'masa.codigo'));
+
+        if (! $missingItemMass) {
+            if ($masa !== null && trim($masa) !== '') {
+                throw ValidationException::withMessages([
+                    'masa' => 'La masa se define por cada pupusa del combo.',
+                ]);
+            }
+
+            return null;
+        }
+
+        // Compatibilidad con combos antiguos que todavía llegan con una masa global.
+        return $this->masaConfiguration($masa);
+    }
+
+    private function masaConfiguration(?string $masa): array
+    {
+        $selected = MasaPupusa::tryFrom(strtoupper(trim((string) $masa)));
+
+        if (! $selected) {
+            throw ValidationException::withMessages([
+                'masa' => 'Selecciona si la preparación será de maíz o de arroz.',
+            ]);
+        }
+
+        return [
+            'masa' => [
+                'codigo' => $selected->value,
+                'nombre' => $selected->label(),
+            ],
+        ];
+    }
+
+    private function sameConfiguration(?array $left, ?array $right): bool
+    {
+        return json_encode($left ?? [], JSON_UNESCAPED_UNICODE) === json_encode($right ?? [], JSON_UNESCAPED_UNICODE);
     }
 
     private function lockPedido(Pedido $pedido): Pedido

@@ -3,12 +3,15 @@
 namespace App\Filament\Pages\Pos;
 
 use App\Application\Printing\QueueTicketResult;
+use App\Enums\EstadoComercialPedido;
 use App\Enums\EstadoLineaPedido;
 use App\Enums\MetodoPago;
 use App\Enums\OrigenPedido;
+use App\Enums\TipoPedido;
 use App\Models\Pedido;
 use App\Services\CobroService;
 use App\Services\ConfiguracionService;
+use App\Services\Orders\OrderLinePresenter;
 use Illuminate\Validation\ValidationException;
 
 class ChargeOrder extends PosPage
@@ -44,6 +47,12 @@ class ChargeOrder extends PosPage
 
         abort_unless($pedido->establecimiento_id === $this->establishment()->getKey(), 404);
         abort_unless($pedido->estado_comercial->isPayable(), 404);
+        abort_if(
+            $pedido->tipo_pedido === TipoPedido::MESA
+                && $pedido->estado_comercial !== EstadoComercialPedido::PENDIENTE_COBRO,
+            409,
+            'La mesa todavía no ha solicitado la cuenta.',
+        );
 
         $this->pedido = $pedido;
         $this->refreshPedido();
@@ -80,7 +89,7 @@ class ChargeOrder extends PosPage
                 return;
             }
 
-            $this->montoRecibido = $current === '' ? '0.' : $current . '.';
+            $this->montoRecibido = $current === '' ? '0.' : $current.'.';
 
             return;
         }
@@ -91,7 +100,7 @@ class ChargeOrder extends PosPage
             return;
         }
 
-        $this->montoRecibido = $current === '0' ? $digito : $current . $digito;
+        $this->montoRecibido = $current === '0' ? $digito : $current.$digito;
     }
 
     public function borrarDigito(): void
@@ -127,7 +136,7 @@ class ChargeOrder extends PosPage
                 ? ['aprobada' => $this->tarjetaAprobada]
                 : null;
 
-            [, , $ticketResult] = app(CobroService::class)->chargeAndSend(
+            [, $comandaJob, $ticketResult] = app(CobroService::class)->chargeAndSend(
                 $this->pedido,
                 MetodoPago::tryFrom($this->metodoPago) ?? MetodoPago::EFECTIVO,
                 $this->metodoPago === MetodoPago::EFECTIVO->value ? $this->montoRecibido : null,
@@ -141,7 +150,11 @@ class ChargeOrder extends PosPage
                 default => ' Ticket de cliente en cola de impresión.',
             };
 
-            session()->flash('pos_feedback', 'Pago registrado y comanda enviada a cocina.' . $ticketMessage);
+            $kitchenMessage = $comandaJob
+                ? ' Los productos pendientes se enviaron a cocina.'
+                : ' La comanda ya estaba enviada.';
+
+            session()->flash('pos_feedback', 'Pago registrado.'.$kitchenMessage.$ticketMessage);
             $this->redirect(ServiceSelection::getUrl());
         } catch (ValidationException $exception) {
             $this->feedback = collect($exception->errors())->flatten()->first() ?? 'No se pudo registrar el pago.';
@@ -209,11 +222,12 @@ class ChargeOrder extends PosPage
 
     public function comboLineSummary($line): string
     {
-        return collect($line->seleccion_combo ?? [])
-            ->flatMap(fn (array $group): array => collect($group['items'] ?? [])
-                ->map(fn (array $item): string => $item['cantidad'] . ' ' . $item['nombre'])
-                ->all())
-            ->implode(', ');
+        return app(OrderLinePresenter::class)->comboSummary($line);
+    }
+
+    public function getHasPendingKitchenLinesProperty(): bool
+    {
+        return $this->activeDetails->contains(fn ($line): bool => $line->tanda_id === null);
     }
 
     private function refreshPedido(): void

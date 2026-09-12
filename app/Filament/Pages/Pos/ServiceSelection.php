@@ -3,6 +3,8 @@
 namespace App\Filament\Pages\Pos;
 
 use App\Enums\EstadoComercialPedido;
+use App\Enums\EstadoLineaPedido;
+use App\Enums\FlujoPos;
 use App\Enums\OrigenPedido;
 use App\Enums\TipoPedido;
 use App\Filament\Pages\Cash\CloseSession;
@@ -11,6 +13,8 @@ use App\Models\Pago;
 use App\Models\Pedido;
 use App\Services\ConfiguracionService;
 use App\Services\PedidoService;
+use App\Services\PoliticaFlujosPos;
+use App\ValueObjects\ConfiguracionFlujosPos;
 use Illuminate\Validation\ValidationException;
 
 class ServiceSelection extends PosPage
@@ -25,7 +29,10 @@ class ServiceSelection extends PosPage
 
     public function mount(): void
     {
-        $this->ensureCashSession();
+        if ($this->ensureCashSession()) {
+            app(PedidoService::class)->discardEmptyDraftsForUser(auth()->user());
+        }
+
         $this->feedback = session('pos_feedback');
     }
 
@@ -56,6 +63,12 @@ class ServiceSelection extends PosPage
 
     public function openTables(): void
     {
+        if (! app(PoliticaFlujosPos::class)->permite(FlujoPos::MESA_POSTPAGO)) {
+            $this->feedback = 'El flujo de mesa está deshabilitado para esta sucursal.';
+
+            return;
+        }
+
         $this->redirect(TableSelection::getUrl([
             'tipo' => TipoPedido::MESA->value,
             'entrada' => 'mesas',
@@ -89,7 +102,13 @@ class ServiceSelection extends PosPage
         return (int) Pedido::query()
             ->where('establecimiento_id', $establishment->getKey())
             ->where('estado_comercial', EstadoComercialPedido::PENDIENTE_COBRO->value)
+            ->whereHas('detalles', fn ($query) => $query->where('estado_linea', EstadoLineaPedido::ACTIVA->value))
             ->count();
+    }
+
+    public function getFlowSettingsProperty(): ConfiguracionFlujosPos
+    {
+        return app(PoliticaFlujosPos::class)->actual();
     }
 
     public function getOpenCountProperty(): int
@@ -103,6 +122,7 @@ class ServiceSelection extends PosPage
         return (int) Pedido::query()
             ->where('establecimiento_id', $establishment->getKey())
             ->where('estado_comercial', EstadoComercialPedido::ABIERTO->value)
+            ->whereHas('detalles', fn ($query) => $query->where('estado_linea', EstadoLineaPedido::ACTIVA->value))
             ->count();
     }
 

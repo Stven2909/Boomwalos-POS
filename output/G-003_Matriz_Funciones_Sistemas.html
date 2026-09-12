@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>G-003 — Definición de Funciones por Sistema</title>
+    <style>
+        @page {
+            size: A4 portrait;
+            margin: 1.5cm 1.3cm 1.5cm 1.3cm;
+            @bottom-right {
+                content: "Página " counter(page);
+                font-size: 8pt;
+                color: #64748b;
+                font-family: 'Segoe UI', system-ui, sans-serif;
+            }
+        }
+        
+        * {
+            box-sizing: border-box;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            color: #1e293b;
+            line-height: 1.5;
+            font-size: 8.5pt;
+            background: #ffffff;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Header */
+        .doc-header {
+            border-bottom: 2px solid #0284c7;
+            padding-bottom: 8px;
+            margin-bottom: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
+
+        .doc-title-block h1 {
+            font-size: 17pt;
+            color: #0f172a;
+            margin: 0 0 3px 0;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+        }
+
+        .doc-title-block h2 {
+            font-size: 10pt;
+            color: #0284c7;
+            margin: 0;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .badge-container {
+            display: flex;
+            gap: 6px;
+        }
+
+        .badge {
+            background: #f1f5f9;
+            color: #334155;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 7pt;
+            font-weight: 700;
+            border: 1px solid #cbd5e1;
+            text-transform: uppercase;
+        }
+
+        .badge-success {
+            background: #dcfce7;
+            color: #166534;
+            border-color: #86efac;
+        }
+
+        .badge-primary {
+            background: #e0f2fe;
+            color: #0369a1;
+            border-color: #7dd3fc;
+        }
+
+        /* Metadata Box */
+        .meta-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 8px 12px;
+            margin-bottom: 16px;
+        }
+
+        .meta-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .meta-label {
+            font-size: 6.5pt;
+            color: #64748b;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-bottom: 2px;
+        }
+
+        .meta-value {
+            font-size: 8pt;
+            color: #0f172a;
+            font-weight: 600;
+        }
+
+        /* Headings */
+        h2.section-title {
+            font-size: 11pt;
+            color: #0f172a;
+            border-left: 4px solid #0284c7;
+            padding-left: 8px;
+            margin-top: 16px;
+            margin-bottom: 8px;
+            font-weight: 700;
+            page-break-after: avoid;
+        }
+
+        h3.subsection-title {
+            font-size: 9.5pt;
+            color: #1e293b;
+            margin-top: 12px;
+            margin-bottom: 6px;
+            font-weight: 700;
+            page-break-after: avoid;
+        }
+
+        p {
+            margin-top: 0;
+            margin-bottom: 6px;
+            text-align: justify;
+        }
+
+        /* Inventory Cards */
+        .inv-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 14px;
+            page-break-inside: avoid;
+        }
+
+        .inv-card {
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            padding: 10px;
+        }
+
+        .inv-card.pos { border-top: 3px solid #2563eb; }
+        .inv-card.portal { border-top: 3px solid #059669; }
+        .inv-card.fiscal { border-top: 3px solid #d97706; }
+
+        .inv-card h4 {
+            margin: 0 0 6px 0;
+            font-size: 8.5pt;
+            font-weight: 700;
+            color: #0f172a;
+            border-bottom: 1px solid #f1f5f9;
+            padding-bottom: 4px;
+        }
+
+        .inv-list {
+            margin: 0 0 0 14px;
+            padding: 0;
+            font-size: 7.5pt;
+        }
+
+        .inv-list li {
+            margin-bottom: 3px;
+        }
+
+        /* Tables */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 8px 0 14px 0;
+            font-size: 7.5pt;
+            page-break-inside: avoid;
+        }
+
+        th {
+            background: #0f172a;
+            color: #ffffff;
+            font-weight: 600;
+            text-align: left;
+            padding: 5px 7px;
+            font-size: 7pt;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        td {
+            padding: 4.5px 7px;
+            border-bottom: 1px solid #e2e8f0;
+            vertical-align: middle;
+        }
+
+        tr:nth-child(even) td {
+            background: #f8fafc;
+        }
+
+        /* Pills */
+        .pill {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-weight: 700;
+            font-size: 6.5pt;
+            text-transform: uppercase;
+        }
+
+        .pill-owner { background: #dbeafe; color: #1e40af; }
+        .pill-consumer { background: #fef3c7; color: #92400e; }
+        .pill-na { background: #f1f5f9; color: #64748b; }
+        .pill-sync { background: #d1fae5; color: #065f46; }
+
+        /* Sign-off box */
+        .signoff-box {
+            margin-top: 16px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            background: #f8fafc;
+            padding: 8px 12px;
+            page-break-inside: avoid;
+        }
+
+        .signoff-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-top: 8px;
+        }
+
+        .signoff-line {
+            border-top: 1px solid #94a3b8;
+            margin-top: 20px;
+            padding-top: 2px;
+            text-align: center;
+            font-size: 7pt;
+            color: #334155;
+            font-weight: 600;
+        }
+
+        .page-break {
+            page-break-after: always;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- DOCUMENT HEADER -->
+    <div class="doc-header">
+        <div class="doc-title-block">
+            <h2>Ingeniería de Software & Arquitectura de Sistemas</h2>
+            <h1>Asignación Funcional & Matriz de Responsabilidades</h1>
+        </div>
+        <div class="badge-container">
+            <span class="badge badge-primary">Ref: G-003</span>
+            <span class="badge badge-success">Estado: Aprobado</span>
+            <span class="badge">Versión 1.0</span>
+        </div>
+    </div>
+
+    <!-- METADATA GRID -->
+    <div class="meta-grid">
+        <div class="meta-item">
+            <span class="meta-label">Proyecto</span>
+            <span class="meta-value">Boomwalos Suite</span>
+        </div>
+        <div class="meta-item">
+            <span class="meta-label">Autor / Líder Técnico</span>
+            <span class="meta-value">Moisés Herrera</span>
+        </div>
+        <div class="meta-item">
+            <span class="meta-label">Revisores Técnicos</span>
+            <span class="meta-value">Henrry B. / Steven R. / Jorge D.</span>
+        </div>
+        <div class="meta-item">
+            <span class="meta-label">Fecha de Emisión</span>
+            <span class="meta-value">24 de Agosto, 2026</span>
+        </div>
+    </div>
+
+    <!-- SECCIÓN 1: OBJETIVO Y CRITERIOS -->
+    <h2 class="section-title">1. Objetivo y Criterios de Aislamiento Funcional</h2>
+    <p>
+        El presente documento establece formalmente la <strong>distribución de responsabilidades, propiedad de datos y asignación de funciones</strong> entre los tres productos de la suite Boomwalos (POS, Portal Cliente QR y API Fiscal Externa).
+    </p>
+    <p>
+        <strong>Principio Rector de Arquitectura:</strong> Ningún sistema debe asumir responsabilidades de otro dominio. La operación del salón no depende de la conectividad con Hacienda, el portal del comensal no interviene en la caja ni inventario, y la API Fiscal no almacena lógica comercial de restaurantes.
+    </p>
+
+    <!-- SECCIÓN 2: MATRIZ RACI FUNCION VS SISTEMA -->
+    <h2 class="section-title">2. Matriz Función vs Sistema (Boundary Matrix)</h2>
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 25%;">Módulo / Dominio Funcional</th>
+                <th style="width: 30%;">Función Específica</th>
+                <th style="width: 15%; text-align: center;">Boomwalos POS</th>
+                <th style="width: 15%; text-align: center;">Portal QR</th>
+                <th style="width: 15%; text-align: center;">API Fiscal</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Salón & Mesas</strong></td>
+                <td>Apertura, ocupación, cambio y unión de mesas</td>
+                <td style="text-align: center;"><span class="pill pill-owner">Propietario</span></td>
+                <td style="text-align: center;"><span class="pill pill-na">N/A</span></td>
+                <td style="text-align: center;"><span class="pill pill-na">N/A</span></td>
+            </tr>
+            <tr>
+                <td><strong>Comandero & Cocina</strong></td>
+                <td>Despacho de tandas con notas de preparación</td>
+                <td style="text-align: center;"><span class="pill pill-owner">Propietario</span></td>
+                <td style="text-align: center;"><span class="pill pill-na">N/A</span></td>
+                <td style="text-align: center;"><span class="pill pill-na">N/A</span></td>
+            </tr>
+            <tr>
+                <td><strong>Caja & Turnos</strong></td>
+                <td>Apertura, arqueos ciegos, cortes X/Z y cierre de caja</td>
+                <td style="text-align: center;"><span class="pill pill-owner">Propietario</span></td>
+                <td style="text-align: center;"><span class="pill pill-na">N/A</span></td>
+                <td style="text-align: center;"><span class="pill pill-na">N/A</span></td>
+            </tr>
+            <tr>
+                <td><strong>Cobro & Pagos</strong></td>
+                <td>Múltiples métodos de pago (Efectivo, Tarjeta, Mixto)</td>
+                <td style="text-align: center;"><span class="pill pill-owner">Propietario</span></td>
+                <td style="text-align: center;"><span class="pill pill-na">N/A</span></td>
+                <td style="text-align: center;"><span class="pill pill-na">N/A</span></td>
+            </tr>
+            <tr>
+                <td><strong>Hardware & Impresión</strong></td>
+                <td>Impresión térmica ESC/POS de comandas, pre-cuenta y tickets</td>
+                <td style="text-align: center;"><span class="pill pill-owner">Propietario</span></td>
+                <td style="text-align: center;"><span class="pill pill-na">N/A</span></td>
+                <td style="text-align: center;"><span class="pill pill-na">N/A</span></td>
+            </tr>
+            <tr>
+                <td><strong>Seguimiento de Ticket</strong></td>
+                <td>Generación y emisión de <code>tracking_code</code> en QR</td>
+                <td style="text-align: center;"><span class="pill pill-owner">Propietario</span></td>
+                <td style="text-align: center;"><span class="pill pill-consumer">Lector</span></td>
+                <td style="text-align: center;"><span class="pill pill-na">N/A</span></td>
+            </tr>
+            <tr>
+                <td><strong>Autoservicio Comensal</strong></td>
+                <td>Consulta de orden y desglose de cuenta por QR</td>
+                <td style="text-align: center;"><span class="pill pill-sync">API Proveedora</span></td>
+                <td style="text-align: center;"><span class="pill pill-owner">Propietario</span></td>
+                <td style="text-align: center;"><span class="pill pill-na">N/A</span></td>
+            </tr>
+            <tr>
+                <td><strong>Captura Tributaria</strong></td>
+                <td>Validación de DUI/NIT, NRC, Razón Social y Giro</td>
+                <td style="text-align: center;"><span class="pill pill-na">N/A</span></td>
+                <td style="text-align: center;"><span class="pill pill-owner">Propietario</span></td>
+                <td style="text-align: center;"><span class="pill pill-consumer">Receptor</span></td>
+            </tr>
+            <tr>
+                <td><strong>Solicitud DTE</strong></td>
+                <td>Selección Factura Consumidor Final vs Crédito Fiscal (CCF)</td>
+                <td style="text-align: center;"><span class="pill pill-sync">Cola Local</span></td>
+                <td style="text-align: center;"><span class="pill pill-owner">Propietario</span></td>
+                <td style="text-align: center;"><span class="pill pill-consumer">Receptor</span></td>
+            </tr>
+            <tr>
+                <td><strong>Esquemas DTE</strong></td>
+                <td>Mapeo a JSON normado por Ministerio de Hacienda</td>
+                <td style="text-align: center;"><span class="pill pill-na">N/A</span></td>
+                <td style="text-align: center;"><span class="pill pill-na">N/A</span></td>
+                <td style="text-align: center;"><span class="pill pill-owner">Propietario</span></td>
+            </tr>
+            <tr>
+                <td><strong>Firma Digital</strong></td>
+                <td>Sellado criptográfico con llaves y certificado <code>.p12</code></td>
+                <td style="text-align: center;"><span class="pill pill-na">N/A</span></td>
+                <td style="text-align: center;"><span class="pill pill-na">N/A</span></td>
+                <td style="text-align: center;"><span class="pill pill-owner">Propietario</span></td>
+            </tr>
+            <tr>
+                <td><strong>Transmisión Tributaria</strong></td>
+                <td>Envío a Hacienda y obtención de Sello de Recepción</td>
+                <td style="text-align: center;"><span class="pill pill-na">N/A</span></td>
+                <td style="text-align: center;"><span class="pill pill-na">N/A</span></td>
+                <td style="text-align: center;"><span class="pill pill-owner">Propietario</span></td>
+            </tr>
+            <tr>
+                <td><strong>Contingencia Fiscal</strong></td>
+                <td>Buffer offline y reintentos ante caídas de Hacienda</td>
+                <td style="text-align: center;"><span class="pill pill-sync">Cola Respaldo</span></td>
+                <td style="text-align: center;"><span class="pill pill-na">N/A</span></td>
+                <td style="text-align: center;"><span class="pill pill-owner">Propietario</span></td>
+            </tr>
+            <tr>
+                <td><strong>Entrega Documental</strong></td>
+                <td>Visualización y descarga de PDF oficial con QR y JSON</td>
+                <td style="text-align: center;"><span class="pill pill-consumer">Visualizador</span></td>
+                <td style="text-align: center;"><span class="pill pill-owner">Portal Descarga</span></td>
+                <td style="text-align: center;"><span class="pill pill-sync">Generador</span></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- SECCIÓN 3: INVENTARIO POR SISTEMA -->
+    <h2 class="section-title">3. Inventario Detallado de Funciones por Sistema</h2>
+    <div class="inv-grid">
+        <!-- INVENTARIO POS -->
+        <div class="inv-card pos">
+            <h4>🖥️ Boomwalos POS</h4>
+            <ul class="inv-list">
+                <li><strong>Gestión de Salón:</strong> Mesas, zonas, cuentas unidas/divididas, órdenes para llevar.</li>
+                <li><strong>Tandas de Cocina:</strong> Enrutamiento de pedidos con modificadores y notas de cocina.</li>
+                <li><strong>Cajas & Arqueos:</strong> Apertura de turno, arqueo ciego, retiros e ingresos de efectivo, corte X/Z.</li>
+                <li><strong>Motor de Pagos:</strong> Pagos mixtos (efectivo, tarjeta, transferencia), cálculo de cambio y propinas.</li>
+                <li><strong>Impresión ESC/POS:</strong> Despacho térmico directo vía LAN TCP/IP y USB.</li>
+                <li><strong>Emisión de QR:</strong> Generación de <code>tracking_code</code> impreso en ticket.</li>
+                <li><strong>Auditoría & Roles:</strong> Bitácora inmutable de eventos y permisos de usuario.</li>
+            </ul>
+        </div>
+
+        <!-- INVENTARIO PORTAL -->
+        <div class="inv-card portal">
+            <h4>📱 Portal Cliente QR</h4>
+            <ul class="inv-list">
+                <li><strong>Consulta por QR:</strong> Resolución inmediata de la orden mediante el <code>tracking_code</code>.</li>
+                <li><strong>Detalle de Consumo:</strong> Desglose completo de ítems, precios y totales.</li>
+                <li><strong>Selector de Comprobante:</strong> Solicitud de Factura o Crédito Fiscal (CCF).</li>
+                <li><strong>Validación Tributaria:</strong> Validación en tiempo real de DUI/NIT, NRC y Razón Social.</li>
+                <li><strong>Monitor de Estado:</strong> Seguimiento del flujo de timbrado del DTE.</li>
+                <li><strong>Descarga Oficial:</strong> Descarga del archivo JSON firmado y PDF oficial con QR.</li>
+                <li><strong>WebFact Admin:</strong> Panel para administración y aprobación de solicitudes CCF.</li>
+            </ul>
+        </div>
+
+        <!-- INVENTARIO FISCAL -->
+        <div class="inv-card fiscal">
+            <h4>🏛️ API Fiscal Externa</h4>
+            <ul class="inv-list">
+                <li><strong>Mapeo DTE:</strong> Serialización a esquemas normados por el Ministerio de Hacienda.</li>
+                <li><strong>Firma Criptográfica:</strong> Sellado digital PKCS#12 (<code>.p12</code>) con llave privada.</li>
+                <li><strong>Conexión con Hacienda:</strong> Protocolo seguro HTTPS con API gubernamental.</li>
+                <li><strong>Gestión de Sellos:</strong> Recepción y registro de UUID y Sello de Recepción.</li>
+                <li><strong>Motor de Contingencia:</strong> Cola de reintentos asíncronos y modo offline.</li>
+                <li><strong>Renderizado PDF Legal:</strong> Generación de representación gráfica con QR tributario.</li>
+                <li><strong>Emisión Webhooks:</strong> Notificación automática de estados al POS y Portal.</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="page-break"></div>
+
+    <!-- SECCIÓN 4: PROPIEDAD DE DATOS Y CONTRATOS -->
+    <h2 class="section-title">4. Propiedad de Datos (Data Ownership) y Contratos de Comunicación</h2>
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 25%;">Entidad / Dominio de Datos</th>
+                <th style="width: 20%;">Sistema Propietario</th>
+                <th style="width: 25%;">Mecanismo de Exposición</th>
+                <th style="width: 30%;">Reglas de Integridad & Seguridad</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Menú, Precios y Catálogo</strong></td>
+                <td>Boomwalos POS</td>
+                <td>Base de datos local / Tenant</td>
+                <td>Modificación exclusiva por administradores de local.</td>
+            </tr>
+            <tr>
+                <td><strong>Órdenes, Tandas y Pagos</strong></td>
+                <td>Boomwalos POS</td>
+                <td>API REST (<code>/v1/portal-qr/orden</code>)</td>
+                <td>Lectura pública por <code>tracking_code</code> (sin exponer montos de caja ni mesero).</td>
+            </tr>
+            <tr>
+                <td><strong>Datos Fiscales del Cliente</strong></td>
+                <td>Portal Cliente QR</td>
+                <td>POST REST (<code>/v1/portal-qr/solicitar</code>)</td>
+                <td>Validación sintáctica y de formato antes de transmitir a la API Fiscal.</td>
+            </tr>
+            <tr>
+                <td><strong>DTE Firmado, UUID y Sello</strong></td>
+                <td>API Fiscal Externa</td>
+                <td>POST Webhook (<code>/fiscal/v1/webhooks</code>)</td>
+                <td>Almacenamiento inmutable y correlativos continuos exigidos por ley.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- SECCIÓN 5: DECISIONES ARQUITECTÓNICAS -->
+    <h2 class="section-title">5. Decisiones Arquitectónicas y Validación de Escenarios</h2>
+    <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px; padding: 10px; margin-bottom: 14px;">
+        <p style="margin-bottom: 4px;"><strong>1. ¿Qué sucede si el restaurante se queda sin conexión a Internet?</strong></p>
+        <p style="font-size: 7.5pt; color: #475569; margin-bottom: 8px;">
+            El POS continúa operando 100% de manera local en LAN (mesas, comandas a cocina, cobros e impresión de tickets físicos con QR). Las ventas se acumulan en la tabla <code>cola_venta_fiscals</code> y se sincronizan automáticamente con la API Fiscal en cuanto se restablece la conectividad.
+        </p>
+        <p style="margin-bottom: 4px;"><strong>2. ¿Qué sucede si el Ministerio de Hacienda no está disponible?</strong></p>
+        <p style="font-size: 7.5pt; color: #475569; margin-bottom: 8px;">
+            La API Fiscal activa el protocolo normado de contingencia, almacenando los documentos firmados y reintentando la transmisión mediante un Job programado (<code>EnviarVentasFiscalesJob</code>) con backoff exponencial.
+        </p>
+        <p style="margin-bottom: 4px;"><strong>3. Plazo límite para solicitar Crédito Fiscal por el comensal:</strong></p>
+        <p style="font-size: 7.5pt; color: #475569; margin-bottom: 0;">
+            El código QR del ticket de venta tiene una vigencia parametrizable (por defecto 72 horas). Si el cliente no solicita CCF en ese lapso, la venta queda consolidada como Factura de Consumidor Final automática.
+        </p>
+    </div>
+
+    <!-- SECCIÓN 6: APROBACIÓN Y CIERRE DE TAREA -->
+    <div class="signoff-box">
+        <div style="font-weight: 700; font-size: 8.5pt; color: #0f172a;">
+            Aprobación Técnica y Cierre de Tarea (Task G-003)
+        </div>
+        <p style="font-size: 7.5pt; margin: 3px 0 0 0; color: #475569;">
+            El presente inventario funcional y matriz de responsabilidades satisface al 100% los requerimientos de la tarea <strong>G-003 — Definir qué funciones pertenecen a cada sistema</strong>. Se da por concluida la delimitación de alcance entre Boomwalos POS, Portal Cliente QR y API Fiscal Externa.
+        </p>
+        <div class="signoff-grid">
+            <div>
+                <div class="signoff-line">Moisés Herrera<br><span style="font-size: 6.5pt; color: #64748b; font-weight: normal;">Líder Técnico / Arquitecto</span></div>
+            </div>
+            <div>
+                <div class="signoff-line">Henrry Barrientos<br><span style="font-size: 6.5pt; color: #64748b; font-weight: normal;">Líder de QA / Procesos</span></div>
+            </div>
+            <div>
+                <div class="signoff-line">Steven Rivera<br><span style="font-size: 6.5pt; color: #64748b; font-weight: normal;">Desarrollador / Portal QR</span></div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

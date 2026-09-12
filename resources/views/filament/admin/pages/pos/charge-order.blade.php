@@ -33,6 +33,9 @@
                                 @if ($line->combo_id)
                                     <span>{{ $this->comboLineSummary($line) }}</span>
                                 @endif
+                                @if (data_get($line->configuracion_producto, 'masa.nombre'))
+                                    <span>Masa: {{ data_get($line->configuracion_producto, 'masa.nombre') }}</span>
+                                @endif
                                 <small>{{ $line->cantidad }} × {{ $this->money($line->precio_unitario) }}</small>
                             </div>
                             <b>{{ $this->money((float) $line->precio_unitario * $line->cantidad) }}</b>
@@ -51,9 +54,14 @@
                         La cuenta no tiene productos activos para cobrar.
                     </div>
                 @else
-                    <div class="bw-pos-charge-note">
-                        <x-heroicon-o-fire class="h-5 w-5" />
-                        <span>Al confirmar el pago, los productos pendientes se envían a cocina.</span>
+                    <div class="bw-pos-charge-note {{ $this->hasPendingKitchenLines ? 'is-warning' : 'is-ready' }}">
+                        @if ($this->hasPendingKitchenLines)
+                            <x-heroicon-o-printer class="h-5 w-5" />
+                            <span>Al cobrar, solo los productos pendientes se enviarán a cocina.</span>
+                        @else
+                            <x-heroicon-o-check-circle class="h-5 w-5" />
+                            <span>La comanda ya fue enviada. El cobro no repetirá productos en cocina.</span>
+                        @endif
                     </div>
                 @endif
             </section>
@@ -148,4 +156,3 @@
         </main>
     </div>
 </x-filament-panels::page>
-

@@ -11,7 +11,7 @@ class RenderKitchenComanda
         private readonly BrandingServiceInterface $branding,
     ) {}
 
-    public function render(Pedido $pedido): string
+    public function render(Pedido $pedido, ?iterable $detalles = null): string
     {
         $pedido->loadMissing([
             'establecimiento',
@@ -26,21 +26,33 @@ class RenderKitchenComanda
         $lineas[] = $this->establecimiento($pedido);
         $lineas[] = 'COMANDA';
         $lineas[] = $this->destino($pedido);
-        $lineas[] = 'Pedido: ' . $pedido->codigo_corto;
-        $lineas[] = 'Fecha: ' . now()->setTimezone('America/El_Salvador')->format('d/m/Y H:i');
+        $lineas[] = 'Pedido: '.$pedido->codigo_corto;
+        $lineas[] = 'Fecha: '.now()->setTimezone('America/El_Salvador')->format('d/m/Y H:i');
         $lineas[] = str_repeat('-', 32);
 
-        foreach ($pedido->detalles as $detalle) {
+        $selectedDetails = $detalles === null ? $pedido->detalles : collect($detalles);
+
+        foreach ($selectedDetails as $detalle) {
             if ($detalle->estado_linea?->value !== 'ACTIVA') {
                 continue;
             }
 
+            $detalle->loadMissing(['producto', 'combo', 'detallePedidoNotas.notaCocina']);
+
             $nombre = $detalle->combo?->nombre ?? $detalle->producto?->nombre ?? 'Producto';
             $lineas[] = "{$detalle->cantidad} x {$nombre}";
+            $masaLinea = data_get($detalle->configuracion_producto, 'masa.nombre');
+
+            if (! $detalle->combo_id && $masaLinea) {
+                $lineas[] = '  Masa: '.$masaLinea;
+            }
 
             foreach ($detalle->seleccion_combo ?? [] as $grupo) {
                 foreach ($grupo['items'] ?? [] as $item) {
-                    $lineas[] = "  - {$item['cantidad']} {$item['nombre']}";
+                    $cantidadItem = (int) $detalle->cantidad * (int) ($item['cantidad'] ?? 0);
+                    $masaItem = data_get($item, 'masa.nombre') ?: $masaLinea;
+                    $sufijoMasa = $masaItem ? ' · '.$masaItem : '';
+                    $lineas[] = "  - {$cantidadItem} {$item['nombre']}{$sufijoMasa}";
                 }
             }
 
@@ -58,7 +70,7 @@ class RenderKitchenComanda
             $lineas[] = $footer;
         }
 
-        return implode("\n", $lineas) . "\n";
+        return implode("\n", $lineas)."\n";
     }
 
     private function establecimiento(Pedido $pedido): string
@@ -69,7 +81,7 @@ class RenderKitchenComanda
     private function destino(Pedido $pedido): string
     {
         return $pedido->mesa
-            ? 'MESA ' . $pedido->mesa->numero
+            ? 'MESA '.$pedido->mesa->numero
             : 'PARA LLEVAR · MOSTRADOR';
     }
 }
