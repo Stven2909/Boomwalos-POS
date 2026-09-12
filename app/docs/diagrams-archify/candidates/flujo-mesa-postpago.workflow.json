@@ -1,0 +1,69 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Cobro de mesa en postpago",
+    "subtitle": "Del pedido abierto al ticket impreso y al DTE diferido",
+    "output": "app/docs/diagrams-archify/flujo-mesa-postpago.html",
+    "animation": "trace",
+    "visual_preset": "signal-flow",
+    "quality_profile": "showcase",
+    "views": [
+      { "id": "cobro", "label": "Pago en caja", "focus": ["pedido", "cobro", "pago", "cierre"], "note": "El servicio valida y registra un único cobro por pedido." },
+      { "id": "impresion", "label": "Impresión del ticket", "focus": ["ticket", "impresora"], "note": "El ticket se imprime al instante desde la cola de trabajos." },
+      { "id": "fiscal", "label": "DTE diferido", "focus": ["cierre", "facturador"], "note": "Mesa postpago emite el DTE después del cierre." }
+    ]
+  },
+  "lanes": [
+    { "id": "mesa", "label": "Caja / Mesa" },
+    { "id": "cobro", "label": "Servicio de cobro" },
+    { "id": "async", "label": "Impresión y fiscal", "variant": "exception" }
+  ],
+  "phases": [
+    { "id": "apertura", "label": "Pedido abierto", "fromCol": 0, "toCol": 1 },
+    { "id": "pago", "label": "Cobro del pedido", "fromCol": 2, "toCol": 3, "variant": "emphasis" },
+    { "id": "cierre", "label": "Cierre y DTE", "fromCol": 4, "toCol": 5, "variant": "dashed" }
+  ],
+  "groups": [
+    { "id": "g_ticket", "label": "Ticket inmediato", "lane": "async", "fromCol": 3, "toCol": 4, "variant": "dashed" },
+    { "id": "g_dte", "label": "Emisión fiscal", "lane": "async", "fromCol": 4, "toCol": 5, "variant": "security" }
+  ],
+  "mainPath": ["pedido", "cobro", "pago", "cierre"],
+  "nodes": [
+    { "id": "pedido", "lane": "mesa", "col": 0, "type": "frontend", "label": "Pedido en mesa", "sublabel": "OrderEntry", "width": 132 },
+    { "id": "cierre", "lane": "mesa", "col": 5, "type": "backend", "label": "Cierre de pedido", "sublabel": "despachado", "width": 132 },
+    { "id": "cobro", "lane": "cobro", "col": 2, "type": "backend", "label": "CobroService", "sublabel": "chargeAndSend", "tag": "un solo cobro", "width": 132 },
+    { "id": "pago", "lane": "cobro", "col": 3, "type": "database", "label": "Pago", "sublabel": "efectivo / tarjeta", "width": 132 },
+    { "id": "rechazo", "lane": "cobro", "col": 4, "type": "security", "label": "Pedido abierto", "sublabel": "reintentar", "width": 132 },
+    { "id": "ticket", "lane": "async", "col": 3, "type": "messagebus", "label": "Job ticket", "sublabel": "ProcessPrintJob", "width": 132 },
+    { "id": "impresora", "lane": "async", "col": 4, "type": "cloud", "label": "Impresora", "sublabel": "PDF / ESC-POS", "width": 132 },
+    { "id": "facturador", "lane": "async", "col": 5, "type": "cloud", "label": "Facturador MH", "sublabel": "sello de recepción", "width": 132 }
+  ],
+  "edges": [
+    { "id": "cobrar-pedido", "from": "pedido", "to": "cobro", "label": "cobrar (postpago)", "variant": "emphasis" },
+    { "id": "registrar-pago", "from": "cobro", "to": "pago", "label": "registra Pago" },
+    { "id": "pago-fallido", "from": "cobro", "to": "rechazo", "label": "cobro fallido", "variant": "security", "role": "error" },
+    { "id": "encolar-ticket", "from": "cobro", "to": "ticket", "label": "encola job", "variant": "dashed" },
+    { "id": "imprimir-ticket", "from": "ticket", "to": "impresora", "label": "imprime", "variant": "emphasis" },
+    { "id": "pedido-pagado", "from": "pago", "to": "cierre", "label": "pagado", "variant": "emphasis" },
+    { "id": "programar-dte", "from": "cierre", "to": "facturador", "label": "DTE", "variant": "security" }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Contrato del flujo",
+      "items": [
+        "Postpago: la impresión es inmediata y el DTE es diferido",
+        "El Pago es un nodo único: cierre y trabajos dependen de él"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Recuperación",
+      "items": [
+        "Un cobro fallido deja el pedido abierto para reintentar",
+        "El DTE se reintenta por su propio worker hasta el sello"
+      ]
+    }
+  ]
+}

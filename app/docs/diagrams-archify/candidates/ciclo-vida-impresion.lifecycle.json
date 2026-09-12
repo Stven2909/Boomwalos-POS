@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "diagram_type": "lifecycle",
+  "meta": {
+    "title": "Ciclo de vida de un trabajo de impresión",
+    "subtitle": "El EstadoImpresion en la cola de trabajos",
+    "output": "app/docs/diagrams-archify/ciclo-vida-impresion.html",
+    "viewBox": [1030, 566],
+    "animation": "trace",
+    "quality_profile": "showcase",
+    "views": [
+      { "id": "normal", "label": "Ciclo normal", "focus": ["pendiente", "procesando", "impreso"], "note": "El worker toma el trabajo, lo imprime y lo cierra como IMPRESO." },
+      { "id": "recuperacion", "label": "Recuperación", "focus": ["procesando", "error", "pendiente"], "note": "La falla es reintentable; el monitor devuelve el trabajo a PENDIENTE." },
+      { "id": "sin-impresora", "label": "Sin impresora", "focus": ["pendiente", "error"], "note": "Sin impresora configurada, el trabajo nace ERROR sin llegar a imprimirse." }
+    ]
+  },
+  "lanes": [
+    { "id": "main", "label": "Ciclo del trabajo" },
+    { "id": "exceptions", "label": "Recuperación" }
+  ],
+  "states": [
+    { "id": "pendiente", "type": "start", "label": "Pendiente", "sublabel": "trabajo creado", "lane": "main", "col": 1, "step": "01", "tag": "encolado" },
+    { "id": "procesando", "type": "active", "label": "Procesando", "sublabel": "resuelve impresora", "lane": "main", "col": 2, "step": "02", "tag": "ocupado" },
+    { "id": "impreso", "type": "success", "label": "Impreso", "sublabel": "PDF / ESC-POS", "lane": "main", "col": 3, "step": "03", "tag": "terminado" },
+    { "id": "error", "type": "failure", "label": "Error", "sublabel": "reintentar (monitor)", "lane": "exceptions", "col": 1, "yOffset": 60, "tag": "retryable" }
+  ],
+  "transitions": [
+    { "id": "asignado", "from": "pendiente", "to": "procesando", "variant": "default" },
+    { "id": "completo", "from": "procesando", "to": "impreso", "variant": "emphasis" },
+    { "id": "sin-impresora", "from": "pendiente", "to": "error", "label": "sin impresora", "variant": "security", "fromSide": "bottom", "toSide": "left", "labelAt": [440, 330], "via": [[248, 258], [440, 258], [440, 367]] },
+    { "id": "fallo", "from": "procesando", "to": "error", "variant": "security", "fromSide": "bottom", "toSide": "top", "via": [[402, 240], [556, 240]] },
+    { "id": "reintento", "from": "error", "to": "pendiente", "label": "re-encolar", "variant": "emphasis", "fromSide": "bottom", "toSide": "left", "via": [[556, 470], [170, 470], [170, 157]] }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Iteración cerrada",
+      "items": [
+        "Pendiente → Procesando → Impreso: trata cada trabajo una sola vez",
+        "El worker resuelve la impresora antes de la entrega física"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Recuperación manual",
+      "items": [
+        "Sin impresora configurada, el trabajo nace ERROR sin imprimirse",
+        "El monitor devuelve a Pendiente cualquier trabajo en ERROR"
+      ]
+    }
+  ]
+}

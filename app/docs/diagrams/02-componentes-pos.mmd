@@ -36,7 +36,6 @@ graph TB
     end
 
     subgraph "Capa de Contratos (app/Contracts)"
-        TenantCtx["TenantConnectionResolver"]
         EstCtx["EstablishmentContext"]
         FiscalGW["FiscalGatewayInterface"]
         KitchenDisp["KitchenDispatcherInterface"]
@@ -58,7 +57,7 @@ graph TB
 
     subgraph "Capa de Infraestructura"
         EscPos["EscPosPrintService\n(ESC/POS nativo)"]
-        PrinterFactory["PrinterConnectorFactory\n(TCP/IP, USB)"]
+        PrinterFactory["PrinterConnectorFactory\n(TCP/IP, USB, PDF)"]
         ProcessPrint["ProcessPrintJob\n(Queue, 3 retries)"]
         FiscalSaleRegistrar["FiscalSaleRegistrar\n(bridge pago→fiscal)"]
         EnviarFiscal["EnviarVentasFiscalesJob\n(Queue)"]

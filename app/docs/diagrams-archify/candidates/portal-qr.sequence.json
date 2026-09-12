@@ -1,0 +1,64 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "Consulta por QR del ticket — Portal WebFact",
+    "subtitle": "El cliente escanea el QR y consulta el estado de su pedido",
+    "output": "app/docs/diagrams-archify/portal-qr.html",
+    "viewBox": [1080, 480],
+    "column_fit": "spread",
+    "animation": "trace",
+    "quality_profile": "showcase",
+    "views": [
+      { "id": "lectura", "label": "Lectura del QR", "focus": ["cliente", "portal", "api"], "note": "El ticket imprime la URL del portal junto al tracking POS." },
+      { "id": "resolucion", "label": "Resolución de la orden", "focus": ["api", "fiscal", "pedido"], "note": "El tracking se convierte en pedido y estado de solicitud de DTE." },
+      { "id": "respuesta", "label": "Respuesta al cliente", "focus": ["pedido", "fiscal", "api", "portal", "cliente"], "note": "El portal muestra el estado sin exponer datos internos." }
+    ]
+  },
+  "participants": [
+    { "id": "cliente", "type": "external", "label": "Cliente", "sublabel": "consumidor" },
+    { "id": "portal", "type": "frontend", "label": "Portal", "sublabel": "WebFact" },
+    { "id": "api", "type": "backend", "label": "API QR", "sublabel": "PortalQrController" },
+    { "id": "fiscal", "type": "backend", "label": "Servicio fiscal", "sublabel": "buscarOrden" },
+    { "id": "pedido", "type": "database", "label": "Pedido", "sublabel": "estado + solicitud DTE" }
+  ],
+  "segments": [
+    { "from": 152, "to": 205, "label": "Lectura" },
+    { "from": 210, "to": 300, "label": "Resolución" },
+    { "from": 305, "to": 365, "label": "Respuesta" }
+  ],
+  "messages": [
+    { "id": "escanear", "from": "cliente", "to": "portal", "y": 160, "label": "escanea QR de su ticket", "variant": "emphasis" },
+    { "id": "solicitud", "from": "portal", "to": "api", "y": 185, "label": "GET orden?tracking=POS-…", "variant": "emphasis" },
+    { "id": "buscar", "from": "api", "to": "fiscal", "y": 218, "label": "buscarOrden(tracking)" },
+    { "id": "consulta", "from": "fiscal", "to": "pedido", "y": 250, "label": "pedido + estado_solicitud" },
+    { "id": "pedido-encontrado", "from": "pedido", "to": "fiscal", "y": 278, "label": "orden", "variant": "return" },
+    { "id": "orden-ok", "from": "fiscal", "to": "api", "y": 292, "label": "orden + estado", "variant": "return" },
+    { "id": "json-200", "from": "api", "to": "portal", "y": 332, "label": "200 JSON", "variant": "return" },
+    { "id": "mostrar", "from": "portal", "to": "cliente", "y": 358, "label": "estado del pedido", "variant": "return" }
+  ],
+  "activations": [
+    { "participant": "portal", "from": 158, "to": 364, "type": "frontend" },
+    { "participant": "api", "from": 182, "to": 338, "type": "backend" },
+    { "participant": "fiscal", "from": 213, "to": 311, "type": "backend" },
+    { "participant": "pedido", "from": 244, "to": 284, "type": "database" }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Consulta única",
+      "items": [
+        "El QR del ticket apunta al portal y lleva el tracking POS",
+        "Una sola consulta resuelve el pedido y el estado de su DTE"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Fallo controlado",
+      "items": [
+        "Tracking inexistente responde 404 con mensaje claro",
+        "El parámetro faltante se rechaza con 400"
+      ]
+    }
+  ]
+}

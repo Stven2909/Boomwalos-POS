@@ -1,0 +1,85 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Componentes del POS — Boomwalos Pos",
+    "subtitle": "Orquestación de cobro, contexto de sucursal e impresión",
+    "output": "app/docs/diagrams-archify/componentes-pos.html",
+    "viewBox": [1150, 650],
+    "animation": "trace",
+    "visual_preset": "signal-flow",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/Stven2909/Boomwalos-POS.git",
+      "provider": "github",
+      "link_mode": "web",
+      "revision": "10954f638eb4e0e593652bbdd4ea1c4e4080f9f1"
+    },
+    "legend": {
+      "mode": "auto",
+      "entries": {
+        "frontend": { "label": "Panel web (Filament)" },
+        "backend": { "label": "Servicio Laravel" },
+        "security": { "label": "Contexto de sucursal" },
+        "database": { "label": "Base de datos" },
+        "messagebus": { "label": "Cola / job" },
+        "cloud": { "label": "Dispositivo físico" },
+        "external": { "label": "Servicio externo" }
+      }
+    }
+  },
+  "components": [
+    { "id": "portal", "type": "backend", "label": "Portal fiscal", "sublabel": "fiscal · QR", "sources": [{ "path": "app/Http/Controllers/Api/PortalQrController.php" }, { "path": "app/Services/Portal/PortalFiscalService.php" }], "pos": [24, 120], "size": [150, 64] },
+    { "id": "pos-ui", "type": "frontend", "label": "Interfaz de cobro", "sublabel": "OrderEntry", "sources": [{ "path": "app/Filament/Pages/Pos/OrderEntry.php" }, { "path": "app/Filament/Pages/Pos/ChargeOrder.php" }], "pos": [24, 240], "size": [150, 64] },
+    { "id": "impresora-svc", "type": "backend", "label": "Impresora::buscar", "sublabel": "TICKET · COMANDA", "sources": [{ "path": "app/Models/Impresora.php" }], "pos": [590, 120], "size": [150, 64] },
+    { "id": "cobro", "type": "backend", "label": "CobroService", "sublabel": "chargeAndSend", "tag": "orquestador", "sources": [{ "path": "app/Services/CobroService.php" }], "pos": [580, 240], "size": [170, 70] },
+    { "id": "contexto", "type": "security", "label": "Contexto de sucursal", "sublabel": "sucursal activa", "sources": [{ "path": "app/Context/EstablishmentContext.php" }], "pos": [590, 480], "size": [150, 64] },
+    { "id": "job", "type": "messagebus", "label": "Jobs asíncronos", "sublabel": "ProcessPrintJob", "sources": [{ "path": "app/Jobs/ProcessPrintJob.php" }, { "path": "app/Jobs/EnviarVentasFiscalesJob.php" }], "pos": [900, 480], "size": [150, 64] },
+    { "id": "imps", "type": "cloud", "label": "Impresoras 80 mm", "sublabel": "local · SNPP · PDF", "sources": [{ "path": "app/Services/Printing/PrinterConnectorFactory.php" }, { "path": "app/Application/Printing/RenderCustomerTicket.php" }], "pos": [900, 240], "size": [150, 64] },
+    { "id": "db", "type": "database", "label": "Modelos", "sublabel": "pedidos · pagos · jobs", "sources": [{ "path": "config/database.php" }], "pos": [316, 480], "size": [150, 64] },
+    { "id": "dte", "type": "external", "label": "Acoplamiento DTE", "sublabel": "facturación externa", "sources": [{ "path": "app/Services/FiscalSaleRegistrar.php" }], "pos": [900, 60], "size": [150, 64] }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "Sistema Boomwalos Pos",
+      "wraps": ["portal", "pos-ui", "impresora-svc", "cobro", "contexto", "job", "db"],
+      "pad": 24
+    }
+  ],
+  "connections": [
+    { "id": "cobrar", "from": "pos-ui", "to": "cobro", "label": "cobrar e imprimir", "variant": "emphasis" },
+    { "id": "resuelve", "from": "cobro", "to": "impresora-svc", "label": "resuelve impresora", "fromSide": "top", "toSide": "bottom" },
+    { "id": "establecimiento", "from": "contexto", "to": "db", "label": "establecimiento" },
+    { "id": "imprime", "from": "impresora-svc", "to": "imps", "label": "imprime 80 mm", "via": [[815, 152], [815, 272]] },
+    { "id": "sucursal", "from": "cobro", "to": "contexto", "label": "sucursal activa", "variant": "emphasis", "fromSide": "bottom", "toSide": "top", "labelAt": [665, 390] },
+    { "id": "escribe", "from": "job", "to": "imps", "label": "escribe PDF", "variant": "dashed", "fromSide": "top", "toSide": "bottom" },
+    { "id": "dte-fiscal", "from": "portal", "to": "dte", "label": "DTE", "variant": "security", "fromSide": "top", "toSide": "top", "via": [[99, 10], [975, 10]] }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Orquestación de cobro",
+      "items": [
+        "CobroService cobra e imprime en una sola operación",
+        "Resuelve la impresora por tipo: TICKET · COMANDA"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Contexto de sucursal",
+      "items": [
+        "El establecimiento activo sale de la sesión del operador",
+        "Sin sucursal activa se cae a la impresora global"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Impresión asíncrona",
+      "items": [
+        "Los jobs escriben el PDF o la comanda del trabajo",
+        "El conector se elige según la configuración de la impresora"
+      ]
+    }
+  ]
+}

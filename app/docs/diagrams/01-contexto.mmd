@@ -7,7 +7,6 @@ graph LR
     subgraph "Boomwalos POS"
         subgraph "Paneles Filament"
             PanelAdmin["Panel Admin\n(/admin)"]
-            PanelPlatform["Panel Platform\n(/platform)"]
         end
         subgraph "Módulos POS"
             Catalogo["Catálogo\nProductos, Combos,\nCategorías"]
@@ -30,15 +29,13 @@ graph LR
     end
 
     subgraph "Datos"
-        TenantDB[("Tenant DB\n(una por empresa)")]
-        PlatformDB[("Platform DB\n(registro tenants)")]
+        DBUnica[("Base única\n(todos los establecimientos)")]
     end
 
     PanelAdmin --> Catalogo
     PanelAdmin --> Ordenes
     PanelAdmin --> Cobro
     PanelAdmin --> Cocina
-    PanelPlatform --> TenantDB
 
     Cobro --> Impresion
     Cobro --> Fiscal
@@ -52,14 +49,13 @@ graph LR
     PortalQrAPI -->|"consulta estado DTE"| APIFiscal
     WebFact -->|"HTTP JSON (tracking)"| PortalQrAPI
 
-    Ordenes --> TenantDB
-    Cobro --> TenantDB
-    Auditoria --> TenantDB
-    PortalQrAPI --> TenantDB
+    Ordenes --> DBUnica
+    Cobro --> DBUnica
+    Auditoria --> DBUnica
+    PortalQrAPI --> DBUnica
 
     style APIFiscal fill:#f9f,stroke:#333
     style WebFact fill:#e7f5e7,stroke:#333
     style PortalQrAPI fill:#e7f5e7,stroke:#333
     style PdfVirt fill:#fff2cc,stroke:#333
     style PanelAdmin fill:#6B4E63,color:#fff
-    style PanelPlatform fill:#6B4E63,color:#fff

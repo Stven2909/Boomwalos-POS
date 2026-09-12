@@ -1,0 +1,69 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "Flujo de datos del cobro en caja",
+    "subtitle": "Cobro directo, cola de impresión y fiscal asíncrono",
+    "output": "app/docs/diagrams-archify/flujo-datos.html",
+    "viewBox": [1080, 640],
+    "column_fit": "spread",
+    "animation": "trace",
+    "quality_profile": "showcase",
+    "views": [
+      { "id": "cobro", "label": "Cobro", "focus": ["cajero", "cobro", "datos"], "note": "Un solo intento; validación contra reintentos en la caja." },
+      { "id": "cola", "label": "Cola de impresión", "focus": ["cobro", "cola", "impresora", "datos"], "note": "El ticket se imprime al instante; la comanda según flujo del pedido." },
+      { "id": "fiscal", "label": "Fiscal asíncrono", "focus": ["cola", "facturador", "datos"], "note": "El DTE viaja sin bloquear la venta." }
+    ]
+  },
+  "participants": [
+    { "id": "cajero", "type": "external", "label": "Cajero", "sublabel": "operador" },
+    { "id": "cobro", "type": "backend", "label": "Cobro", "sublabel": "CobroService" },
+    { "id": "cola", "type": "messagebus", "label": "Cola", "sublabel": "trabajos" },
+    { "id": "impresora", "type": "external", "label": "Impresora", "sublabel": "80 mm" },
+    { "id": "facturador", "type": "external", "label": "Facturador", "sublabel": "DTE fiscal" },
+    { "id": "datos", "type": "database", "label": "Datos", "sublabel": "pagos + trabajos" }
+  ],
+  "segments": [
+    { "from": 150, "to": 208, "label": "Cobro" },
+    { "from": 218, "to": 336, "label": "Cola de impresión" },
+    { "from": 348, "to": 412, "label": "Fiscal asíncrono" }
+  ],
+  "messages": [
+    { "id": "cobrar", "from": "cajero", "to": "cobro", "y": 160, "label": "cobrar pedido (efectivo)", "variant": "emphasis" },
+    { "id": "registrar", "from": "cobro", "to": "datos", "y": 186, "label": "crea Pago; pedido COBRADO" },
+    { "id": "encolar", "from": "cobro", "to": "cola", "y": 222, "label": "encola trabajos (ticket/comanda)", "variant": "dashed" },
+    { "id": "leer", "from": "cola", "to": "datos", "y": 250, "label": "lee trabajo PENDIENTE" },
+    { "id": "imprimir", "from": "cola", "to": "impresora", "y": 278, "label": "imprime PDF / ESC-POS", "variant": "emphasis" },
+    { "id": "confirmar", "from": "impresora", "to": "cola", "y": 306, "label": "confirmación", "variant": "dashed" },
+    { "id": "marcar", "from": "cola", "to": "datos", "y": 334, "label": "estado IMPRESO", "variant": "dashed" },
+    { "id": "dte", "from": "cola", "to": "facturador", "y": 368, "label": "DTE (flujo modular, 14 días)", "variant": "dashed" },
+    { "id": "aceptar", "from": "facturador", "to": "cola", "y": 396, "label": "202 aceptado", "variant": "dashed" }
+  ],
+  "activations": [
+    { "participant": "cobro", "from": 156, "to": 226, "type": "backend" },
+    { "participant": "cola", "from": 218, "to": 400, "type": "messagebus" },
+    { "participant": "datos", "from": 181, "to": 191, "type": "database" },
+    { "participant": "datos", "from": 244, "to": 255, "type": "database" },
+    { "participant": "datos", "from": 329, "to": 339, "type": "database" },
+    { "participant": "impresora", "from": 273, "to": 311, "type": "external" },
+    { "participant": "facturador", "from": 363, "to": 401, "type": "external" }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Iteración clara",
+      "items": [
+        "Cobro idempotente: valida y persiste el Pago una sola vez",
+        "El ticket y la comanda comparten la misma cola de trabajos"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Asíncrono de bajo acoplamiento",
+      "items": [
+        "Si la impresora falla, el trabajo queda ERROR con PDF de respaldo",
+        "El DTE no bloquea la venta: viaja por su propio worker"
+      ]
+    }
+  ]
+}

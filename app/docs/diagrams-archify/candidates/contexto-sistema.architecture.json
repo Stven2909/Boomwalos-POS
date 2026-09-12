@@ -1,0 +1,87 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Contexto del Sistema — Boomwalos Pos",
+    "subtitle": "Vista de contexto C4 · punto de venta de un único establecimiento",
+    "output": "app/docs/diagrams-archify/contexto-sistema.html",
+    "viewBox": [1160, 580],
+    "animation": "trace",
+    "visual_preset": "signal-flow",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/Stven2909/Boomwalos-POS.git",
+      "provider": "github",
+      "link_mode": "web",
+      "revision": "10954f638eb4e0e593652bbdd4ea1c4e4080f9f1"
+    },
+    "legend": {
+      "mode": "auto",
+      "entries": {
+        "external": { "label": "Actor externo" },
+        "frontend": { "label": "Panel web (Filament)" },
+        "backend": { "label": "API Laravel / job" },
+        "database": { "label": "Base de datos" },
+        "messagebus": { "label": "Cola de trabajos" },
+        "cloud": { "label": "Dispositivo físico" }
+      }
+    }
+  },
+  "components": [
+    { "id": "cajero", "type": "external", "label": "Cajero / Mesero", "sublabel": "opera el POS", "pos": [30, 70], "size": [150, 64] },
+    { "id": "cliente", "type": "external", "label": "Cliente final", "sublabel": "escanea el QR del ticket", "pos": [30, 320], "size": [150, 64] },
+    { "id": "pos", "type": "frontend", "label": "Panel POS", "sublabel": "Filament · cajero", "sources": [{ "path": "app/Filament/Pages/Pos/OrderEntry.php" }], "pos": [280, 70], "size": [150, 64] },
+    { "id": "admin", "type": "frontend", "label": "Panel Admin", "sublabel": "Filament · impresoras", "sources": [{ "path": "app/Providers/Filament/AdminPanelProvider.php" }], "pos": [280, 195], "size": [150, 64] },
+    { "id": "qr", "type": "frontend", "label": "Consulta QR", "sublabel": "portal público de estado", "sources": [{ "path": "app/Http/Controllers/Api/PortalQrController.php" }], "pos": [280, 320], "size": [150, 64] },
+    { "id": "backend", "type": "backend", "label": "API de negocio", "sublabel": "pedidos, cobros y tickets", "sources": [{ "path": "app/Services/CobroService.php" }, { "path": "app/Http/Controllers/Printing/TicketPdfController.php" }], "pos": [540, 195], "size": [180, 72] },
+    { "id": "db", "type": "database", "label": "Base de datos única", "sublabel": "PostgreSQL por instalación", "sources": [{ "path": "config/database.php" }], "pos": [795, 195], "size": [150, 64] },
+    { "id": "queue", "type": "messagebus", "label": "Cola de trabajos", "sublabel": "jobs de impresión", "sources": [{ "path": "config/queue.php" }], "pos": [555, 320], "size": [150, 64] },
+    { "id": "impresora", "type": "cloud", "label": "Impresora 80 mm", "sublabel": "local · red SNPP · PDF", "sources": [{ "path": "app/Services/Printing/PrinterConnectorFactory.php" }], "pos": [550, 460], "size": [160, 64] },
+    { "id": "dte", "type": "external", "label": "Facturador DTE", "sublabel": "API externa de facturación", "sources": [{ "path": "app/Services/FiscalSaleRegistrar.php" }], "pos": [1000, 70], "size": [150, 64] }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "Sistema Boomwalos Pos",
+      "wraps": ["pos", "admin", "qr", "backend", "db", "queue"],
+      "pad": 34
+    }
+  ],
+  "connections": [
+    { "id": "opera-pos", "from": "cajero", "to": "pos", "label": "opera", "variant": "emphasis", "route": "straight" },
+    { "id": "escanea-qr", "from": "cliente", "to": "qr", "label": "escanea QR", "variant": "emphasis", "route": "straight" },
+    { "id": "estado-pedido", "from": "qr", "to": "backend", "label": "estado del pedido" },
+    { "id": "api-pos", "from": "pos", "to": "backend", "label": "API JSON" },
+    { "id": "api-admin", "from": "admin", "to": "backend", "label": "gestión", "labelSegment": 0, "labelDy": 14 },
+    { "id": "sql", "from": "backend", "to": "db", "label": "SQL" },
+    { "id": "encola", "from": "backend", "to": "queue", "label": "encola jobs", "labelAt": [630, 296], "variant": "dashed" },
+    { "id": "procesa", "from": "queue", "to": "impresora", "label": "ticket / comanda", "labelAt": [630, 424], "variant": "emphasis" },
+    { "id": "envia-dte", "from": "backend", "to": "dte", "label": "DTE firmado", "variant": "security", "fromSide": "top", "toSide": "bottom", "via": [[630, 150], [1075, 150]] }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Un solo establecimiento",
+      "items": [
+        "El sistema opera contra una única base de datos por instalación",
+        "El contexto de sucursal se resuelve en tiempo de ejecución"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Impresión desacoplada",
+      "items": [
+        "Los trabajos de impresión van a una cola y se procesan de forma asíncrona",
+        "La impresora se elige por tipo: comanda, ticket o copia de DTE"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Facturación opcional",
+      "items": [
+        "El DTE se solicita solo cuando el pedido lo requiere",
+        "La copia del DTE vuelve como trabajo de impresión"
+      ]
+    }
+  ]
+}

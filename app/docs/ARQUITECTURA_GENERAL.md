@@ -1,9 +1,17 @@
 # Arquitectura General — Boomwalos POS
 
-**Versión:** 1.0
-**Fecha:** 2026-08-24
+**Versión:** 1.1
+**Fecha:** 2026-09-12
 **Estado:** Borrador para aprobación
 **Autores:** Equipo Boomwalos
+
+> **Actualización 1.1 (2026-09-12):** reconciliación con el commit `3eb6a1f` _Actualizacion de Estados de Cobros + Comanda_.
+> - **Se eliminó el subsistema multi-tenant / Platform.** El sistema opera ahora en **base de datos única** con contexto de sucursal (`EstablishmentContext`). Se borraron: `TenantContext`, `ResolveTenant`, `TenantConnectionResolver`, modelos `Platform/*`, `PlatformPanelProvider`, `PlatformTenantResource`, `ManagePlatformTenants`, `config/tenancy.php`, rutas console y sus tests.
+> - **Nuevos flujos POS configurables:** `FlujoPos` (`MOSTRADOR_PREPAGO` / `MESA_POSTPAGO`), `PoliticaFlujosPos`, `ConfiguracionFlujosPos` (persistido en `Configuracion` bajo `pos.flujos_operativos`), `ConfiguracionFlujosPosService`, página TI `PosOperationSettings` y `config/pos.php` (`POS_REQUIRE_EXPLICIT_ESTABLISHMENT`).
+> - **Masa de pupusa:** `productos.requiere_masa` + `detalles_pedido.configuracion_producto` (migración `2026_09_09_000001`).
+> - **Cobros/comanda:** mesa exige `PENDIENTE_COBRO` (solicitar cuenta) y bloquea el cobro si hay líneas pendientes de cocina (sin `tanda_id`); la comanda mapea las líneas pendientes y marca `tanda_id` en cada una; `CobroService` devuelve `QueueTicketResult` tipado.
+> - **Impresión:** `Impresora::buscar($tipo, ?int $establecimientoId)` con resolución explícita de sucursal; `TicketPdfController` exige permiso `ver_impresoras` y acceso al establecimiento (403/404).
+> - End-to-end validado en caja local (PDF 80mm), suite completa **173/173** en SQLite.
 
 ---
 
@@ -11,7 +19,7 @@
 
 1. [Identidad del Proyecto](#1-identidad-del-proyecto)
 2. [Visión General del Sistema](#2-visión-general-del-sistema)
-3. [Arquitectura Multi-Tenancy](#3-arquitectura-multi-tenancy)
+3. [Contexto de Sucursal y Modelo de Datos](#3-contexto-de-sucursal-y-modelo-de-datos)
 4. [Producto 1: POS (Implementado)](#4-producto-1-pos-implementado)
 5. [Producto 2: Portal Cliente QR / WebFact (Implementado)](#5-producto-2-portal-cliente-qr-webfact-implementado)
 6. [Producto 3: API Fiscal Externa (Servicio Externo)](#6-producto-3-api-fiscal-externa-servicio-externo)
@@ -40,7 +48,7 @@
 | Frontend | Tailwind CSS 4, Vite 8, Livewire 3 |
 | RBAC | Spatie Laravel Permission 8.3 |
 | Testing | PHPUnit 12.5 |
-| Base de datos (producción) | MySQL (una por empresa + una platform) |
+| Base de datos (producción) | MySQL (base única, contexto de sucursal por establecimiento) |
 | Base de datos (desarrollo) | SQLite |
 | Impresión | ESC/POS nativo (`mike42/escpos-php`) + PDF virtual (`barryvdh/laravel-dompdf`) |
 | Zona horaria | `America/El_Salvador` (UTC-6) |
@@ -64,57 +72,46 @@ Boomwalos POS es un sistema punto de venta SaaS diseñado para pupuserías y res
 
 ---
 
-## 3. Arquitectura Multi-Tenancy
+## 3. Contexto de Sucursal y Modelo de Datos
 
 ### Modelo
 
-El sistema opera como SaaS multi-tenant con **aislamiento por conexión de base de datos**. Cada empresa (tenant) tiene su propia base de datos operacional. No existen columnas `tenant_id` en las tablas operacionales — el aislamiento se logra a nivel de conexión.
+Tras la eliminación del subsistema multi-tenant (commit `3eb6a1f`, 2026-09-12), el sistema opera como **aplicación de base única**: una sola base de datos MySQL que contiene todas las **sucursales (establecimientos)** y sus tablas operacionales. No existe `tenant_id` ni conexión dinámica por hostname.
 
-**Referencia:** ADR-001, `TENANCY.md`
+**Referencia histórica:** ADR-001 (multiempresa) quedó desactualizado. El aislamiento actual es por **sucursal** vía `EstablishmentContextInterface` + RBAC.
 
-### Dos Modos de Operación
+### Contexto de Sucursal (EstablishmentContext)
 
-| Modo | Entorno | Comportamiento |
-|---|---|---|
-| `single` | Desarrollo / Testing | Todas las empresas comparten una DB. Slug se resuelve pero no hay aislamiento real. |
-| `database` | Producción | Cada empresa tiene su propia DB. Conexión dinámica por request. Unknown host → 404. |
-
-### Tablas Platform (conexión `platform`)
-
-| Tabla | Propósito |
-|---|---|
-| `platform_tenants` | Registro central de empresas (slug, nombre, estado, plan, branding) |
-| `platform_tenant_connections` | Credenciales de DB por tenant (host, DB, user, password encrypted) |
-| `platform_users` | Usuarios super-admin del panel `/platform` |
-
-### Resolución de Tenant por Request
-
-![Resolución de Tenant](diagrams/05-multi-tenancy.png)
-
-> **Figura 2.** Flujo de resolución de tenant: el middleware `ResolveTenant` extrae el slug del hostname, consulta `platform_tenants`, y cambia la conexión DB antes de que cualquier modelo se consulte.
-
-### Establishments (Sucursales)
-
-Dentro de cada tenant, existen múltiples **establecimientos** (sucursales). El contexto de sucursal se maneja via:
-
-- `EstablishmentContext` (singleton por request)
-- Persistido en `session('pos.establishment_id')`
-- Enforce de acceso: administradores ven todo; cajeros solo sus sucursales asignadas (`establecimiento_usuario`)
+- `EstablishmentContext` (singleton por request) → `EstablishmentContextInterface`
+- Persistido en `session('pos.establishment_id')`; ruta `POST /admin/context/establishment/{establecimiento}`
+- Enforce de acceso: administradores ven todas las sucursales; cajeros solo sus succursales asignadas (`establecimiento_usuario`)
 - Trait `GuardsEstablishment` fuerza selección de sucursal en páginas operacionales
+- `config/pos.php` → `POS_REQUIRE_EXPLICIT_ESTABLISHMENT`: si es `true`, siempre se exige selección explícita de sucursal (default `false`, compatibilidad single-tenant)
+
+### Configuración de Flujos Operativos
+
+Los flujos de operación del POS son configurables por sucursal (página Filament **TI → PosOperationSettings**):
+
+| Clase | Rol |
+|---|---|
+| `FlujoPos` (enum) | `MOSTRADOR_PREPAGO` (cobrar antes) / `MESA_POSTPAGO` (cobrar después por mesa) |
+| `PoliticaFlujosPos` | Modelo de dominio: valida habilitación/flujo por establecimiento y tipo de pedido |
+| `ConfiguracionFlujosPos` (VO) | Config solicitada: flujos habilitados + predeterminado; validada por `validate()` |
+| `ConfiguracionFlujosPosService` | Oracle de persistencia/lectura (`Configuracion` → `pos.flujos_operativos`) |
+
+Reglas: al menos un flujo activo; el predeterminado debe estar habilitado; permiso `gestionar_configuracion_pos` controla el acceso. Detalle completo en `docs/Fase_0B_Flujos_Operativos_Boomwalos_POS.md`.
 
 ### Conexiones de Base de Datos
 
 | Conexión | Propósito |
 |---|---|
-| `default` | Conexión principal (sqlite en dev, mysql en prod) |
-| `platform` | Registro de tenants (solo en modo `database`) |
-| `tenant` | Conexión dinámica, reescrita por request en modo `database` |
+| `default` (mysql/sqlite) | Única. Contiene todos los datos operacionales y de configuración |
 
 ### Diagrama de Componentes POS
 
 ![Componentes POS](diagrams/02-componentes-pos.png)
 
-> **Figura 3.** Arquitectura en capas del POS: Interfaz → Servicios → Aplicación → Contratos → Persistencia → Infraestructura.
+> **Figura 2.** Arquitectura en capas del POS: Interfaz → Servicios → Aplicación → Contratos → Persistencia → Infraestructura.
 
 ---
 
@@ -124,8 +121,9 @@ Dentro de cada tenant, existen múltiples **establecimientos** (sucursales). El 
 
 | Panel | Path | Guard | Propósito |
 |---|---|---|---|
-| Admin (default) | `/admin` | `web` (User) | POS, catálogo, pedidos, cobro, cocina, reportes, fiscal |
-| Platform | `/platform` | `platform` (PlatformUser) | Gestión de empresas (tenants) |
+| Admin (default) | `/admin` | `web` (User) | POS, catálogo, pedidos, cobro, cocina, reportes, fiscal, TI (flujos POS) |
+
+> El panel `Platform` (`/platform`) fue **eliminado** junto con el multi-tenant (commit `3eb6a1f`).
 
 ### 4.2 Navegación del Panel Admin
 
@@ -141,17 +139,26 @@ Dentro de cada tenant, existen múltiples **establecimientos** (sucursales). El 
 
 ### 4.3 Flujo POS (Paso a Paso)
 
-**Flujo principal (Mesa):**
+Los flujos están gobernados por `PoliticaFlujosPos` (configurable en **TI → PosOperationSettings**): `MOSTRADOR_PREPAGO` (cobro previo) o `MESA_POSTPAGO` (cobro posterior).
+
+**Flujo Mesa (`MESA_POSTPAGO`):**
 
 ```
 Login → Selección de Sucursal → Abrir Caja → Selección de Servicio →
-Selección de Mesa → Agregar productos/combos → Enviar a cocina (comanda) →
-Cobrar (efectivo/tarjeta) → Imprimir ticket → (Cocina avanza estados) →
-Entrega → Pedido CERRADO → Mesa LIBRE
+Selección de Mesa → Agregar productos/combos → Enviar a cocina (comanda con tanda_id) →
+(agregar items → comanda incremental) → Solicitar cuenta (PENDIENTE_COBRO) →
+Cobrar (efectivo/tarjeta) → Imprimir ticket → Pedido CERRADO → Mesa LIBRE
 ```
 
-**Flujo Para Llevar:**
-Igual al de mesa pero sin selección de mesa (`mesa_id = NULL`), sin cambio de estado de mesa.
+Transiciones internas de `PedidoService` (reescrito en `3eb6a1f`):
+
+- Mesa exige `PENDIENTE_COBRO` para cobrar; no se cobra con líneas pendientes de cocina (sin `tanda_id`).
+- La comanda mapea **solo las líneas nuevas** (uid = `pedido + COMANDA + ids de línea`) y marca `tanda_id` en cada línea.
+- Al reabrir mesa ocupada se libera la mesa; los borradores vacíos se descartan al entrar al POS.
+- `CobroService` devuelve `[$pago, $comandaJob, QueueTicketResult]` tipado; mete comanda/ticket en cola (`ProcessPrintJob`) post-commit.
+
+**Flujo Para Llevar (`MOSTRADOR_PREPAGO`):**
+Cobro previo, sin mesa (`mesa_id = NULL`); la comanda se genera tras el cobro con las líneas pendientes.
 
 ### 4.4 Catálogo
 
@@ -265,9 +272,20 @@ Además de imprimir físicamente, cada `ProcessPrintJob` genera una **copia digi
 
 #### Búsqueda de Impresora
 
-`Impresora::buscar(TipoImpresora)`:
-1. Busca en la sucursal activa (`establecimiento_id`)
-2. Fallback: impresoras sin `establecimiento_id` (globales)
+`Impresora::buscar(TipoImpresora $tipo, ?int $establecimientoId = null)` (firma desde `3eb6a1f`):
+1. Si no se pasa `$establecimientoId`, usa `EstablishmentContext::idOrNull()`
+2. Busca impresora **de la sucursal** (`establecimiento_id` = el solicitado)
+3. Fallback: impresoras sin `establecimiento_id` (globales)
+
+Llamadas típicas: comanda/reprint usan `establecimiento_id` explícito del pedido; ticket usa el contexto (con fallback global — p. ej. "Cajero Virtual" PDF global).
+
+#### PDF y Guards de Acceso (desde `3eb6a1f`)
+
+Las rutas de PDF (`/admin/impresion/trabajo/{id}/pdf`, `/admin/impresion/prueba/{id}/pdf`) son servidas por `TicketPdfController` con doble guard:
+- `abort_unless(auth()->user()?->can('ver_impresoras'), 403)` — permiso RBAC
+- `canAccessEstablishment()` — 404 si el establecimiento del trabajo/impresora no es accesible o difiere del contexto activo
+
+La copia PDF se genera y valida siempre con dompdf (226.77 pt = 80 mm de ancho, tamaño variable según líneas), QR de DTE incluido.
 
 #### Contenido Renderizado
 
@@ -289,7 +307,7 @@ Además de imprimir físicamente, cada `ProcessPrintJob` genera una **copia digi
 
 #### Riesgo de Routing Cross-Branch
 
-`Impresora::buscar()` tiene un fallback a impresoras **globales** (`establecimiento_id IS NULL`). Si la sucursal activa no tiene impresora del tipo requerido, el job se asigna a una impresora global que puede estar físicamente en otra sucursal. No hay validación de sucursal en tiempo de ejecución (`EscPosPrintService`, `ProcessPrintJob`). `TrabajoImpresion` no tiene campo `establecimiento_id`.
+`Impresora::buscar()` mantiene un fallback a impresoras **globales** (`establecimiento_id IS NULL`). Si la sucursal activa no tiene impresora del tipo requerido, el job se asigna a una impresora global que puede estar físicamente en otra sucursal. Muchísimos call-sites ya pasan `$establecimientoId` explícito (comanda, reprint), pero `CobroService::createTicketJob` aún cae al fallback del contexto. `TrabajoImpresion` no tiene campo `establecimiento_id`.
 
 ### 4.9 Cocina
 
@@ -344,7 +362,7 @@ El `KitchenService` existe pero **no hay UI que invoque `transition()`**. El est
 | Auth de portal admin | `PortalAdminTokenService` + `AuthenticatePortalAdmin` | Token Bearer cifrado (`Crypt`), TTL 24h, rol `administrador` obligatorio |
 | Smart QR en tickets | `EscPosPrintService`, `RenderCustomerTicket`, `QueueCustomerTicket` | QR gráfico ESC/POS + enlace WebFact en tickets |
 
-### 5.2 Endpoints (`routes/api.php`, todos bajo `ResolveTenant`)
+### 5.2 Endpoints (`routes/api.php`)
 
 | Método | Ruta | Acceso | Propósito |
 |---|---|---|---|
@@ -379,7 +397,7 @@ Guardados por establecimiento en `Configuracion` (`clave = 'modo_emision_portal'
 
 ### 5.5 Seguridad del Portal
 
-- `/v1/portal-qr/*` son públicos (solo `ResolveTenant`); `/v1/portal-admin/*` exigen **Bearer token** cifrado (`Crypt::encryptString`; payload `user_id`, `role=administrador`, `iat`, `exp`, TTL 24h), validado en `AuthenticatePortalAdmin`.
+- `/v1/portal-qr/*` son públicos (sin autenticación; solo `throttle:30,1`); `/v1/portal-admin/*` exigen **Bearer token** cifrado (`Crypt::encryptString`; payload `user_id`, `role=administrador`, `iat`, `exp`, TTL 24h), validado en `AuthenticatePortalAdmin`.
 - `solicitar` valida datos del receptor (nombre, email, telefono obligatorios).
 - La emisión evita duplicados con `updateOrCreate` sobre `(pedido_id, tipo_documento)`.
 - **Gap:** los endpoints `/v1/portal-qr/*` no tienen rate limiting (riesgo R1).
@@ -513,7 +531,7 @@ EnviarVentasFiscalesJob → FiscalOutboxService::enviarPendientes()
 
 ![Flujo de Datos](diagrams/04-flujo-datos.png)
 
-> **Figura 5.** Secuencia completa de un cobro: impresión de comanda y ticket (síncrono), registro fiscal (asíncrono), y avance de cocina (posterior).
+> **Figura 3.** Secuencia completa de un cobro: impresión de comanda y ticket (síncrono), registro fiscal (asíncrono), y avance de cocina (posterior).
 
 ### 7.2 Flujo Mesa (7 Pasos)
 
@@ -615,7 +633,6 @@ Todos los servicios cross-cutting están bound via interfaces en `AppServiceProv
 - `AuditLoggerInterface` → `AuditLogger`
 - `BrandingServiceInterface` → `BrandingService`
 - `EstablishmentContextInterface` → `EstablishmentContext`
-- `TenantConnectionResolverInterface` → `TenantConnectionResolver`
 
 ### 9.2 Estado de Cocina Per-Tanda
 
@@ -714,12 +731,13 @@ Rate limiting: 5 intentos. Post-login:
 - Admin → Dashboard
 - Cajero → EstablishmentSelection (si múltiples) → OpenSession (si no hay turno) → ServiceSelection
 
-### 11.3 Tenant Isolation
+### 11.3 Aislamiento por Sucursal (reemplaza Tenant Isolation)
 
-- Cada request resuelve el tenant por hostname
-- Conexión DB se cambia antes de ejecutar la ruta
-- `TenantContext` y `EstablishmentContext` se resetean en el bloque `finally`
-- Rutas `/platform/*` se saltan la resolución de tenant
+- Base de datos **única**; el aislamiento es lógico por `establecimiento_id` + RBAC.
+- `EstablishmentContext` (singleton) fuerza la sucursal activa; `canAccess()` valida administrador → todo; cajero → sucursales asignadas u única sucursal (conveniencia single-tenant).
+- Guards en páginas operacionales (`GuardsEstablishment`) y en rutas web de impresión (permiso + `canAccessEstablishment`).
+- `POS_REQUIRE_EXPLICIT_ESTABLISHMENT=true` elimina el atajo de sucursal única.
+- El aislamiento por **tenant/DB dinámica** fue eliminado en `3eb6a1f`.
 
 ### 11.4 Fiscal: HMAC-SHA256
 
@@ -748,7 +766,7 @@ Rate limiting: 5 intentos. Post-login:
 
 ### 11.8 Portal Cliente QR y Admin API
 
-- **Público:** `/v1/portal-qr/*` solo pasa `ResolveTenant` (sin autenticación). La orden se expone vía `numero_seguimiento` (opaco) o `codigo_corto` (predictible de 1-4 dígitos); el endpoint `estado` no devuelve datos sensibles del cliente.
+- **Público:** `/v1/portal-qr/*` sin autenticación (solo `throttle:30,1`). La orden se expone vía `numero_seguimiento` (opaco) o `codigo_corto` (predictible de 1-4 dígitos); el endpoint `estado` no devuelve datos sensibles del cliente.
 - **Admin:** `/v1/portal-admin/*` exige **Bearer token** auto-contenido y cifrado (`PortalAdminTokenService::generateToken`, `Crypt::encryptString` con `APP_KEY`), TTL 24h, rol `administrador` verificado contra la DB en cada request (`AuthenticatePortalAdmin`).
 - **Tokens cancelables:** el token es stateless (depende de `APP_KEY`); no hay revocación individual ni rotación automática. No usa Laravel Sanctum (ver R12).
 - **CORS:** `config/cors.php` permite `allowed_origins => ['*']` sobre `api/*` — necesario para WebFact (frontend externo), pero amplío la superficie (riesgo R1).
@@ -828,11 +846,11 @@ Página en Ajustes que muestra todos los `TrabajoImpresion`:
 
 | # | Riesgo | Impacto | Probabilidad | Mitigación |
 |---|---|---|---|---|
-| R1 | **Endpoints públicos del portal sin rate limiting** — `/v1/portal-qr/*` son públicos (solo `ResolveTenant`) con CORS `*`; abuso puede saturar emisión de DTEs (costo/validez) | Medio | Media | Aplicar middleware de rate limiting a rutas públicas; restringir CORS por origen WebFact |
+| R1 | **Endpoints públicos del portal** — `/v1/portal-qr/*` son públicos (sin autenticación) con CORS `*`; abuso puede saturar emisión de DTEs (costo/validez). Mitigado parcialmente con `throttle:30,1` | Medio | Media | Aplicar rate limiting más estricto a rutas públicas; restringir CORS por origen WebFact |
 | R2 | **Sin UI de cocina** — KitchenService existe pero nadie invoca `transition()` | Alto | Alta | Implementar vista de cocina o mejorar PrintMonitor |
 | R3 | **Impresión sin Bluetooth** — limita hardware móvil | Medio | Media | Implementar `EscPosBluetoothDriver` (fase P2) |
 | R4 | **Documento fiscal: UNIQUE(pedido_id, tipo)** permite CF+CCF simultáneos | Medio | Media | Migración para enforce ONE active document per order |
-| R5 | **Multi-tenant fiscal jobs** requieren `tenantSlug` manual en database mode | Medio | Baja | Automatizar resolución de tenant en jobs |
+| R5 | ~~Multi-tenant fiscal jobs~~ — eliminado con el multi-tenant (`3eb6a1f`) | — | — | — |
 | R6 | **Sin health checks** — no hay forma de monitorear salud del sistema | Medio | Alta | Implementar `/health` endpoint |
 | R7 | **Sin rate limiting** en endpoints internos | Bajo | Baja | Aplicar middleware de rate limiting |
 | R8 | **Arqueo transparente** — no hay bloqueo por discrepancia; la diferencia solo se registra, puede pasar desapercibida | Bajo | Media | Proceso de reconciliación periódica (reportes de caja) |
@@ -890,36 +908,7 @@ Página en Ajustes que muestra todos los `TrabajoImpresion`:
 
 ## 17. Apéndice B: Schema de Base de Datos
 
-### Tablas Platform (conexión `platform`)
-
-```
-platform_tenants
-  ├── id (bigint PK)
-  ├── slug (string UNIQUE)
-  ├── display_name (string)
-  ├── status (string)
-  ├── plan_code (string, nullable)
-  ├── logo_path, favicon_path (string, nullable)
-  ├── primary_color, secondary_color (string, nullable)
-  ├── ticket_header, ticket_footer (text, nullable)
-  ├── contact_phone, contact_email (string, nullable)
-  └── timestamps
-
-platform_tenant_connections
-  ├── id (bigint PK)
-  ├── tenant_id (bigint FK → platform_tenants)
-  ├── driver, host, port, database, username
-  ├── password (string, encrypted)
-  ├── unix_socket (string, nullable)
-  └── options (json, nullable)
-
-platform_users
-  ├── id (bigint PK)
-  ├── name, email (string, unique)
-  └── password (string)
-```
-
-### Tablas Operacionales (conexión `tenant` — una por empresa)
+### Tablas Operacionales (conexión default — base única)
 
 ```
 establecimientos
@@ -1176,7 +1165,8 @@ Los diagramas Mermaid fuente están en `app/docs/diagrams/`:
 | `02-componentes-pos.mmd` | Componentes POS |
 | `03-portal-qr.mmd` | Portal Cliente QR (flujo) |
 | `04-flujo-datos.mmd` | Flujo de Datos End-to-End |
-| `05-multi-tenancy.mmd` | Resolución de Tenant |
+
+> `05-multi-tenancy.*` fue eliminado (multi-tenant removido en `3eb6a1f`).
 
 Para regenerar los PNG:
 
