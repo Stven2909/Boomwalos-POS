@@ -1,0 +1,55 @@
+sequenceDiagram
+    autonumber
+    actor Cajero
+    participant POS as OrderEntry
+    participant PedidoSvc as PedidoService
+    participant CobroSvc as CobroService
+    participant KitchenSvc as KitchenService
+    participant Queue as Cola Impresión
+    participant Printer as Tiquetera
+    participant FiscalSvc as FiscalOutboxService
+    participant FiscalAPI as API Fiscal
+
+    rect rgb(240, 248, 255)
+    Note over Cajero,Printer: FLUJO DE COBRO E IMPRESIÓN
+    Cajero->>POS: "Cobrar y enviar a cocina"
+    POS->>CobroSvc: chargeAndSend(pedido, pago)
+    CobroSvc->>CobroSvc: Validate: pedido existe, no cobrado
+    CobroSvc->>CobroSvc: Create Pago (EFECTIVO/TARJETA)
+    CobroSvc->>CobroSvc: Calculate cambio_devuelto
+    CobroSvc->>CobroSvc: pedido → COBRADO
+
+    loop Para cada tanda en PENDIENTE
+        CobroSvc->>Queue: QueueKitchenBatch(tanda)
+        Queue->>Queue: RenderKitchenComanda::render()
+        Queue->>Queue: Create TrabajoImpresion (COMANDA)
+        Queue->>Queue: ProcessPrintJob dispatch
+        Queue->>Printer: ESC/POS → imprime comanda
+        Printer-->>Queue: IMPRESO ✓
+    end
+
+    CobroSvc->>Queue: QueueCustomerTicket(pedido)
+    Queue->>Queue: RenderCustomerTicket::render()
+    Queue->>Queue: Create TrabajoImpresion (TICKET)
+    Queue->>Printer: ESC/POS → imprime ticket cliente
+    Printer-->>Queue: IMPRESO ✓
+    end
+
+    rect rgb(255, 248, 240)
+    Note over CobroSvc,FiscalAPI: FLUJO FISCAL (paralelo, async)
+    CobroSvc->>FiscalSvc: registrarVenta(pedido, pago)
+    FiscalSvc->>FiscalSvc: Check: fiscal_habilitada?
+    FiscalSvc->>FiscalSvc: Create VentaFiscalPos (NO)
+    FiscalSvc->>FiscalSvc: Create ColaVentaFiscal (PENDIENTE)
+    FiscalSvc->>FiscalAPI: EnviarVentasFiscalesJob
+    FiscalAPI-->>FiscalSvc: 202 {fiscal_sale_id}
+    FiscalSvc->>FiscalSvc: VentaFiscalPos → SINCRONIZADO
+    end
+
+    rect rgb(240, 255, 240)
+    Note over Cajero,KitchenSvc: FLUJO COCINA (posterior)
+    KitchenSvc->>KitchenSvc: transition(tanda, EN_PREPARACION)
+    KitchenSvc->>KitchenSvc: transition(tanda, LISTA)
+    KitchenSvc->>KitchenSvc: transition(tanda, ENTREGADA)
+    KitchenSvc->>KitchenSvc: if all tandas ENTREGADA → pedido CERRADO
+    end

@@ -1,0 +1,36 @@
+sequenceDiagram
+    autonumber
+    actor Cliente
+    participant WF as WebFact Frontend (boomwalos.vercel.app)
+    participant API as Portal QR API (POS /v1/portal-qr)
+    participant DB as Tenant DB
+    participant Admin as Portal Admin API (/v1/portal-admin)
+    participant Fiscal as API Fiscal Externa
+
+    Note over Cliente,Admin: FASE 1: Smart QR en ticket (implementado)
+    API->>DB: Pedido cobrado → ticket con bloque QR + tracking
+    Cliente->>WF: Escanea QR / abre URL con ?tracking=
+
+    Note over Cliente,Fiscal: FASE 2: Consulta y solicitud (implementado)
+    Cliente->>WF: Ingresa tracking
+    WF->>API: GET /estado?trackingPOS=...
+    API->>DB: buscarOrden() por numero_seguimiento / codigo_corto
+    API-->>WF: estado_solicitud, codigo_generacion, sello_recepcion
+
+    Cliente->>WF: Formulario: nombre, email, teléfono, NIT
+    WF->>API: POST /solicitar {trackingPOS, tipoDTE, receptor}
+    API->>API: Decisión por modo (MANUAL / AUTOMATICO / HIBRIDO)
+
+    alt Modo AUTOMATICO o HIBRIDO + Factura
+        API->>Fiscal: emitirDteDirecto() → POST /api/v1/pos/emitir
+        Fiscal-->>API: DTE con codigo_generacion, sello_recepcion, numero_control
+        API->>DB: DocumentoFiscal → EMITIDO
+    else Modo MANUAL o HIBRIDO + CCF
+        API->>DB: DocumentoFiscal → PENDIENTE
+        Admin->>API: GET /solicitudes (Bearer token)
+        Admin->>API: POST /generar o /rechazar
+        API->>Fiscal: Emisión manual del DTE
+        API->>DB: DocumentoFiscal → EMITIDO / RECHAZADO
+    end
+
+    Note over Cliente,Admin: Estado verificable en cualquier momento: GET /estado (idempotente, sin duplicados)

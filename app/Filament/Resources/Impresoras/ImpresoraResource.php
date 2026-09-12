@@ -151,7 +151,7 @@ class ImpresoraResource extends Resource
                                     ->body('El documento PDF fue generado correctamente.')
                                     ->success()
                                     ->actions([
-                                        \Filament\Notifications\Actions\Action::make('abrir_pdf')
+                                        Action::make('abrir_pdf')
                                             ->label('Abrir PDF')
                                             ->url($pdfUrl, shouldOpenInNewTab: true)
                                             ->button(),

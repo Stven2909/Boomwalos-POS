@@ -1,0 +1,99 @@
+graph TB
+    subgraph "Capa de Interfaz (Filament v5)"
+        Login["Login\n(code+PIN / email+password)"]
+        Dashboard["Dashboard"]
+        ServiceSelection["ServiceSelection\n(Mesa / Para Llevar)"]
+        TableSelection["TableSelection\n(por zona)"]
+        OrderEntry["OrderEntry\n(catálogo + combos + resumen)"]
+        ChargeOrder["ChargeOrder\n(numpad + efectivo/tarjeta)"]
+        ListaPedidos["ListaPedidos\n(abiertos / pendientes / todos)"]
+        Resources["Resources CRUD\n(Productos, Categorías,\nCombos, Mesas, etc.)"]
+        Informes["Informes\n(Ventas, Caja,\nCocina, Actividad)"]
+        PrintMonitor["PrintMonitor\n jobs de impresión)"]
+    end
+
+    subgraph "Capa de Servicios (app/Services)"
+        PedidoSvc["PedidoService\n(crear, agregar,\nenviar cocina, cancelar)"]
+        CobroSvc["CobroService\n(cobrar, validar,\nliberar mesa)"]
+        KitchenSvc["KitchenService\n(máquina de estados\ntanda: PEND→PREP→LISTA→ENTREG)"]
+        CierreCajaSvc["CierreCajaService\n(arqueo transparente,\ntotales, discrepancia)"]
+        ReportesSvc["ReportesService\n(KPIs, métricas,\ntiempos cocina)"]
+        ConfigSvc["ConfiguracionService\n(key-value por sucursal)"]
+        BrandingSvc["BrandingService\n(marca, colores,\nheader/footer ticket)"]
+    end
+
+    subgraph "Capa de Aplicación (app/Application)"
+        SyncCombo["SyncComboOptions\n(catálogo combos)"]
+        QueueKitchen["QueueKitchenBatch\n(impresión comanda)"]
+        QueueTicket["QueueCustomerTicket\n(impresión ticket)"]
+        ReprintTicket["ReprintTicket\n(reimpresión)"]
+        RenderComanda["RenderKitchenComanda\n(CONTENT comanda)"]
+        RenderTicket["RenderCustomerTicket\n(CONTENT ticket)"]
+        FiscalOutbox["FiscalOutboxService\n(outbox pattern)"]
+        FiscalClient["FiscalClient\n(HTTP HMAC)"]
+        FiscalDocSvc["FiscalDocumentoService\n(Factura/CCF)"]
+        FiscalWebhook["FiscalWebhookService\n(reconciliación)"]
+    end
+
+    subgraph "Capa de Contratos (app/Contracts)"
+        TenantCtx["TenantConnectionResolver"]
+        EstCtx["EstablishmentContext"]
+        FiscalGW["FiscalGatewayInterface"]
+        KitchenDisp["KitchenDispatcherInterface"]
+        TicketDisp["CustomerTicketDispatcherInterface"]
+        AuditLog["AuditLoggerInterface"]
+        BrandInt["BrandingServiceInterface"]
+    end
+
+    subgraph "Capa de Persistencia (Models + Migrations)"
+        Pedido["Pedido\n(estado_comercial)"]
+        Tanda["TandaPedido\n(estado_cocina)"]
+        Detalle["DetallePedido\n(producto XOR combo)"]
+        Trabajo["TrabajoImpresion\n(estado impresión)"]
+        Pago["Pago\n(EFECTIVO/TARJETA)"]
+        SesionCaja["SesionCaja\n(abertura/cierre)"]
+        VentaFiscal["VentaFiscalPos\n(estado fiscal)"]
+        Impresora["Impresora\n(TICKET/COMANDA)"]
+    end
+
+    subgraph "Capa de Infraestructura"
+        EscPos["EscPosPrintService\n(ESC/POS nativo)"]
+        PrinterFactory["PrinterConnectorFactory\n(TCP/IP, USB)"]
+        ProcessPrint["ProcessPrintJob\n(Queue, 3 retries)"]
+        FiscalSaleRegistrar["FiscalSaleRegistrar\n(bridge pago→fiscal)"]
+        EnviarFiscal["EnviarVentasFiscalesJob\n(Queue)"]
+        HmacSigner["HmacSigner\n(SHA-256)"]
+    end
+
+    Login --> PedidoSvc
+    ServiceSelection --> PedidoSvc
+    OrderEntry --> PedidoSvc
+    OrderEntry --> SyncCombo
+    ChargeOrder --> CobroSvc
+    ListaPedidos --> PedidoSvc
+
+    PedidoSvc --> Pedido
+    PedidoSvc --> Tanda
+    PedidoSvc --> Detalle
+    PedidoSvc --> QueueKitchen
+    CobroSvc --> Pago
+    CobroSvc --> SesionCaja
+    CobroSvc --> QueueTicket
+    CobroSvc --> FiscalSaleRegistrar
+
+    QueueKitchen --> RenderComanda
+    QueueKitchen --> Trabajo
+    QueueTicket --> RenderTicket
+    QueueTicket --> Trabajo
+    Trabajo --> ProcessPrint
+    ProcessPrint --> EscPos
+    EscPos --> PrinterFactory
+
+    FiscalSaleRegistrar --> FiscalOutbox
+    FiscalOutbox --> EnviarFiscal
+    EnviarFiscal --> FiscalClient
+    FiscalClient --> HmacSigner
+    FiscalClient -->|"HTTP POST"| VentaFiscal
+
+    style Login fill:#6B4E63,color:#fff
+    style Dashboard fill:#6B4E63,color:#fff

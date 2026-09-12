@@ -1,0 +1,65 @@
+graph LR
+    subgraph "Externo"
+        APIFiscal["API Fiscal Externa\n(DTE / MH El Salvador)"]
+        WebFact["WebFact Frontend\n(boomwalos.vercel.app — Smart QR)"]
+    end
+
+    subgraph "Boomwalos POS"
+        subgraph "Paneles Filament"
+            PanelAdmin["Panel Admin\n(/admin)"]
+            PanelPlatform["Panel Platform\n(/platform)"]
+        end
+        subgraph "Módulos POS"
+            Catalogo["Catálogo\nProductos, Combos,\nCategorías"]
+            Ordenes["Órdenes\nPedidoService\nTandaPedido"]
+            Cobro["Cobro\nCobroService\nSesionCaja"]
+            Cocina["Cocina\nKitchenService\nEstado Cocina"]
+            PortalQrAPI["Portal Cliente QR / Admin\n(/v1/portal-qr · /v1/portal-admin\nPortalFiscalService)"]
+        end
+        subgraph "Infraestructura"
+            Impresion["Impresión\nEscPosPrintService\nPdfTicketService (PDF)"]
+            Fiscal["Fiscal\nFiscalOutboxService\nFiscalOnboardingService"]
+            Auditoria["Auditoría\nAuditLogger\nEventoAuditoria"]
+        end
+    end
+
+    subgraph "Hardware"
+        Tiquetera["Tiquetera Térmica\n(TICKET)"]
+        Comanda["Tiquetera Cocina\n(COMANDA)"]
+        PdfVirt["Impresora PDF Virtual\n(dompdf, sin hardware)"]
+    end
+
+    subgraph "Datos"
+        TenantDB[("Tenant DB\n(una por empresa)")]
+        PlatformDB[("Platform DB\n(registro tenants)")]
+    end
+
+    PanelAdmin --> Catalogo
+    PanelAdmin --> Ordenes
+    PanelAdmin --> Cobro
+    PanelAdmin --> Cocina
+    PanelPlatform --> TenantDB
+
+    Cobro --> Impresion
+    Cobro --> Fiscal
+    Ordenes --> Cocina
+    Ordenes --> PortalQrAPI
+
+    Impresion -->|"TCP/IP · USB"| Tiquetera
+    Impresion -->|"TCP/IP · USB"| Comanda
+    Impresion -->|"PDF"| PdfVirt
+    Fiscal -->|"HMAC-SHA256 /api/v1/pos/emitir"| APIFiscal
+    PortalQrAPI -->|"consulta estado DTE"| APIFiscal
+    WebFact -->|"HTTP JSON (tracking)"| PortalQrAPI
+
+    Ordenes --> TenantDB
+    Cobro --> TenantDB
+    Auditoria --> TenantDB
+    PortalQrAPI --> TenantDB
+
+    style APIFiscal fill:#f9f,stroke:#333
+    style WebFact fill:#e7f5e7,stroke:#333
+    style PortalQrAPI fill:#e7f5e7,stroke:#333
+    style PdfVirt fill:#fff2cc,stroke:#333
+    style PanelAdmin fill:#6B4E63,color:#fff
+    style PanelPlatform fill:#6B4E63,color:#fff
