@@ -77,8 +77,8 @@ class PortalQrController extends Controller
     public function solicitar(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'trackingPOS' => 'required|string',
-            'tipoDTE' => 'nullable|string',
+            'trackingPOS' => 'required|string|max:50',
+            'tipoDTE' => 'required|string|in:01,03',
             'nombre' => 'required|string|max:200',
             'nit' => 'nullable|string|max:30',
             'nrc' => 'nullable|string|max:30',
@@ -87,8 +87,8 @@ class PortalQrController extends Controller
             'telefono' => 'required|string|max:30',
             'giro' => 'nullable|string|max:250',
             'direccion' => 'nullable|string|max:300',
-            'departamento' => 'nullable|string|max:100',
-            'municipio' => 'nullable|string|max:100',
+            'departamento' => 'nullable|string|max:10',
+            'municipio' => 'nullable|string|max:10',
         ]);
 
         $resultado = $this->portalFiscalService->procesarSolicitudCliente($validated);

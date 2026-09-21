@@ -12,6 +12,7 @@ use App\Models\DocumentoFiscal;
 use App\Models\Establecimiento;
 use App\Models\Pedido;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Str;
@@ -26,6 +27,7 @@ class PortalFiscalService
     public function __construct(
         private readonly FiscalGatewayInterface $fiscalGateway,
         private readonly EstablishmentContextInterface $establishmentContext,
+        private readonly PortalFiscalValidator $fiscalValidator,
     ) {}
 
     /**
@@ -141,11 +143,24 @@ class PortalFiscalService
             ? (float) bcsub((string) $pedido->pago->monto_recibido, (string) ($pedido->pago->cambio_devuelto ?? 0), 2)
             : $totalCalculado;
 
+        $esPlazoValido = true;
+        $motivoInvalido = null;
+        try {
+            $this->fiscalValidator->validarPlazoFiscal($pedido);
+        } catch (ValidationException $e) {
+            $esPlazoValido = false;
+            $motivoInvalido = collect($e->validator->errors()->all())->first() ?? 'Plazo de emisión de factura expirado.';
+        }
+
         return [
             'id' => $pedido->getKey(),
             'tracking_number' => $pedido->numero_seguimiento,
             'codigo_corto' => $pedido->codigo_corto,
             'fecha' => $pedido->created_at?->format('d/m/Y h:i A') ?? now()->format('d/m/Y h:i A'),
+            'fecha_raw' => $pedido->created_at?->toIso8601String(),
+            'plazo_valido' => $esPlazoValido,
+            'motivo_invalido' => $motivoInvalido,
+            'requiere_identificacion_art119' => ($totalFinal >= 200.00),
             'cliente' => $docFiscal?->datos_solicitante['nombre'] ?? 'Consumidor Final',
             'establecimiento' => $pedido->establecimiento?->nombre,
             'estado_comercial' => $pedido->estado_comercial?->value,
@@ -211,10 +226,13 @@ class PortalFiscalService
     }
 
     /**
-     * Procesa la solicitud enviada por un cliente desde WebFact.
+     * Procesa la solicitud enviada por un cliente desde WebFact con validaciones fiscales y candado atómico.
      */
     public function procesarSolicitudCliente(array $datos): array
     {
+        // 1. Sanitizar todos los datos de entrada contra XSS e inyecciones
+        $datos = $this->fiscalValidator->sanitizarDatos($datos);
+
         $tracking = trim((string) ($datos['trackingPOS'] ?? ''));
         if ($tracking === '') {
             return ['success' => false, 'message' => 'El número de tracking es obligatorio.'];
@@ -233,77 +251,112 @@ class PortalFiscalService
             ->first();
 
         if (! $pedido) {
-            return ['success' => false, 'message' => 'No se encontró la orden solicitada.'];
+            return ['success' => false, 'message' => 'No se encontró la orden solicitada. Verifica tu ticket de compra.'];
         }
 
-        // Mapear tipo de documento
-        $codigoDte = (string) ($datos['tipoDTE'] ?? '01');
-        $tipoDocumento = match ($codigoDte) {
-            '03', 'CCF' => TipoDocumento::CCF,
-            default => TipoDocumento::FACTURA,
-        };
-
-        // Verificar si ya existe documento fiscal emitido
-        $docExistente = DocumentoFiscal::query()
-            ->where('pedido_id', $pedido->getKey())
-            ->where('estado', EstadoDocumentoFiscal::EMITIDO)
-            ->first();
-
-        if ($docExistente) {
+        // 2. Candado Atómico contra condiciones de carrera y doble emisión
+        $lock = Cache::lock("dte_portal_pedido_{$pedido->getKey()}", 15);
+        if (! $lock->get()) {
             return [
-                'success' => true,
-                'estado' => 'EMITIDO',
-                'message' => 'Esta orden ya cuenta con factura electrónica emitida.',
-                'dte' => [
-                    'codigo_generacion' => $docExistente->codigo_generacion,
-                    'sello_recepcion' => $docExistente->sello_recepcion,
-                    'numero_control' => $docExistente->numero_control,
-                ],
+                'success' => false,
+                'message' => 'Existe una solicitud en procesamiento para esta orden. Por favor espera un momento.',
             ];
         }
 
-        $datosCliente = [
-            'nombre' => trim((string) ($datos['nombre'] ?? 'Consumidor Final')),
-            'nit' => trim((string) ($datos['nit'] ?? $datos['dui'] ?? '')),
-            'nrc' => trim((string) ($datos['nrc'] ?? '')),
-            'dui' => trim((string) ($datos['dui'] ?? '')),
-            'email' => trim((string) ($datos['email'] ?? '')),
-            'telefono' => trim((string) ($datos['telefono'] ?? '')),
-            'giro' => trim((string) ($datos['giro'] ?? '')),
-            'direccion' => trim((string) ($datos['direccion'] ?? '')),
-            'departamento' => trim((string) ($datos['departamento'] ?? '')),
-            'municipio' => trim((string) ($datos['municipio'] ?? '')),
-            'tipo_dte_codigo' => $codigoDte,
-        ];
+        try {
+            // 3. Verificar si ya existe documento fiscal emitido
+            $docExistente = DocumentoFiscal::query()
+                ->where('pedido_id', $pedido->getKey())
+                ->where('estado', EstadoDocumentoFiscal::EMITIDO)
+                ->first();
 
-        $modo = $this->obtenerModoEmision($pedido->establecimiento_id);
+            if ($docExistente) {
+                return [
+                    'success' => true,
+                    'estado' => 'EMITIDO',
+                    'message' => 'Esta orden ya cuenta con factura electrónica emitida.',
+                    'dte' => [
+                        'codigo_generacion' => $docExistente->codigo_generacion,
+                        'sello_recepcion' => $docExistente->sello_recepcion,
+                        'numero_control' => $docExistente->numero_control,
+                    ],
+                ];
+            }
 
-        // Decidir si emite automáticamente o pasa a validación manual
-        $debeEmitirAutomatico = ($modo === self::MODO_AUTOMATICO) || ($modo === self::MODO_HIBRIDO && $tipoDocumento === TipoDocumento::FACTURA);
+            // 4. Validar plazo de facturación y período mensual IVA (Anti-Fraude y Cierre Fiscal F-07)
+            $this->fiscalValidator->validarPlazoFiscal($pedido);
 
-        if ($debeEmitirAutomatico) {
-            return $this->emitirDteDirecto($pedido, $tipoDocumento, $datosCliente);
+            // 5. Mapear tipo de documento (Exclusivamente Factura 01 o CCF 03)
+            $codigoDte = (string) ($datos['tipoDTE'] ?? '01');
+            $tipoDocumento = match ($codigoDte) {
+                '03', 'CCF' => TipoDocumento::CCF,
+                default => TipoDocumento::FACTURA,
+            };
+
+            $datosCliente = [
+                'nombre' => trim((string) ($datos['nombre'] ?? 'Consumidor Final')),
+                'nit' => trim((string) ($datos['nit'] ?? $datos['dui'] ?? '')),
+                'nrc' => trim((string) ($datos['nrc'] ?? '')),
+                'dui' => trim((string) ($datos['dui'] ?? '')),
+                'email' => trim((string) ($datos['email'] ?? '')),
+                'telefono' => trim((string) ($datos['telefono'] ?? '')),
+                'giro' => trim((string) ($datos['giro'] ?? '')),
+                'direccion' => trim((string) ($datos['direccion'] ?? '')),
+                'departamento' => trim((string) ($datos['departamento'] ?? '')),
+                'municipio' => trim((string) ($datos['municipio'] ?? '')),
+                'tipo_dte_codigo' => $codigoDte,
+            ];
+
+            // Calcular monto total real de la orden
+            $totalMonto = $pedido->pago?->monto_recibido !== null
+                ? (float) bcsub((string) $pedido->pago->monto_recibido, (string) ($pedido->pago->cambio_devuelto ?? 0), 2)
+                : (float) $pedido->detalles->sum(fn ($d) => ((int) $d->cantidad) * ((float) $d->precio_unitario));
+
+            // 6. Validaciones fiscales específicas por ley
+            if ($tipoDocumento === TipoDocumento::CCF) {
+                $this->fiscalValidator->validarCreditoFiscalArt114($datosCliente);
+            } else {
+                $this->fiscalValidator->validarArticulo119($totalMonto, $datosCliente);
+            }
+
+            $modo = $this->obtenerModoEmision($pedido->establecimiento_id);
+
+            // En modo HÍBRIDO: Facturas < $200 se emiten automáticas; Facturas >= $200 y CCF van a supervisión (PENDIENTE)
+            $debeEmitirAutomatico = ($modo === self::MODO_AUTOMATICO)
+                || ($modo === self::MODO_HIBRIDO && $tipoDocumento === TipoDocumento::FACTURA && $totalMonto < 200.00);
+
+            if ($debeEmitirAutomatico) {
+                return $this->emitirDteDirecto($pedido, $tipoDocumento, $datosCliente);
+            }
+
+            // Modo Manual o Híbrido supervisado: Registrar solicitud como PENDIENTE
+            $docFiscal = DocumentoFiscal::updateOrCreate(
+                [
+                    'pedido_id' => $pedido->getKey(),
+                    'tipo_documento' => $tipoDocumento,
+                ],
+                [
+                    'estado' => EstadoDocumentoFiscal::PENDIENTE,
+                    'datos_solicitante' => $datosCliente,
+                    'solicitado_at' => now(),
+                ],
+            );
+
+            return [
+                'success' => true,
+                'estado' => 'PENDIENTE',
+                'message' => 'Solicitud registrada correctamente. Nuestro equipo validará los datos fiscales y emitirá su comprobante a la brevedad.',
+                'solicitud_id' => $docFiscal->getKey(),
+            ];
+        } catch (ValidationException $e) {
+            return [
+                'success' => false,
+                'message' => collect($e->validator->errors()->all())->first() ?? 'Datos fiscales inválidos.',
+                'errors' => $e->validator->errors()->toArray(),
+            ];
+        } finally {
+            $lock->release();
         }
-
-        // Modo Manual: Registrar solicitud como PENDIENTE
-        $docFiscal = DocumentoFiscal::updateOrCreate(
-            [
-                'pedido_id' => $pedido->getKey(),
-                'tipo_documento' => $tipoDocumento,
-            ],
-            [
-                'estado' => EstadoDocumentoFiscal::PENDIENTE,
-                'datos_solicitante' => $datosCliente,
-                'solicitado_at' => now(),
-            ],
-        );
-
-        return [
-            'success' => true,
-            'estado' => 'PENDIENTE',
-            'message' => 'Solicitud registrada correctamente. Nuestro equipo validará los datos y emitirá su comprobante.',
-            'solicitud_id' => $docFiscal->getKey(),
-        ];
     }
 
     /**
@@ -350,6 +403,9 @@ class PortalFiscalService
                 'email' => ! empty($datosCliente['email']) ? $datosCliente['email'] : null,
                 'telefono' => ! empty($datosCliente['telefono']) ? $datosCliente['telefono'] : null,
                 'direccion' => ! empty($datosCliente['direccion']) ? $datosCliente['direccion'] : null,
+                'giro' => ! empty($datosCliente['giro']) ? $datosCliente['giro'] : null,
+                'departamento' => ! empty($datosCliente['departamento']) ? $datosCliente['departamento'] : null,
+                'municipio' => ! empty($datosCliente['municipio']) ? $datosCliente['municipio'] : null,
             ], fn ($v) => $v !== null),
             'items' => $items,
             'clave_reintento' => $clave,
