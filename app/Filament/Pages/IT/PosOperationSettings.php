@@ -15,6 +15,8 @@ use App\Models\Impresora;
 use App\Models\Mesa;
 use App\Models\SesionCaja;
 use App\Services\ConfiguracionFlujosPosService;
+use App\Services\ConfiguracionService;
+use App\Services\Gaveta\RegistradoraSincronizacionService;
 use App\Services\PoliticaFlujosPos;
 use App\ValueObjects\ConfiguracionFlujosPos;
 use Filament\Notifications\Notification;
@@ -46,6 +48,10 @@ class PosOperationSettings extends Page
     public bool $mesaPostpago = true;
 
     public string $predeterminado = FlujoPos::MOSTRADOR_PREPAGO->value;
+
+    public bool $gavetaAuto = false;
+
+    public bool $gavetaExigir = true;
 
     public ?string $feedback = null;
 
@@ -97,6 +103,20 @@ class PosOperationSettings extends Page
         }
     }
 
+    public function toggleGavetaAuto(): void
+    {
+        $this->gavetaAuto = ! $this->gavetaAuto;
+
+        if (! $this->gavetaAuto) {
+            $this->gavetaExigir = true;
+        }
+    }
+
+    public function toggleGavetaExigir(): void
+    {
+        $this->gavetaExigir = ! $this->gavetaExigir;
+    }
+
     public function save(): void
     {
         try {
@@ -108,6 +128,16 @@ class PosOperationSettings extends Page
             ], auth()->user());
 
             $this->fillFromSettings($settings);
+
+            app(ConfiguracionService::class)->set(
+                RegistradoraSincronizacionService::CONFIG_MODO,
+                $this->gavetaAuto ? RegistradoraSincronizacionService::MODO_AUTO : RegistradoraSincronizacionService::MODO_MANUAL,
+            );
+            app(ConfiguracionService::class)->set(
+                RegistradoraSincronizacionService::CONFIG_EXIGIR,
+                $this->gavetaExigir,
+            );
+
             $this->feedback = null;
 
             Notification::make()
@@ -170,6 +200,11 @@ class PosOperationSettings extends Page
     private function loadSettings(): void
     {
         $this->fillFromSettings(app(PoliticaFlujosPos::class)->actual());
+
+        $configuracion = app(ConfiguracionService::class);
+        $this->gavetaAuto = $configuracion->get(RegistradoraSincronizacionService::CONFIG_MODO, RegistradoraSincronizacionService::MODO_MANUAL)
+            === RegistradoraSincronizacionService::MODO_AUTO;
+        $this->gavetaExigir = (bool) $configuracion->get(RegistradoraSincronizacionService::CONFIG_EXIGIR, true);
     }
 
     private function fillFromSettings(ConfiguracionFlujosPos $settings): void

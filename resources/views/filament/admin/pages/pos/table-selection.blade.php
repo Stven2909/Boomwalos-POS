@@ -7,6 +7,7 @@
             'backLabel' => $entryMode === 'mesas' ? 'Dashboard' : 'Servicio',
             'centerLabel' => $this->operationContext(),
             'rightLabel' => $this->actorName() . ' · MESAS',
+            'showGavetaButton' => true,
         ])
 
         <main class="bw-pos-table-main">

@@ -3,6 +3,7 @@
         @include('filament.admin.components.pos-header', [
             'centerLabel' => $this->operationContext(),
             'rightLabel' => $this->actorName(),
+            'showGavetaButton' => true,
         ])
 
         <main class="bw-pos-service-main">

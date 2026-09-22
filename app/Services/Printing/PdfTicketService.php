@@ -2,7 +2,9 @@
 
 namespace App\Services\Printing;
 
+use App\Enums\TipoTrabajoImpresion;
 use App\Models\TrabajoImpresion;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Dompdf\Dompdf;
 use Dompdf\Options;
 use Illuminate\Http\Response;
@@ -21,7 +23,7 @@ class PdfDocument
     {
         return response($this->content, 200, [
             'Content-Type' => 'application/pdf',
-            'Content-Disposition' => 'inline; filename="' . $filename . '"',
+            'Content-Disposition' => 'inline; filename="'.$filename.'"',
         ]);
     }
 }
@@ -52,9 +54,9 @@ class PdfTicketService
 
         $pdfBinary = '';
 
-        if (class_exists(\Barryvdh\DomPDF\Facade\Pdf::class)) {
+        if (class_exists(Pdf::class)) {
             try {
-                $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadHTML($html)
+                $pdf = Pdf::loadHTML($html)
                     ->setPaper([0, 0, $anchoPt, $altoPt], 'portrait')
                     ->setOptions([
                         'font_dir' => $fontDir,
@@ -73,7 +75,7 @@ class PdfTicketService
         }
 
         if ($pdfBinary === '') {
-            $options = new Options();
+            $options = new Options;
             $options->set('fontDir', $fontDir);
             $options->set('fontCache', $fontDir);
             $options->set('tempDir', sys_get_temp_dir());
@@ -95,7 +97,7 @@ class PdfTicketService
 
     public function saveForJob(TrabajoImpresion $job): string
     {
-        $titulo = ($job->isTicket() ? 'Ticket #' : 'Comanda #') . $job->getKey();
+        $titulo = $this->tituloPara($job);
         $doc = $this->renderToPdf($job->contenido ?? '', $titulo);
         $fileName = "impresiones/trabajo-{$job->getKey()}.pdf";
 
@@ -106,10 +108,19 @@ class PdfTicketService
 
     public function streamJobPdf(TrabajoImpresion $job): Response
     {
-        $titulo = ($job->isTicket() ? 'Ticket #' : 'Comanda #') . $job->getKey();
+        $titulo = $this->tituloPara($job);
         $doc = $this->renderToPdf($job->contenido ?? '', $titulo);
 
         return $doc->stream("{$titulo}.pdf");
+    }
+
+    private function tituloPara(TrabajoImpresion $job): string
+    {
+        return match ($job->tipo_trabajo) {
+            TipoTrabajoImpresion::CORTE_CAJA => "Corte de caja #{$job->getKey()}",
+            TipoTrabajoImpresion::TICKET => "Ticket #{$job->getKey()}",
+            default => "Comanda #{$job->getKey()}",
+        };
     }
 
     public function generateTestPdf(string $nombreImpresora, string $tipo): PdfDocument
@@ -121,7 +132,7 @@ class PdfTicketService
             '--------------------------------',
             "IMPRESORA: {$nombreImpresora}",
             "TIPO: {$tipo}",
-            "CONEXION: SIMULADOR PDF",
+            'CONEXION: SIMULADOR PDF',
             "FECHA: {$fecha}",
             '--------------------------------',
             'ESTADO: CONEXION VIRTUAL OK',

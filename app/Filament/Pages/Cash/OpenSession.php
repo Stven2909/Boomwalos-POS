@@ -3,10 +3,12 @@
 namespace App\Filament\Pages\Cash;
 
 use App\Contracts\EstablishmentContextInterface;
+use App\Filament\Pages\Dashboard;
 use App\Filament\Pages\Pos\ServiceSelection;
 use App\Models\Establecimiento;
 use App\Models\EventoAuditoria;
 use App\Models\SesionCaja;
+use App\Services\Gaveta\RegistradoraSincronizacionService;
 use Filament\Pages\Page;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -22,6 +24,8 @@ class OpenSession extends Page
     protected string $view = 'filament.admin.pages.cash.open-session';
 
     public string $montoInicial = '0.00';
+
+    public bool $checkpointVisible = false;
 
     public function getOperationContextProperty(): string
     {
@@ -96,7 +100,32 @@ class OpenSession extends Page
                     ],
                 ]);
             }
+            if ($this->activeSession()) {
+                $checkpoint = app(RegistradoraSincronizacionService::class)
+                    ->registrarApertura($establecimientoId, auth()->user(), $this->activeSession()?->getKey());
+
+                if ($checkpoint['checkpoint']) {
+                    $this->checkpointVisible = true;
+
+                    return;
+                }
+            }
         });
+
+        $this->redirect(ServiceSelection::getUrl());
+    }
+
+    public function confirmarGavetaAbierta(): void
+    {
+        $sesion = $this->activeSession();
+
+        if (! $sesion) {
+            $this->redirect(Dashboard::getUrl());
+
+            return;
+        }
+
+        app(RegistradoraSincronizacionService::class)->confirmarApertura($sesion, auth()->user());
 
         $this->redirect(ServiceSelection::getUrl());
     }

@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Contracts\EstablishmentContextInterface;
 use App\Enums\EstadoComercialPedido;
+use App\Enums\EstadoLineaPedido;
 use App\Enums\MetodoPago;
 use App\Models\Establecimiento;
 use App\Models\EventoAuditoria;
@@ -11,6 +12,7 @@ use App\Models\Pago;
 use App\Models\Pedido;
 use App\Models\SesionCaja;
 use App\Models\User;
+use App\Services\Gaveta\RegistradoraSincronizacionService;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -20,6 +22,7 @@ class CierreCajaService
     public function __construct(
         private readonly EstablishmentContextInterface $establishmentContext,
         private readonly PedidoService $pedidoService,
+        private readonly RegistradoraSincronizacionService $registradoraSync,
     ) {}
 
     public function calcularEsperado(SesionCaja $sesion): string
@@ -65,7 +68,7 @@ class CierreCajaService
             throw new AuthorizationException('La caja no pertenece a la sucursal activa.');
         }
 
-        return DB::transaction(function () use ($sesion, $efectivoContado, $actor): SesionCaja {
+        $cerrada = DB::transaction(function () use ($sesion, $efectivoContado, $actor): SesionCaja {
             Establecimiento::query()
                 ->lockForUpdate()
                 ->findOrFail($sesion->establecimiento_id);
@@ -110,6 +113,10 @@ class CierreCajaService
 
             return $sesion->fresh(['usuarioApertura', 'usuarioCierre']);
         });
+
+        $this->registradoraSync->registrarCierre($cerrada, $actor);
+
+        return $cerrada;
     }
 
     private function ensureNoOpenOrders(SesionCaja $sesion): void
@@ -120,7 +127,7 @@ class CierreCajaService
                 EstadoComercialPedido::ABIERTO->value,
                 EstadoComercialPedido::PENDIENTE_COBRO->value,
             ])
-            ->whereHas('detalles', fn ($query) => $query->where('estado_linea', \App\Enums\EstadoLineaPedido::ACTIVA->value))
+            ->whereHas('detalles', fn ($query) => $query->where('estado_linea', EstadoLineaPedido::ACTIVA->value))
             ->count();
 
         if ($openOrders > 0) {

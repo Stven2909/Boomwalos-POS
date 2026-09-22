@@ -59,6 +59,13 @@
                             </div>
                         @endif
 
+                        @if ($this->requerirConfirmacionGaveta)
+                            <label class="bw-cash-gaveta-confirm">
+                                <input type="checkbox" wire:model.live="gavetaCerrada">
+                                <span>Confirmo que la gaveta de dinero quedó cerrada y el efectivo resguardado.</span>
+                            </label>
+                        @endif
+
                         <button
                             type="submit"
                             wire:confirm="¿Seguro que quieres cerrar el turno? Se cerrará tu sesión."

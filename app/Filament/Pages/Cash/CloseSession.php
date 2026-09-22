@@ -6,6 +6,7 @@ use App\Contracts\EstablishmentContextInterface;
 use App\Filament\Pages\Dashboard;
 use App\Models\SesionCaja;
 use App\Services\CierreCajaService;
+use App\Services\Gaveta\RegistradoraSincronizacionService;
 use Filament\Facades\Filament;
 use Filament\Pages\Page;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -24,6 +25,13 @@ class CloseSession extends Page
     public string $efectivoContado = '0.00';
 
     public ?string $feedback = null;
+
+    public bool $gavetaCerrada = false;
+
+    public function getRequerirConfirmacionGavetaProperty(): bool
+    {
+        return app(RegistradoraSincronizacionService::class)->requiereConfirmacionCierre();
+    }
 
     public static function canAccess(): bool
     {
@@ -100,6 +108,12 @@ class CloseSession extends Page
 
         if (! $sesion) {
             $this->redirect(Dashboard::getUrl());
+
+            return;
+        }
+
+        if ($this->requerirConfirmacionGaveta && ! $this->gavetaCerrada) {
+            $this->feedback = 'Confirma que cerraste la gaveta de dinero y resguardaste el efectivo antes de firmar el cierre.';
 
             return;
         }

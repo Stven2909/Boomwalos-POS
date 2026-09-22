@@ -71,6 +71,7 @@
                 ? 'MESA ' . $pedido->mesa?->numero . ' · EN EL LOCAL'
                 : 'PARA LLEVAR · MOSTRADOR',
             'rightLabel' => $this->actorName() . ' · ' . ($pedido->codigoCortoLabel() ?: 'ORDEN'),
+            'showGavetaButton' => true,
         ])
 
         <main class="bw-pos-order-main">

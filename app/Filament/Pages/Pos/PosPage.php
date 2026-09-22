@@ -7,6 +7,8 @@ use App\Filament\Pages\Cash\OpenSession;
 use App\Filament\Pages\EstablishmentSelection;
 use App\Models\Establecimiento;
 use App\Models\SesionCaja;
+use App\Services\Gaveta\RegistradoraSincronizacionService;
+use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 
 abstract class PosPage extends Page
@@ -87,5 +89,33 @@ abstract class PosPage extends Page
     protected function money(float|int|string $amount): string
     {
         return '$'.number_format((float) $amount, 2, '.', ',');
+    }
+
+    public function abrirGaveta(): void
+    {
+        $establishment = $this->establishmentOrNull();
+
+        if (! $establishment) {
+            Notification::make()
+                ->danger()
+                ->title('Configura la sucursal antes de abrir la gaveta.')
+                ->send();
+
+            return;
+        }
+
+        $resultado = app(RegistradoraSincronizacionService::class)
+            ->abrirManual($establishment->getKey(), auth()->user());
+
+        if ($resultado['pulso']) {
+            Notification::make()
+                ->success()
+                ->title('La gaveta de dinero se abrió.')
+                ->send();
+        } else {
+            Notification::make()
+                ->title($resultado['mensaje'])
+                ->send();
+        }
     }
 }

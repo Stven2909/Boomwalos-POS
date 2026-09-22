@@ -73,12 +73,18 @@ body:has(.bw-pos-page) .fi-page-content {
 }
 
 .bw-pos-header-brand,
+.bw-pos-header-right,
 .bw-pos-header-session,
 .bw-pos-header-context,
 .bw-pos-brand,
 .bw-pos-back-link {
     display: inline-flex;
     align-items: center;
+}
+
+.bw-pos-header-right {
+    justify-content: flex-end;
+    gap: 14px;
 }
 
 .bw-pos-header-session {
@@ -97,6 +103,28 @@ body:has(.bw-pos-page) .fi-page-content {
     border: 2px solid var(--bw-primary);
     border-radius: 50%;
     background: var(--bw-secondary);
+}
+
+.bw-pos-gaveta-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border: 1px solid #d7d0da;
+    border-radius: 10px;
+    background: #fff;
+    color: var(--bw-primary);
+    cursor: pointer;
+    outline-offset: 2px;
+    transition: background-color 150ms ease, border-color 150ms ease, transform 150ms ease;
+}
+
+.bw-pos-gaveta-button:hover,
+.bw-pos-gaveta-button:focus-visible {
+    border-color: var(--bw-primary);
+    background: var(--bw-secondary);
+    transform: translateY(-1px);
 }
 
 .bw-pos-brand {
@@ -2578,6 +2606,43 @@ body:has(.bw-pos-page) .fi-page-content {
 
 .bw-cash-opening-form .bw-pos-primary-button {
     margin-top: 10px;
+}
+
+.bw-cash-gaveta-checkpoint {
+    display: grid;
+    gap: 18px;
+    margin-top: 28px;
+}
+
+.bw-cash-gaveta-checkpoint p {
+    margin: 0;
+    color: #202027;
+    font-size: 15px;
+    line-height: 1.55;
+}
+
+.bw-cash-gaveta-confirm {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 16px;
+    cursor: pointer;
+    color: #202027;
+}
+
+.bw-cash-gaveta-confirm input {
+    width: 20px;
+    height: 20px;
+    accent-color: var(--bw-primary);
+    cursor: pointer;
+}
+
+.bw-cash-gaveta-confirm span {
+    color: #202027;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: normal;
+    text-transform: none;
 }
 
 .bw-cash-summary-row {

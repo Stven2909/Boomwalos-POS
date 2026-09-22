@@ -4,6 +4,7 @@
             'backUrl' => \App\Filament\Pages\Pos\ServiceSelection::getUrl(),
             'backLabel' => 'Inicio',
             'rightLabel' => $this->actorName() . ' · CONSULTA DE PEDIDOS',
+            'showGavetaButton' => true,
         ])
 
         <main class="bw-pos-service-main bw-pos-orders-main">

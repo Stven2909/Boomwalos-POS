@@ -356,6 +356,7 @@ class CashCloseFlowTest extends TestCase
             ->test(CloseSession::class)
             ->assertSee('$104.00')
             ->set('efectivoContado', '104.00')
+            ->set('gavetaCerrada', true)
             ->call('closeSession')
             ->assertHasNoErrors()
             ->assertRedirect(Filament::getLoginUrl());
@@ -421,6 +422,7 @@ class CashCloseFlowTest extends TestCase
             ->assertSet('diferencia', '-0.50');
 
         $component
+            ->set('gavetaCerrada', true)
             ->call('closeSession')
             ->assertHasNoErrors();
 

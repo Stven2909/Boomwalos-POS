@@ -17,23 +17,33 @@
                     </div>
                 @endif
 
-                <form wire:submit="openSession" class="bw-cash-opening-form">
-                    <label for="montoInicial">Monto inicial</label>
-                    <div class="bw-cash-amount-field">
-                        <span>$</span>
-                        <input id="montoInicial" type="number" min="0" step="0.01" wire:model="montoInicial" inputmode="decimal" autocomplete="off">
+                @unless ($this->checkpointVisible)
+                    <form wire:submit="openSession" class="bw-cash-opening-form">
+                        <label for="montoInicial">Monto inicial</label>
+                        <div class="bw-cash-amount-field">
+                            <span>$</span>
+                            <input id="montoInicial" type="number" min="0" step="0.01" wire:model="montoInicial" inputmode="decimal" autocomplete="off">
+                        </div>
+                        @error('montoInicial')
+                            <span class="bw-pos-feedback is-error" role="alert">{{ $message }}</span>
+                        @enderror
+
+                        <button type="submit" class="bw-pos-primary-button">
+                            Abrir turno
+                            <x-heroicon-o-arrow-right class="h-5 w-5" />
+                        </button>
+                    </form>
+
+                    <a href="{{ \App\Filament\Pages\Dashboard::getUrl() }}" class="bw-pos-secondary-button">Volver al inicio</a>
+                @else
+                    <div class="bw-cash-gaveta-checkpoint" role="status">
+                        <p>Turno abierto. Abre la gaveta de dinero con la llave, acomoda el monto inicial y confirma para continuar.</p>
+                        <button type="button" wire:click="confirmarGavetaAbierta" class="bw-pos-primary-button">
+                            Gaveta abierta
+                            <x-heroicon-o-arrow-right class="h-5 w-5" />
+                        </button>
                     </div>
-                    @error('montoInicial')
-                        <span class="bw-pos-feedback is-error" role="alert">{{ $message }}</span>
-                    @enderror
-
-                    <button type="submit" class="bw-pos-primary-button">
-                        Abrir turno
-                        <x-heroicon-o-arrow-right class="h-5 w-5" />
-                    </button>
-                </form>
-
-                <a href="{{ \App\Filament\Pages\Dashboard::getUrl() }}" class="bw-pos-secondary-button">Volver al inicio</a>
+                @endunless
             </section>
         </main>
     </div>

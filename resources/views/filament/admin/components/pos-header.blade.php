@@ -4,6 +4,7 @@
     'backUrl' => null,
     'backAction' => null,
     'backLabel' => 'Servicio',
+    'showGavetaButton' => false,
 ])
 
 <header class="bw-pos-header">
@@ -33,8 +34,22 @@
         </div>
     @endif
 
-    <div class="bw-pos-header-session">
-        <span>{{ $rightLabel }}</span>
-        <span class="bw-pos-session-dot" aria-hidden="true"></span>
+    <div class="bw-pos-header-right">
+        @if ($showGavetaButton)
+            <button
+                type="button"
+                wire:click="abrirGaveta"
+                class="bw-pos-gaveta-button"
+                title="Abrir gaveta de dinero"
+                aria-label="Abrir gaveta de dinero"
+            >
+                <x-heroicon-o-banknotes class="h-6 w-6" />
+            </button>
+        @endif
+
+        <div class="bw-pos-header-session">
+            <span>{{ $rightLabel }}</span>
+            <span class="bw-pos-session-dot" aria-hidden="true"></span>
+        </div>
     </div>
 </header>

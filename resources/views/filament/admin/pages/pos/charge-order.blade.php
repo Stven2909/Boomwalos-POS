@@ -7,6 +7,7 @@
                 ? 'MESA ' . $pedido->mesa->numero . ' · COBRO'
                 : 'PARA LLEVAR · COBRO',
             'rightLabel' => 'PASO 4 DE 5 · COBRAR',
+            'showGavetaButton' => true,
         ])
 
         <main class="bw-pos-charge-main">

@@ -4,7 +4,6 @@ namespace App\Filament\Pages\Printing;
 
 use App\Contracts\EstablishmentContextInterface;
 use App\Enums\EstadoImpresion;
-use App\Enums\TipoTrabajoImpresion;
 use App\Jobs\ProcessPrintJob;
 use App\Models\TrabajoImpresion;
 use Filament\Pages\Page;
@@ -50,6 +49,7 @@ class PrintMonitor extends Page
 
         if (! $job) {
             $this->feedback = 'El trabajo no se encontró o no está en estado de error.';
+
             return;
         }
 
@@ -69,7 +69,7 @@ class PrintMonitor extends Page
         }
 
         $count = $failedJobs->count();
-        $this->feedback = "{$count} " . ($count === 1 ? 'trabajo reenviado' : 'trabajos reenviados') . ' a la cola de impresión.';
+        $this->feedback = "{$count} ".($count === 1 ? 'trabajo reenviado' : 'trabajos reenviados').' a la cola de impresión.';
     }
 
     public function getJobsProperty(): Collection
@@ -110,6 +110,7 @@ class PrintMonitor extends Page
             'all' => 'Todos',
             'COMANDA' => 'Comanda',
             'TICKET' => 'Ticket',
+            'CORTE_CAJA' => 'Corte de caja',
         ];
     }
 
@@ -117,6 +118,7 @@ class PrintMonitor extends Page
     {
         return $this->scopedJobs()->where('estado', EstadoImpresion::ERROR)->count();
     }
+
     private function scopedJobs(): Builder
     {
         $context = app(EstablishmentContextInterface::class);
@@ -126,7 +128,10 @@ class PrintMonitor extends Page
             : $context->accessible()->pluck('id')->all();
 
         return TrabajoImpresion::query()
-            ->whereHas('pedido', fn (Builder $query) => $query->whereIn('establecimiento_id', $establishmentIds));
+            ->where(function (Builder $query) use ($establishmentIds) {
+                $query
+                    ->whereHas('pedido', fn (Builder $sub) => $sub->whereIn('establecimiento_id', $establishmentIds))
+                    ->orWhereHas('impresora', fn (Builder $sub) => $sub->whereIn('establecimiento_id', $establishmentIds));
+            });
     }
-
 }

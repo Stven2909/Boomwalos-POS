@@ -15,6 +15,9 @@ class ConfiguracionService
         'pos.flujos_operativos' => 'array',
         'moneda.simbolo' => 'string',
         'impresion.ticket_activo' => 'boolean',
+        'gaveta.modo' => 'string',
+        'gaveta.exigir_confirmacion' => 'boolean',
+        'gaveta.impresora_id' => 'integer',
     ];
 
     public function get(string $clave, mixed $default = null): mixed

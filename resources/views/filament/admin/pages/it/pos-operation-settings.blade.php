@@ -65,6 +65,35 @@
                     </label>
                 </section>
 
+                <section class="bw-ti-section" aria-labelledby="gaveta-title">
+                    <div class="bw-ti-section-heading">
+                        <div>
+                            <h2 id="gaveta-title">Gaveta de dinero / Registradora</h2>
+                            <p>Controla la apertura y cierre del cajón en el flujo del turno.</p>
+                        </div>
+                    </div>
+
+                    <div class="bw-ti-flow-list">
+                        <button type="button" wire:click="toggleGavetaAuto" class="bw-ti-flow {{ $gavetaAuto ? 'is-enabled' : '' }}" aria-pressed="{{ $gavetaAuto ? 'true' : 'false' }}">
+                            <span class="bw-ti-flow-icon"><x-heroicon-o-banknotes class="h-7 w-7" /></span>
+                            <span class="bw-ti-flow-copy">
+                                <strong>Pulso automático</strong>
+                                <small>Al abrir o cerrar turno se pide a la impresora Ticket que abra el cajón (ESC/POS). Requiere una impresora configurada.</small>
+                            </span>
+                            <span class="bw-ti-switch" aria-hidden="true"><i></i></span>
+                        </button>
+
+                        <button type="button" wire:click="toggleGavetaExigir" class="bw-ti-flow {{ $gavetaExigir ? 'is-enabled' : '' }}" aria-pressed="{{ $gavetaExigir ? 'true' : 'false' }}">
+                            <span class="bw-ti-flow-icon"><x-heroicon-o-key class="h-7 w-7" /></span>
+                            <span class="bw-ti-flow-copy">
+                                <strong>Pedir confirmación física</strong>
+                                <small>Los formularios de apertura y cierre exigen confirmar que el cajón quedó cerrado o el monto acomodado.</small>
+                            </span>
+                            <span class="bw-ti-switch" aria-hidden="true"><i></i></span>
+                        </button>
+                    </div>
+                </section>
+
                 <section class="bw-ti-section" aria-labelledby="history-title">
                     <div class="bw-ti-section-heading">
                         <div>
@@ -129,6 +158,7 @@
                         <strong>Configuración a aplicar</strong>
                         <span>{{ $mostradorPrepago ? 'Mostrador activo' : 'Mostrador inactivo' }}</span>
                         <span>{{ $mesaPostpago ? 'Mesa activa' : 'Mesa inactiva' }}</span>
+                        <span>Gaveta: {{ $gavetaAuto ? 'Pulso automático' : 'Apertura manual' }}{{ $gavetaExigir ? ' · confirmación' : '' }}</span>
                     </div>
                     <button type="button" wire:click="save" wire:confirm="¿Aplicar esta configuración a la sucursal activa? Si existen operaciones incompatibles, el sistema bloqueará el cambio." wire:loading.attr="disabled" class="bw-ti-save">
                         <x-heroicon-o-shield-check class="h-5 w-5" />
