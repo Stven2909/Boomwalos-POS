@@ -3,9 +3,9 @@
   "diagram_type": "architecture",
   "meta": {
     "title": "Componentes del POS — Boomwalos Pos",
-    "subtitle": "Orquestación de cobro, contexto de sucursal e impresión",
+    "subtitle": "Orquestación de cobro, contexto de sucursal, impresión y fiscal",
     "output": "app/docs/diagrams-archify/componentes-pos.html",
-    "viewBox": [1150, 650],
+    "viewBox": [1320, 740],
     "animation": "trace",
     "visual_preset": "signal-flow",
     "quality_profile": "showcase",
@@ -13,14 +13,14 @@
       "url": "https://github.com/Stven2909/Boomwalos-POS.git",
       "provider": "github",
       "link_mode": "web",
-      "revision": "10954f638eb4e0e593652bbdd4ea1c4e4080f9f1"
+      "revision": "34b14dd994e9c4d99bfa9ca0fd19c1d4d8a5eb32"
     },
     "legend": {
       "mode": "auto",
       "entries": {
         "frontend": { "label": "Panel web (Filament)" },
         "backend": { "label": "Servicio Laravel" },
-        "security": { "label": "Contexto de sucursal" },
+        "security": { "label": "Contexto / seguridad" },
         "database": { "label": "Base de datos" },
         "messagebus": { "label": "Cola / job" },
         "cloud": { "label": "Dispositivo físico" },
@@ -29,32 +29,41 @@
     }
   },
   "components": [
-    { "id": "portal", "type": "backend", "label": "Portal fiscal", "sublabel": "fiscal · QR", "sources": [{ "path": "app/Http/Controllers/Api/PortalQrController.php" }, { "path": "app/Services/Portal/PortalFiscalService.php" }], "pos": [24, 120], "size": [150, 64] },
-    { "id": "pos-ui", "type": "frontend", "label": "Interfaz de cobro", "sublabel": "OrderEntry", "sources": [{ "path": "app/Filament/Pages/Pos/OrderEntry.php" }, { "path": "app/Filament/Pages/Pos/ChargeOrder.php" }], "pos": [24, 240], "size": [150, 64] },
-    { "id": "impresora-svc", "type": "backend", "label": "Impresora::buscar", "sublabel": "TICKET · COMANDA", "sources": [{ "path": "app/Models/Impresora.php" }], "pos": [590, 120], "size": [150, 64] },
-    { "id": "cobro", "type": "backend", "label": "CobroService", "sublabel": "chargeAndSend", "tag": "orquestador", "sources": [{ "path": "app/Services/CobroService.php" }], "pos": [580, 240], "size": [170, 70] },
-    { "id": "contexto", "type": "security", "label": "Contexto de sucursal", "sublabel": "sucursal activa", "sources": [{ "path": "app/Context/EstablishmentContext.php" }], "pos": [590, 480], "size": [150, 64] },
-    { "id": "job", "type": "messagebus", "label": "Jobs asíncronos", "sublabel": "ProcessPrintJob", "sources": [{ "path": "app/Jobs/ProcessPrintJob.php" }, { "path": "app/Jobs/EnviarVentasFiscalesJob.php" }], "pos": [900, 480], "size": [150, 64] },
-    { "id": "imps", "type": "cloud", "label": "Impresoras 80 mm", "sublabel": "local · SNPP · PDF", "sources": [{ "path": "app/Services/Printing/PrinterConnectorFactory.php" }, { "path": "app/Application/Printing/RenderCustomerTicket.php" }], "pos": [900, 240], "size": [150, 64] },
-    { "id": "db", "type": "database", "label": "Modelos", "sublabel": "pedidos · pagos · jobs", "sources": [{ "path": "config/database.php" }], "pos": [316, 480], "size": [150, 64] },
-    { "id": "dte", "type": "external", "label": "Acoplamiento DTE", "sublabel": "facturación externa", "sources": [{ "path": "app/Services/FiscalSaleRegistrar.php" }], "pos": [900, 60], "size": [150, 64] }
+    { "id": "portal", "type": "backend", "label": "Portal fiscal", "sublabel": "fiscal · QR", "sources": [{ "path": "app/Http/Controllers/Api/PortalQrController.php" }, { "path": "app/Services/Portal/PortalFiscalService.php" }], "pos": [60, 90], "size": [150, 60] },
+    { "id": "pos-ui", "type": "frontend", "label": "Interfaz de cobro", "sublabel": "OrderEntry", "sources": [{ "path": "app/Filament/Pages/Pos/OrderEntry.php" }, { "path": "app/Filament/Pages/Pos/ChargeOrder.php" }], "pos": [300, 206], "size": [150, 60] },
+    { "id": "cobro", "type": "backend", "label": "CobroService", "sublabel": "chargeAndSend", "tag": "orquestador", "sources": [{ "path": "app/Services/CobroService.php" }], "pos": [640, 194], "size": [170, 84] },
+    { "id": "contexto", "type": "security", "label": "Contexto de sucursal", "sublabel": "sucursal activa", "sources": [{ "path": "app/Context/EstablishmentContext.php" }], "pos": [560, 400], "size": [150, 60] },
+    { "id": "db", "type": "database", "label": "Modelos", "sublabel": "pedidos · pagos · ventas", "sources": [{ "path": "config/database.php" }], "pos": [310, 400], "size": [150, 60] },
+    { "id": "impresora-svc", "type": "backend", "label": "Impresora::buscar", "sublabel": "TICKET · COMANDA", "sources": [{ "path": "app/Models/Impresora.php" }], "pos": [560, 600], "size": [150, 60] },
+    { "id": "imps", "type": "cloud", "label": "Impresoras 80 mm", "sublabel": "local · SNPP · PDF", "sources": [{ "path": "app/Services/Printing/PrinterConnectorFactory.php" }, { "path": "app/Application/Printing/RenderCustomerTicket.php" }], "pos": [850, 600], "size": [150, 60] },
+    { "id": "outbox", "type": "messagebus", "label": "Outbox fiscal", "sublabel": "FiscalOutboxService · job", "sources": [{ "path": "app/Application/Fiscal/FiscalOutboxService.php" }], "pos": [1060, 320], "size": [150, 60] },
+    { "id": "job", "type": "messagebus", "label": "Jobs asíncronos", "sublabel": "ProcessPrint · EnviarVentas", "sources": [{ "path": "app/Jobs/ProcessPrintJob.php" }, { "path": "app/Jobs/EnviarVentasFiscalesJob.php" }], "pos": [1060, 500], "size": [150, 60] },
+    { "id": "webhook", "type": "backend", "label": "Webhook fiscal", "sublabel": "WebhooksController", "sources": [{ "path": "app/Http/Controllers/Fiscal/WebhooksController.php" }, { "path": "app/Services/FiscalWebhookService.php" }], "pos": [1080, 190], "size": [150, 60] },
+    { "id": "gateway", "type": "security", "label": "Cliente fiscal", "sublabel": "HttpFiscalGateway · HMAC", "sources": [{ "path": "app/Application/Fiscal/HttpFiscalGateway.php" }, { "path": "app/Application/Fiscal/FiscalClient.php" }], "pos": [860, 60], "size": [150, 60] },
+    { "id": "apifact", "type": "external", "label": "ApiFact · emitir", "sublabel": "sello + webhooks", "sources": [{ "path": "app/Application/Fiscal/HttpFiscalGateway.php" }], "pos": [1080, 60], "size": [150, 60] }
   ],
   "boundaries": [
     {
       "kind": "region",
       "label": "Sistema Boomwalos Pos",
-      "wraps": ["portal", "pos-ui", "impresora-svc", "cobro", "contexto", "job", "db"],
+      "wraps": ["portal", "pos-ui", "impresora-svc", "cobro", "contexto", "db", "outbox", "job", "webhook", "gateway"],
       "pad": 24
     }
   ],
   "connections": [
-    { "id": "cobrar", "from": "pos-ui", "to": "cobro", "label": "cobrar e imprimir", "variant": "emphasis" },
-    { "id": "resuelve", "from": "cobro", "to": "impresora-svc", "label": "resuelve impresora", "fromSide": "top", "toSide": "bottom" },
-    { "id": "establecimiento", "from": "contexto", "to": "db", "label": "establecimiento" },
-    { "id": "imprime", "from": "impresora-svc", "to": "imps", "label": "imprime 80 mm", "via": [[815, 152], [815, 272]] },
-    { "id": "sucursal", "from": "cobro", "to": "contexto", "label": "sucursal activa", "variant": "emphasis", "fromSide": "bottom", "toSide": "top", "labelAt": [665, 390] },
-    { "id": "escribe", "from": "job", "to": "imps", "label": "escribe PDF", "variant": "dashed", "fromSide": "top", "toSide": "bottom" },
-    { "id": "dte-fiscal", "from": "portal", "to": "dte", "label": "DTE", "variant": "security", "fromSide": "top", "toSide": "top", "via": [[99, 10], [975, 10]] }
+    { "id": "cobrar", "from": "pos-ui", "to": "cobro", "label": "cobrar e imprimir", "variant": "emphasis", "fromSide": "right", "toSide": "left", "labelAt": [545, 228] },
+    { "id": "resuelve", "from": "cobro", "to": "impresora-svc", "label": "resuelve impresora", "labelAt": [820, 178], "fromSide": "top", "toSide": "top", "via": [[725, 150], [985, 150], [985, 490], [635, 490]] },
+    { "id": "imprime", "from": "impresora-svc", "to": "imps", "label": "imprime 80 mm", "labelAt": [780, 646], "fromSide": "right", "toSide": "left" },
+    { "id": "sucursal", "from": "cobro", "to": "contexto", "label": "sucursal activa", "variant": "emphasis", "labelAt": [680, 508], "fromSide": "bottom", "toSide": "bottom", "via": [[725, 480], [635, 480]] },
+    { "id": "establecimiento", "from": "contexto", "to": "db", "label": "establecimiento", "labelAt": [545, 478], "fromSide": "right", "toSide": "right" },
+    { "id": "registrar", "from": "cobro", "to": "outbox", "label": "registra venta", "labelAt": [865, 224], "fromSide": "right", "toSide": "left", "via": [[1005, 236], [1005, 350]] },
+    { "id": "encola", "from": "outbox", "to": "job", "label": "despacha job", "variant": "dashed", "labelAt": [1125, 440], "fromSide": "bottom", "toSide": "top" },
+    { "id": "envia", "from": "job", "to": "gateway", "label": "enviarVenta", "labelAt": [1080, 310], "fromSide": "right", "toSide": "left", "via": [[1230, 530], [1230, 300], [1055, 300], [1055, 125], [845, 125], [845, 90]] },
+    { "id": "api", "from": "gateway", "to": "apifact", "label": "emitir · HMAC", "variant": "security", "labelAt": [1045, 78] },
+    { "id": "sello", "from": "apifact", "to": "webhook", "label": "webhook sellado", "variant": "dashed", "labelAt": [1180, 158], "fromSide": "bottom", "toSide": "right", "via": [[1155, 182], [1270, 182], [1270, 220]] },
+    { "id": "vincular", "from": "webhook", "to": "db", "label": "vincula DTE", "labelAt": [1210, 272], "fromSide": "bottom", "toSide": "left", "via": [[1155, 283], [1240, 283], [1240, 668], [275, 668], [275, 430]] },
+    { "id": "portal-emite", "from": "portal", "to": "gateway", "label": "DTE solicitud", "labelAt": [525, 28], "fromSide": "top", "toSide": "top", "via": [[135, 40], [935, 40]] },
+    { "id": "escribe", "from": "job", "to": "imps", "label": "escribe PDF", "variant": "dashed", "labelAt": [1012, 566], "fromSide": "bottom", "toSide": "top", "via": [[1135, 590], [925, 590]] }
   ],
   "cards": [
     {
@@ -75,10 +84,10 @@
     },
     {
       "dot": "amber",
-      "title": "Impresión asíncrona",
+      "title": "Impresión y fiscal asíncronos",
       "items": [
         "Los jobs escriben el PDF o la comanda del trabajo",
-        "El conector se elige según la configuración de la impresora"
+        "El DTE viaja por outbox con HMAC e Idempotency-Key y vuelve sellado por webhook"
       ]
     }
   ]

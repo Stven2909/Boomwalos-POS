@@ -3,9 +3,9 @@
   "diagram_type": "architecture",
   "meta": {
     "title": "Contexto del Sistema — Boomwalos Pos",
-    "subtitle": "Vista de contexto C4 · punto de venta de un único establecimiento",
+    "subtitle": "Vista de contexto C4 · punto de venta y servicio fiscal contratado",
     "output": "app/docs/diagrams-archify/contexto-sistema.html",
-    "viewBox": [1160, 580],
+    "viewBox": [1320, 560],
     "animation": "trace",
     "visual_preset": "signal-flow",
     "quality_profile": "showcase",
@@ -13,7 +13,7 @@
       "url": "https://github.com/Stven2909/Boomwalos-POS.git",
       "provider": "github",
       "link_mode": "web",
-      "revision": "10954f638eb4e0e593652bbdd4ea1c4e4080f9f1"
+      "revision": "34b14dd994e9c4d99bfa9ca0fd19c1d4d8a5eb32"
     },
     "legend": {
       "mode": "auto",
@@ -23,21 +23,24 @@
         "backend": { "label": "API Laravel / job" },
         "database": { "label": "Base de datos" },
         "messagebus": { "label": "Cola de trabajos" },
-        "cloud": { "label": "Dispositivo físico" }
+        "cloud": { "label": "Sistema o dispositivo externo" }
       }
     }
   },
   "components": [
-    { "id": "cajero", "type": "external", "label": "Cajero / Mesero", "sublabel": "opera el POS", "pos": [30, 70], "size": [150, 64] },
-    { "id": "cliente", "type": "external", "label": "Cliente final", "sublabel": "escanea el QR del ticket", "pos": [30, 320], "size": [150, 64] },
-    { "id": "pos", "type": "frontend", "label": "Panel POS", "sublabel": "Filament · cajero", "sources": [{ "path": "app/Filament/Pages/Pos/OrderEntry.php" }], "pos": [280, 70], "size": [150, 64] },
-    { "id": "admin", "type": "frontend", "label": "Panel Admin", "sublabel": "Filament · impresoras", "sources": [{ "path": "app/Providers/Filament/AdminPanelProvider.php" }], "pos": [280, 195], "size": [150, 64] },
-    { "id": "qr", "type": "frontend", "label": "Consulta QR", "sublabel": "portal público de estado", "sources": [{ "path": "app/Http/Controllers/Api/PortalQrController.php" }], "pos": [280, 320], "size": [150, 64] },
-    { "id": "backend", "type": "backend", "label": "API de negocio", "sublabel": "pedidos, cobros y tickets", "sources": [{ "path": "app/Services/CobroService.php" }, { "path": "app/Http/Controllers/Printing/TicketPdfController.php" }], "pos": [540, 195], "size": [180, 72] },
-    { "id": "db", "type": "database", "label": "Base de datos única", "sublabel": "PostgreSQL por instalación", "sources": [{ "path": "config/database.php" }], "pos": [795, 195], "size": [150, 64] },
-    { "id": "queue", "type": "messagebus", "label": "Cola de trabajos", "sublabel": "jobs de impresión", "sources": [{ "path": "config/queue.php" }], "pos": [555, 320], "size": [150, 64] },
-    { "id": "impresora", "type": "cloud", "label": "Impresora 80 mm", "sublabel": "local · red SNPP · PDF", "sources": [{ "path": "app/Services/Printing/PrinterConnectorFactory.php" }], "pos": [550, 460], "size": [160, 64] },
-    { "id": "dte", "type": "external", "label": "Facturador DTE", "sublabel": "API externa de facturación", "sources": [{ "path": "app/Services/FiscalSaleRegistrar.php" }], "pos": [1000, 70], "size": [150, 64] }
+    { "id": "cajero", "type": "external", "label": "Cajero / Mesero", "sublabel": "opera el POS", "pos": [20, 70], "size": [150, 60] },
+    { "id": "cliente", "type": "external", "label": "Cliente final", "sublabel": "escanea el QR del ticket", "pos": [20, 340], "size": [160, 60] },
+    { "id": "pos", "type": "frontend", "label": "Panel POS", "sublabel": "Filament · cajero", "sources": [{ "path": "app/Filament/Pages/Pos/OrderEntry.php" }], "pos": [225, 70], "size": [150, 60] },
+    { "id": "admin", "type": "frontend", "label": "Panel Admin", "sublabel": "Filament · impresoras", "sources": [{ "path": "app/Providers/Filament/AdminPanelProvider.php" }], "pos": [225, 201], "size": [150, 60] },
+    { "id": "qr", "type": "frontend", "label": "Consulta QR", "sublabel": "portal público de estado", "sources": [{ "path": "app/Http/Controllers/Api/PortalQrController.php" }], "pos": [225, 340], "size": [150, 60] },
+    { "id": "backend", "type": "backend", "label": "API de negocio", "sublabel": "pedidos · cobros · fiscal", "sources": [{ "path": "app/Services/CobroService.php" }, { "path": "app/Http/Controllers/Fiscal/WebhooksController.php" }], "pos": [410, 195], "size": [170, 72] },
+    { "id": "db", "type": "database", "label": "Base de datos única", "sublabel": "SQLite · MySQL", "sources": [{ "path": "config/database.php" }], "pos": [630, 201], "size": [150, 60] },
+    { "id": "queue", "type": "messagebus", "label": "Cola de trabajos", "sublabel": "impresión · fiscal", "sources": [{ "path": "config/queue.php" }], "pos": [415, 340], "size": [160, 60] },
+    { "id": "impresora", "type": "cloud", "label": "Impresora 80 mm", "sublabel": "local · red SNPP · PDF", "sources": [{ "path": "app/Services/Printing/PrinterConnectorFactory.php" }], "pos": [415, 430], "size": [160, 60] },
+    { "id": "apifact", "type": "backend", "label": "ApiFact Fiscal", "sublabel": "HMAC · /v1/pos/emitir", "sources": [{ "path": "app/Application/Fiscal/HttpFiscalGateway.php" }], "pos": [820, 70], "size": [170, 72] },
+    { "id": "proceso", "type": "backend", "label": "Proceso DTE", "sublabel": "firma · sello · PDF", "pos": [820, 235], "size": [170, 72] },
+    { "id": "apifact-db", "type": "database", "label": "Datos fiscales", "sublabel": "dtes · eventos · PDF", "pos": [1020, 239], "size": [150, 64] },
+    { "id": "hacienda", "type": "cloud", "label": "Hacienda (MH)", "sublabel": "mock local · red nacional", "pos": [810, 430], "size": [190, 60] }
   ],
   "boundaries": [
     {
@@ -45,18 +48,27 @@
       "label": "Sistema Boomwalos Pos",
       "wraps": ["pos", "admin", "qr", "backend", "db", "queue"],
       "pad": 34
+    },
+    {
+      "kind": "region",
+      "label": "ApiFact — Servicio fiscal (POsFact)",
+      "wraps": ["apifact", "proceso", "apifact-db"],
+      "pad": 34
     }
   ],
   "connections": [
     { "id": "opera-pos", "from": "cajero", "to": "pos", "label": "opera", "variant": "emphasis", "route": "straight" },
-    { "id": "escanea-qr", "from": "cliente", "to": "qr", "label": "escanea QR", "variant": "emphasis", "route": "straight" },
-    { "id": "estado-pedido", "from": "qr", "to": "backend", "label": "estado del pedido" },
-    { "id": "api-pos", "from": "pos", "to": "backend", "label": "API JSON" },
-    { "id": "api-admin", "from": "admin", "to": "backend", "label": "gestión", "labelSegment": 0, "labelDy": 14 },
-    { "id": "sql", "from": "backend", "to": "db", "label": "SQL" },
-    { "id": "encola", "from": "backend", "to": "queue", "label": "encola jobs", "labelAt": [630, 296], "variant": "dashed" },
-    { "id": "procesa", "from": "queue", "to": "impresora", "label": "ticket / comanda", "labelAt": [630, 424], "variant": "emphasis" },
-    { "id": "envia-dte", "from": "backend", "to": "dte", "label": "DTE firmado", "variant": "security", "fromSide": "top", "toSide": "bottom", "via": [[630, 150], [1075, 150]] }
+    { "id": "escanea-qr", "from": "cliente", "to": "qr", "label": "escanea QR", "variant": "emphasis", "route": "straight", "labelAt": [203, 414] },
+    { "id": "estado-pedido", "from": "qr", "to": "backend", "label": "estado del pedido", "fromSide": "right", "toSide": "left", "via": [[385, 370], [385, 231]], "labelAt": [385, 300] },
+    { "id": "api-pos", "from": "pos", "to": "backend", "label": "API JSON", "fromSide": "bottom", "toSide": "top", "via": [[300, 182], [495, 182]] },
+    { "id": "sql", "from": "backend", "to": "db", "label": "SQL", "fromSide": "right", "toSide": "left", "route": "straight" },
+    { "id": "encola", "from": "backend", "to": "queue", "label": "encola jobs", "variant": "dashed", "fromSide": "bottom", "toSide": "top", "route": "straight", "labelAt": [505, 300] },
+    { "id": "procesa", "from": "queue", "to": "impresora", "label": "ticket / comanda", "variant": "emphasis", "fromSide": "bottom", "toSide": "top", "route": "straight", "labelAt": [495, 414] },
+    { "id": "emitir", "from": "backend", "to": "apifact", "label": "venta firmada · HMAC", "variant": "security", "fromSide": "top", "toSide": "top", "via": [[495, 40], [905, 40]] },
+    { "id": "firmar", "from": "apifact", "to": "proceso", "label": "traduce y firma", "fromSide": "bottom", "toSide": "top", "route": "straight", "labelAt": [905, 156] },
+    { "id": "persistir", "from": "proceso", "to": "apifact-db", "fromSide": "right", "toSide": "left", "route": "straight" },
+    { "id": "sellar", "from": "proceso", "to": "hacienda", "label": "recibir DTE", "variant": "security", "fromSide": "bottom", "toSide": "top", "route": "straight", "labelAt": [942, 374] },
+    { "id": "webhook", "from": "proceso", "to": "queue", "label": "webhook sellado", "variant": "dashed", "fromSide": "left", "toSide": "right", "via": [[700, 271], [700, 370]], "labelAt": [700, 320] }
   ],
   "cards": [
     {
@@ -77,10 +89,10 @@
     },
     {
       "dot": "amber",
-      "title": "Facturación opcional",
+      "title": "Facturación contratada",
       "items": [
-        "El DTE se solicita solo cuando el pedido lo requiere",
-        "La copia del DTE vuelve como trabajo de impresión"
+        "La venta viaja por outbox hacia ApiFact con HMAC e Idempotency-Key",
+        "202 SEALED; el sello y el PDF vuelven por webhook firmado"
       ]
     }
   ]

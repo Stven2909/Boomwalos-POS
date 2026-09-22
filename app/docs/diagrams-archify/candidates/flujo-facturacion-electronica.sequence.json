@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "Facturación electrónica del POS",
+    "subtitle": "Outbox fiscal asíncrono: registro, emisión firmada y sellado por webhook",
+    "output": "app/docs/diagrams-archify/flujo-facturacion-electronica.html",
+    "viewBox": [1080, 560],
+    "column_fit": "spread",
+    "animation": "trace",
+    "quality_profile": "showcase",
+    "views": [
+      { "id": "registro", "label": "Registro del DTE", "focus": ["cobro", "outbox", "cola"], "note": "El DTE entra al outbox sin bloquear la venta." },
+      { "id": "envio", "label": "Envío asíncrono", "focus": ["outbox", "job", "gateway", "apifact"], "note": "Cada envío se firma con HMAC y lleva Idempotency-Key." },
+      { "id": "sellado", "label": "Sellado", "focus": ["apifact", "webhook", "cola"], "note": "El sello llega por el webhook y cierra el documento." }
+    ]
+  },
+  "participants": [
+    { "id": "cobro", "type": "backend", "label": "Cobro", "sublabel": "CobroService" },
+    { "id": "outbox", "type": "backend", "label": "Outbox fiscal", "sublabel": "FiscalOutboxService" },
+    { "id": "cola", "type": "database", "label": "VentaFiscalPos", "sublabel": "cola + estados" },
+    { "id": "job", "type": "messagebus", "label": "Jobs asíncronos", "sublabel": "EnviarVentas" },
+    { "id": "gateway", "type": "security", "label": "Cliente fiscal", "sublabel": "HttpFiscalGateway · HMAC" },
+    { "id": "apifact", "type": "external", "label": "ApiFact", "sublabel": "/api/v1/pos/emitir" },
+    { "id": "webhook", "type": "backend", "label": "Webhook fiscal", "sublabel": "WebhooksController" }
+  ],
+  "segments": [
+    { "from": 144, "to": 232, "label": "Registro del DTE" },
+    { "from": 240, "to": 430, "label": "Envío asíncrono" },
+    { "from": 436, "to": 477, "label": "Sellado y reconciliación" }
+  ],
+  "messages": [
+    { "id": "registrar", "from": "cobro", "to": "outbox", "y": 160, "label": "registrarVenta(pedido, pago, config)", "variant": "emphasis" },
+    { "id": "persistir", "from": "outbox", "to": "cola", "y": 190, "label": "crea VentaFiscalPos (NO) + cola PENDIENTE" },
+    { "id": "encolar", "from": "outbox", "to": "job", "y": 220, "label": "despacha EnviarVentasFiscalesJob", "variant": "dashed" },
+    { "id": "pendientes", "from": "job", "to": "outbox", "y": 252, "label": "enviarPendientes(ventaFiscalPosId)" },
+    { "id": "leer", "from": "outbox", "to": "cola", "y": 280, "label": "lee pendientes PENDIENTE" },
+    { "id": "enviar", "from": "outbox", "to": "gateway", "y": 308, "label": "enviarVenta(payload)", "variant": "emphasis" },
+    { "id": "emitir", "from": "gateway", "to": "apifact", "y": 336, "label": "POST emitir · HMAC · Idempotency-Key", "variant": "security" },
+    { "id": "sellado", "from": "apifact", "to": "gateway", "y": 364, "label": "202 SEALED · sello_recepción", "variant": "return" },
+    { "id": "ok", "from": "gateway", "to": "outbox", "y": 392, "label": "venta enviada", "variant": "return" },
+    { "id": "marcar", "from": "outbox", "to": "cola", "y": 420, "label": "cola → ENVIADO · venta → SINCRONIZADO", "variant": "dashed" },
+    { "id": "evento", "from": "apifact", "to": "webhook", "y": 448, "label": "webhook dte:{id}:sealed", "variant": "dashed" },
+    { "id": "vincular", "from": "webhook", "to": "cola", "y": 476, "label": "procesarEventoPosFact(SEALED): vincula sello" }
+  ],
+  "activations": [
+    { "participant": "cobro", "from": 156, "to": 232, "type": "backend" },
+    { "participant": "outbox", "from": 156, "to": 430, "type": "backend" },
+    { "participant": "cola", "from": 184, "to": 196, "type": "database" },
+    { "participant": "cola", "from": 274, "to": 286, "type": "database" },
+    { "participant": "cola", "from": 414, "to": 426, "type": "database" },
+    { "participant": "cola", "from": 470, "to": 482, "type": "database" },
+    { "participant": "job", "from": 214, "to": 258, "type": "messagebus" },
+    { "participant": "gateway", "from": 302, "to": 398, "type": "security" },
+    { "participant": "apifact", "from": 330, "to": 370, "type": "external" },
+    { "participant": "webhook", "from": 442, "to": 482, "type": "backend" }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Envío garantizado",
+      "items": [
+        "El DTE entra al outbox y no bloquea el cierre de la venta",
+        "El reintento es idempotente por clave_reintento"
+      ]
+    },
+    {
+      "dot": "cyan",
+      "title": "Sellado por webhook",
+      "items": [
+        "ApiFact devuelve 202 y el sello llega por dte:{id}:sealed",
+        "SEALED actualiza la venta y el documento sin reintentos"
+      ]
+    }
+  ]
+}
