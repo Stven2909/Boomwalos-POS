@@ -48,7 +48,7 @@ Scripts incluidos en el repo: `resources/scripts/windows/{kiosk.cmd, watchdog.ps
 
 ## Fase 4 — Runtime PHP + Composer (x64)
 
-1. PHP 8.x x64 thread-safe (`windows.php.net`) → `C:\php`.
+1. PHP **x64 non-thread-safe (NTS)**, última estable ≥ 8.3 (el `composer.lock` exige `^8.3`) en `windows.php.net` → `C:\php`. NTS porque solo se usa CLI (`artisan serve`/`queue`); Nginx+PHP-FPM no aplica aquí.
 2. `php.ini`:
    ```
    extension_dir = "C:\php\ext"
@@ -56,6 +56,7 @@ Scripts incluidos en el repo: `resources/scripts/windows/{kiosk.cmd, watchdog.ps
    extension=pdo_sqlite
    extension=bcmath
    extension=mbstring
+   extension=intl
    extension=gd
    extension=fileinfo
    extension=openssl
@@ -187,3 +188,24 @@ Mientras no haya impresora física, el modo **manual** (llave + confirmación en
 - Credenciales de `pos-terminal` no compartidas; PIN de cajero rotado trimestral.
 - Windows Update en ventana manual; probar el arranque del kiosk tras cada actualización.
 - Monitorear `failed_jobs` y `cola_ventas_fiscales`.
+
+## Anexo — Versiones instaladas (del `composer.lock`/`package.json`)
+
+| Componente | Versión |
+|---|---|
+| PHP (piso del `composer.lock`) | `^8.3` → instalar 8.3.x/8.4.x NTS x64 última |
+| Composer | 2.x última |
+| Node/npm (solo build) | Node 20/22 LTS |
+| laravel/framework | v13.24.0 |
+| filament/filament | v5.7.6 |
+| bezhansalleh/filament-shield | 4.3.1 |
+| spatie/laravel-permission | 8.3.0 |
+| barryvdh/laravel-dompdf | v3.1.2 (dompdf v3.1.6) |
+| mike42/escpos-php | v5.0 |
+| laravel/tinker | v3.0.2 |
+| vite / tailwindcss / laravel-vite-plugin (build) | 8.x / 4.3.x / 3.x |
+
+Extensiones PHP obligatorias por el lock: `intl`, `dom`, `mbstring`, `zlib` y las compiladas en el build
+(`ctype`, `filter`, `hash`, `json`, `session`, `tokenizer`); necesarias por la app: `sqlite3`/`pdo_sqlite`,
+`curl`, `openssl`, `fileinfo`, `gd`, `zip`.
+Verificar con: `php -m | findstr /I "ctype curl dom fileinfo filter gd hash intl json mbstring openssl pcre pdo pdo_sqlite session sqlite3 tokenizer zip zlib"`.
