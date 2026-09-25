@@ -11,6 +11,14 @@
 #   3. Que el navegador kiosk siga abierto. Si no hay chrome con el perfil
 #      kiosk, relanza kiosk.cmd (que hace polling a localhost:8000).
 # Log con rotación diaria (conserva $LogKeepDays archivos).
+# ----------------------------------------------------------------------------
+# NOTA OPERATIVA 1: al detectar cola atascada, el watchdog mata TODOS los
+#   procesos php.exe de la máquina (no solo los de pos-web/pos-queue). No
+#   correr tinker/debug manual en la terminal mientras el watchdog está activo.
+# NOTA OPERATIVA 2 (deuda técnica): la detección de cola consulta las columnas
+#   reserved_at/available_at de la tabla `jobs` directamente por SQL. Si una
+#   futura migración de Laravel renombra esas columnas, el script deja de
+#   detectar atascos sin avisar: revisarlo si se toca esa tabla.
 # ============================================================================
 
 param(

@@ -182,6 +182,8 @@ Mientras no haya impresora física, el modo **manual** (llave + confirmación en
 
 - **Backup SQLite consistente** (`resources/scripts/windows/backup.ps1`): usa `SQLite3::backup()` vía PHP
   (seguro con la app corriendo) + `storage/logs` + `.env`, retención 7 días. Programar diario 04:30.
+  El backup incluye `.env` con credenciales en texto plano → `C:\pos\backups` con **permisos restringidos
+  a la cuenta `pos-terminal`** y fuera de cualquier red/compartido abierto.
 - Credenciales de `pos-terminal` no compartidas; PIN de cajero rotado trimestral.
 - Windows Update en ventana manual; probar el arranque del kiosk tras cada actualización.
 - Monitorear `failed_jobs` y `cola_ventas_fiscales`.
