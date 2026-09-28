@@ -83,8 +83,13 @@
                             </span>
                         </td>
                         <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-700 dark:text-gray-300">{{ $job->intentos }}</td>
-                        <td class="max-w-xs truncate px-4 py-3 text-sm text-red-600 dark:text-red-400" title="{{ $job->ultimo_error }}">
-                            {{ $job->ultimo_error ?? '—' }}
+                        <td class="max-w-xs truncate px-4 py-3 text-sm text-red-600 dark:text-red-400"
+                            @if (auth()->user()?->can('gestionar_configuracion_pos') && $job->ultimo_error) title="{{ $job->ultimo_error }}" @endif>
+                            @if ($job->estado === \App\Enums\EstadoImpresion::ERROR)
+                                Error al imprimir. Revisa la impresora y usa «Reintentar».
+                            @else
+                                {{ $job->ultimo_error ?? '—' }}
+                            @endif
                         </td>
                         <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-500 dark:text-gray-400">{{ $job->created_at?->diffForHumans() ?? '—' }}</td>
                         <td class="whitespace-nowrap px-4 py-3 text-sm flex items-center gap-2">

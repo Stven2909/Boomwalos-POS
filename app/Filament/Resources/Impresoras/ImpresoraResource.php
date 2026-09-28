@@ -10,6 +10,8 @@ use App\Filament\Resources\Impresoras\Pages\ListImpresoras;
 use App\Models\Impresora;
 use App\Services\Printing\PrinterTestService;
 use Filament\Actions\Action;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\EditAction;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
@@ -22,6 +24,7 @@ use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\Log;
 use UnitEnum;
 
 class ImpresoraResource extends Resource
@@ -78,6 +81,7 @@ class ImpresoraResource extends Resource
                     TextInput::make('ip')
                         ->label('Dirección IP')
                         ->placeholder('192.168.1.100')
+                        ->required(fn ($get) => ($get('conexion') instanceof TipoConexionImpresora ? $get('conexion')->value : $get('conexion')) === TipoConexionImpresora::RED->value)
                         ->visible(fn ($get) => ($get('conexion') instanceof TipoConexionImpresora ? $get('conexion')->value : $get('conexion')) === TipoConexionImpresora::RED->value),
                     TextInput::make('puerto')
                         ->label('Puerto')
@@ -87,6 +91,7 @@ class ImpresoraResource extends Resource
                     TextInput::make('dispositivo_usb')
                         ->label('Dispositivo USB')
                         ->placeholder('/dev/usb/lp0 o nombre de impresora')
+                        ->required(fn ($get) => ($get('conexion') instanceof TipoConexionImpresora ? $get('conexion')->value : $get('conexion')) === TipoConexionImpresora::USB->value)
                         ->visible(fn ($get) => ($get('conexion') instanceof TipoConexionImpresora ? $get('conexion')->value : $get('conexion')) === TipoConexionImpresora::USB->value),
                     Toggle::make('activa')
                         ->label('Activa')
@@ -167,15 +172,20 @@ class ImpresoraResource extends Resource
                                     ->send();
                             }
                         } catch (\Throwable $e) {
+                            Log::error("Falló la prueba de la impresora #{$record->getKey()} ({$record->nombre}): {$e->getMessage()}", [
+                                'conexion' => $record->conexion?->value,
+                                'direccion' => $record->direccionConexion(),
+                            ]);
+
                             Notification::make()
-                                ->title('Error de conexión')
-                                ->body($e->getMessage())
+                                ->title('Hubo un error con la prueba')
+                                ->body('No se pudo completar la prueba de la impresora. Revisa que la dirección/IP esté bien configurada y que la impresora esté encendida, e inténtalo de nuevo.')
                                 ->danger()
                                 ->send();
                         }
                     }),
-                \Filament\Actions\EditAction::make(),
-                \Filament\Actions\DeleteAction::make(),
+                EditAction::make(),
+                DeleteAction::make(),
             ])
             ->bulkActions([
                 //
