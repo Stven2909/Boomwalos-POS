@@ -188,12 +188,13 @@
                         <section class="bw-pos-product-grid" aria-label="Productos disponibles">
                             @forelse ($this->products as $producto)
                                 <article wire:key="prod-{{ $producto->getKey() }}" class="bw-pos-product-card {{ $producto->requiere_masa ? 'is-mass-choice' : '' }}" @if (! $producto->requiere_masa) wire:click="selectProduct({{ $producto->getKey() }})" @keydown.enter="event.currentTarget.click()" @keydown.space.prevent="event.currentTarget.click()" tabindex="0" role="button" @endif aria-label="{{ $producto->requiere_masa ? 'Elegir masa para ' : 'Agregar ' }}{{ $producto->nombre }}">
+                                    @php($initials = collect(preg_split('/\s+/u', trim($producto->nombre ?? '')))->take(2)->map(fn ($w) => mb_strtoupper(mb_substr($w, 0, 1)))->implode(''))
                                     <span class="bw-pos-product-image {{ $producto->imageUrl() ? 'has-image' : 'is-placeholder' }}" aria-hidden="true">
                                         @if ($producto->imageUrl())
-                                            <img src="{{ $producto->imageUrl() }}" alt="" onerror="this.hidden = true; this.nextElementSibling.hidden = false;">
-                                            <x-heroicon-o-fire class="h-7 w-7" hidden />
+                                            <img src="{{ $producto->imageUrl() }}" alt="{{ $producto->nombre }}" loading="lazy" decoding="async" draggable="false" onerror="this.hidden = true; var p = this.closest('.bw-pos-product-image'); if (p) { p.classList.remove('has-image'); p.classList.add('is-placeholder'); } var n = this.nextElementSibling; if (n) { n.hidden = false; }">
+                                            <span class="bw-pos-placeholder-initials" hidden>{{ $initials }}</span>
                                         @else
-                                            <x-heroicon-o-fire class="h-7 w-7" />
+                                            <span class="bw-pos-placeholder-initials">{{ $initials }}</span>
                                         @endif
                                     </span>
                                     <div class="bw-pos-product-copy">
