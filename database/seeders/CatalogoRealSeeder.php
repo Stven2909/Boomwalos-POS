@@ -108,7 +108,11 @@ class CatalogoRealSeeder extends Seeder
     {
         $directorio = (string) config('pos.catalogo_images_dir');
 
-        if ($directorio === '' || $origenRelativa === null) {
+        if (! is_dir($directorio)) {
+            $directorio = database_path('seeders/assets/catalogo');
+        }
+
+        if ($origenRelativa === null) {
             return null;
         }
 

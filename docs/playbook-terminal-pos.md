@@ -89,8 +89,10 @@ Scripts incluidos en el repo: `resources/scripts/windows/{kiosk.cmd, watchdog.ps
    Borrar/comentar claves `DB_HOST/DB_PORT/DB_DATABASE/...` de MySQL/MariaDB (no se usan).
 4. `php artisan key:generate` y `php artisan migrate --force`.
 5. `php artisan db:seed --force` (roles/permisos + admin/cajero desde `POS_ADMIN_*`, `POS_CASHIER_CODE/PIN`).
-6. Crear la sucursal única en la app (auto-seleccionada por `true` implícito del contexto).
-7. Assets si aplica: `npm ci && npm run build`.
+6. `php artisan db:seed --class=CatalogoRealSeeder --force` (catálogo real: 19 productos, 4 combos y sus imágenes). El seeder trae las imágenes empaquetadas en `database/seeders/assets/catalogo`, así que **no hay que copiar ninguna carpeta de imágenes**: si `CATALOGO_IMAGES_DIR` está vacío o apunta a una ruta inexistente, usa las del repo.
+7. `php artisan storage:link` (enlace `public/storage` para servir las imágenes del catálogo y los PDF de tickets).
+8. Crear la sucursal única en la app (auto-seleccionada por `true` implícito del contexto).
+9. Assets si aplica: `npm ci && npm run build`.
 
 ## Fase 6 — Servicios (Task Scheduler)
 
