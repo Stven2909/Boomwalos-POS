@@ -301,10 +301,12 @@
                             <b class="bw-pos-line-total">{{ $this->money((float) $line->precio_unitario * $line->cantidad) }}</b>
                         </div>
                     @empty
+                        @if ($this->sentDetails->isEmpty())
                         <div class="bw-pos-summary-empty">
                             <x-heroicon-o-shopping-bag class="h-8 w-8 opacity-40" />
                             <span>Toca los productos para agregarlos</span>
                         </div>
+                        @endif
                     @endforelse
 
                     @if ($this->sentDetails->isNotEmpty())
@@ -439,7 +441,7 @@
                         <x-heroicon-o-check class="h-8 w-8 text-white" />
                     </div>
 
-                    <span class="bw-pos-step-label"><x-heroicon-o-check class="h-4 w-4" aria-hidden="true" /> <span>Cobro registrado</span></span>
+                    <span class="bw-pos-step-label">Cobro registrado</span>
                     <h2 id="change-modal-title" class="bw-pos-change-ticket-title">{{ $lastCode }}</h2>
 
                     @if ($lastChange > 0)
@@ -449,7 +451,6 @@
                         </div>
                     @else
                         <div class="bw-pos-change-hero-card is-exact">
-                            <span class="bw-pos-change-hero-label">PAGO EXACTO</span>
                             <strong class="bw-pos-change-hero-val">Sin vuelto</strong>
                         </div>
                     @endif
@@ -570,7 +571,7 @@
                         <div>
                             <span class="bw-pos-step-label">CONFIGURAR PRODUCTO</span>
                             <h2 id="masa-modal-title">{{ $this->selectedMasaProduct->nombre }}</h2>
-                            <p>Selecciona la masa antes de agregarlo al pedido.</p>
+                            <p>{{ $editingMasaLineId ? 'Selecciona la nueva masa del producto.' : 'Selecciona la masa antes de agregarlo al pedido.' }}</p>
                         </div>
                         <button type="button" wire:click="closeMasaSelector" class="bw-pos-dialog-close" aria-label="Cerrar selector de masa">
                             <x-heroicon-o-x-mark class="h-5 w-5" />
@@ -605,7 +606,7 @@
                             <button type="button" wire:click="closeMasaSelector" class="bw-pos-secondary-button">Cancelar</button>
                             <button type="button" wire:click="saveProductWithMasa" class="bw-pos-primary-button" @disabled($selectedMasa === '')>
                                 <x-heroicon-o-check class="h-5 w-5" />
-                                Agregar producto
+                                {{ $editingMasaLineId ? 'Guardar cambios' : 'Agregar producto' }}
                             </button>
                         </div>
                     </footer>

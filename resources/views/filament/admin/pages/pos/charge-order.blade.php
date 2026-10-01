@@ -1,5 +1,5 @@
 <x-filament-panels::page>
-    <div class="bw-pos-page bw-pos-charge-page">
+    <div class="bw-pos-page bw-pos-charge-page" x-data="{ manualOpen: false }" @keydown.window.escape="manualOpen = false">
         @include('filament.admin.components.pos-header', [
             'backUrl' => $this->backUrl(),
             'backLabel' => $pedido->origen_pedido?->value === \App\Enums\OrigenPedido::DISPOSITIVO->value ? 'Pendientes' : 'Pedido',
@@ -14,7 +14,6 @@
             <section class="bw-pos-charge-content" aria-labelledby="charge-title">
                 <div class="bw-pos-charge-heading">
                     <div>
-                        <span class="bw-pos-step-label">COBRO DE CUENTA</span>
                         <h1 id="charge-title">Cobrar cuenta</h1>
                         <p>
                             {{ $pedido->mesa ? 'Mesa ' . $pedido->mesa->numero : 'Pedido para llevar' }}
@@ -115,17 +114,9 @@
                             </button>
                         </div>
 
-                        <div class="bw-pos-numpad" aria-label="Teclado numérico">
-                            @foreach (['7','8','9','4','5','6','1','2','3'] as $digito)
-                                <button type="button" wire:click="ingresarDigito('{{ $digito }}')" class="bw-pos-numpad-key">{{ $digito }}</button>
-                            @endforeach
-                            <button type="button" wire:click="limpiarMonto" class="bw-pos-numpad-key is-utility">C</button>
-                            <button type="button" wire:click="ingresarDigito('0')" class="bw-pos-numpad-key">0</button>
-                            <button type="button" wire:click="ingresarDigito('.')" class="bw-pos-numpad-key">.</button>
-                            <button type="button" wire:click="borrarDigito" class="bw-pos-numpad-key is-utility" aria-label="Borrar último dígito">
-                                <x-heroicon-o-backspace class="h-5 w-5" />
-                            </button>
-                        </div>
+                        <button type="button" @click="manualOpen = true; $wire.limpiarMonto()" class="bw-pos-quick-amount is-manual">
+                            <x-heroicon-o-pencil-square class="h-5 w-5" /> Manual
+                        </button>
 
                         <div class="bw-pos-change-row">
                             <span>Cambio</span>
@@ -155,5 +146,48 @@
                 </a>
             </aside>
         </main>
+        <div x-show="manualOpen" x-cloak x-trap.noscroll="manualOpen" class="bw-pos-combo-modal" role="dialog" aria-modal="true" aria-labelledby="manual-amount-modal-title">
+            <button type="button" class="bw-pos-combo-backdrop" @click="manualOpen = false" aria-label="Cerrar"></button>
+            <section class="bw-pos-numpad-dialog">
+                <header class="bw-pos-numpad-dialog-header">
+                    <div>
+                        <span class="bw-pos-step-label">MONTO RECIBIDO EN EFECTIVO</span>
+                        <h2 id="manual-amount-modal-title">Ingresar Efectivo</h2>
+                        <p>Total a cobrar: <strong>{{ $this->money($this->total) }}</strong></p>
+                    </div>
+                    <button type="button" @click="manualOpen = false" class="bw-pos-dialog-close" aria-label="Cerrar">
+                        <x-heroicon-o-x-mark class="h-6 w-6" />
+                    </button>
+                </header>
+
+                <div class="bw-pos-numpad-display-box">
+                    <span class="bw-pos-numpad-prefix">{{ $this->simboloMoneda }}</span>
+                    <span class="bw-pos-numpad-value">{{ $montoRecibido === '' ? '0.00' : number_format((float) $montoRecibido, 2, '.', '') }}</span>
+                </div>
+
+                @if ($feedback)
+                    <div class="bw-pos-feedback is-error" role="alert">{{ $feedback }}</div>
+                @endif
+                <div class="bw-pos-change-row"><span>Cambio</span><strong>{{ $this->money($this->change) }}</strong></div>
+
+                <div class="bw-pos-numpad-grid">
+                    @foreach (['1', '2', '3', '4', '5', '6', '7', '8', '9'] as $d)
+                        <button type="button" wire:click="ingresarDigito('{{ $d }}')" class="bw-pos-numpad-key">{{ $d }}</button>
+                    @endforeach
+                    <button type="button" wire:click="ingresarDigito('.')" class="bw-pos-numpad-key font-bold">.</button>
+                    <button type="button" wire:click="ingresarDigito('0')" class="bw-pos-numpad-key">0</button>
+                    <button type="button" wire:click="borrarDigito" class="bw-pos-numpad-key is-backspace"><x-heroicon-o-backspace class="h-5 w-5" aria-hidden="true" /></button>
+                </div>
+
+                <footer class="bw-pos-numpad-dialog-footer">
+                    <button type="button" wire:click="limpiarMonto" class="bw-pos-secondary-button">Limpiar</button>
+                    <button type="button" wire:click="charge" class="bw-pos-primary-button" @disabled($montoRecibido === '' || (float) $montoRecibido < $this->total)>
+                        <x-heroicon-o-check class="h-5 w-5" />
+                        <span>Cobrar Monto</span>
+                    </button>
+                </footer>
+            </section>
+        </div>
+
     </div>
 </x-filament-panels::page>

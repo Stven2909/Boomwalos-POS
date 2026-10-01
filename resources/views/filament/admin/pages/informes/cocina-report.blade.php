@@ -98,7 +98,7 @@
             @endphp
             <div class="bw-informe-section">
                 <h3 class="bw-informe-section-title">Tandas por sucursal en el período</h3>
-                <table class="bw-informe-table">
+                <div class="bw-informe-table-scroll" tabindex="0" role="region" aria-label="Tabla del informe"><table class="bw-informe-table">
                     <thead>
                         <tr>
                             <th>Sucursal</th>
@@ -119,7 +119,7 @@
                             </tr>
                         @endforeach
                     </tbody>
-                </table>
+                </table></div>
             </div>
         @endif
     </div>

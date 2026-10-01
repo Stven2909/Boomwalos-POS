@@ -64,7 +64,7 @@ body:has(.bw-pos-page) .fi-page-content {
     z-index: 50;
     display: grid;
     min-height: 74px;
-    grid-template-columns: 1fr auto 1fr;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
     align-items: center;
     gap: 24px;
     border-bottom: 1px solid #e9e5ea;
@@ -88,6 +88,8 @@ body:has(.bw-pos-page) .fi-page-content {
 }
 
 .bw-pos-header-session {
+    min-width: 0;
+    overflow-wrap: anywhere;
     justify-content: flex-end;
     gap: 14px;
     color: var(--bw-primary);
@@ -314,6 +316,9 @@ body:has(.bw-pos-page) .fi-page-content {
     gap: 8px;
     font: inherit;
     font-weight: 800;
+    min-width: 0;
+    white-space: normal;
+    overflow-wrap: anywhere;
     text-decoration: none;
     transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease, transform 150ms ease;
 }
@@ -644,6 +649,7 @@ body:has(.bw-pos-page) .fi-page-content {
 
 .bw-pos-charge-lines,
 .bw-pos-charge-panel {
+    min-width: 0;
     border: 1px solid #ded9e1;
     border-radius: 16px;
     background: #fff;
@@ -1103,7 +1109,7 @@ body:has(.bw-pos-page) .fi-page-content {
     border: 2px solid var(--bw-primary);
     border-radius: 20px;
     background: var(--bw-secondary);
-    padding: 24px 16px;
+    padding: 16px;
     cursor: pointer;
     transition: transform 150ms ease, box-shadow 150ms ease;
     font-family: inherit;
@@ -1376,9 +1382,11 @@ body:has(.bw-pos-page) .fi-page-content {
     display: inline-flex;
     align-items: center;
     gap: 6px;
+    flex-wrap: wrap;
 }
 
 .bw-pos-btn-step {
+    flex-shrink: 0;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -2105,6 +2113,11 @@ body:has(.bw-pos-page) .fi-page-content {
 }
 
 .bw-pos-sub-action-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 8px;
     flex: 1;
     min-height: 44px;
     border: 1.5px solid #ded9e1;
@@ -2116,6 +2129,10 @@ body:has(.bw-pos-page) .fi-page-content {
     color: #797482;
     cursor: pointer;
     transition: all 150ms;
+}
+
+.bw-pos-sub-action-btn svg {
+    flex-shrink: 0;
 }
 
 .bw-pos-sub-action-btn:hover {
@@ -2331,6 +2348,45 @@ body:has(.bw-pos-page) .fi-page-content {
     font-weight: 700;
 }
 
+.bw-informe-table-scroll {
+    max-width: 100%;
+    overflow-x: auto;
+}
+
+.bw-pos-charge-heading {
+    flex-wrap: wrap;
+}
+
+.bw-pos-order-tracking {
+    overflow-wrap: anywhere;
+    min-width: 0;
+}
+
+.bw-pos-header > div,
+.bw-pos-order-card > span {
+    min-width: 0;
+}
+
+.bw-pos-header-context,
+.bw-pos-order-code,
+.bw-pos-order-meta,
+.bw-pos-sales-stat,
+.bw-cash-summary-row {
+    overflow-wrap: anywhere;
+}
+
+.bw-pos-service-secondary,
+.bw-pos-top-action-btn,
+.bw-pos-recall-touch-pill {
+    flex-wrap: wrap;
+}
+
+.bw-pos-page button svg,
+.bw-pos-page a svg {
+    flex-shrink: 0;
+}
+
+
 .bw-pos-combo-copy b {
     font-size: 18px;
 }
@@ -2348,7 +2404,8 @@ body:has(.bw-pos-page) .fi-page-content {
     color: #fff;
     font-size: 13px;
     font-weight: 800;
-    white-space: nowrap;
+    white-space: normal;
+    overflow-wrap: anywhere;
     justify-self: end;
 }
 
@@ -2389,6 +2446,20 @@ body:has(.bw-pos-page) .fi-page-content {
     justify-content: space-between;
     gap: 18px;
     padding: 22px 24px;
+    flex-shrink: 0;
+    flex-wrap: wrap;
+}
+
+.bw-pos-combo-dialog-header > div,
+.bw-pos-combo-dialog-footer > div {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.bw-pos-combo-dialog-footer > div {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
 }
 
 .bw-pos-combo-dialog-header {
@@ -2427,6 +2498,7 @@ body:has(.bw-pos-page) .fi-page-content {
     overflow-y: auto;
     padding: 22px 24px;
     flex-direction: column;
+    min-height: 0;
 }
 
 .bw-pos-combo-option {
@@ -3473,6 +3545,7 @@ body:has(.bw-cashier-dashboard) .fi-page-header-main-ctn > .fi-header {
     border-radius: 16px;
     background: #ffffff;
     padding: 20px;
+    text-align: left;
     color: #202027;
     transition:
         border-color 150ms ease,
@@ -3482,7 +3555,7 @@ body:has(.bw-cashier-dashboard) .fi-page-header-main-ctn > .fi-header {
         transform 150ms ease;
 }
 
-.bw-cashier-module:hover {
+.bw-cashier-module:not(:disabled):hover {
     border-color: #c9b6c5;
     box-shadow: 0 8px 20px rgba(29, 27, 30, 0.08);
     transform: translateY(-2px);
@@ -3601,10 +3674,11 @@ body:has(.bw-cashier-dashboard) .fi-page-header-main-ctn > .fi-header {
 }
 
 /* Pedidos por cobrar: lista táctil para el cajero. */
-.bw-pos-orders-main {
+.bw-pos-service-main.bw-pos-orders-main {
     display: flex;
     flex-direction: column;
-    gap: 24px;
+    gap: 16px;
+    padding-top: 28px;
 }
 
 .bw-pos-orders-list {
@@ -3786,7 +3860,42 @@ body:has(.bw-cashier-dashboard) .fi-page-header-main-ctn > .fi-header {
 
 /* Consulta de pedidos: búsqueda, estado y acciones. */
 .bw-pos-orders-search {
-    width: min(100%, 640px);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    min-height: 48px;
+    padding: 0 14px;
+    border: 1px solid #ded9e1;
+    border-radius: 12px;
+    background: #fff;
+}
+
+.bw-pos-orders-search svg {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+    color: var(--bw-primary);
+}
+
+.bw-pos-orders-search input {
+    width: 100%;
+    min-width: 0;
+    padding: 12px 0;
+    border: 0;
+    background: transparent;
+    font: inherit;
+    box-shadow: none;
+}
+
+.bw-pos-orders-search input:focus {
+    outline: none;
+    box-shadow: none;
+}
+
+.bw-pos-orders-search:focus-within {
+    outline: 2px solid var(--bw-primary);
+    outline-offset: 2px;
 }
 
 .bw-pos-order-state {
@@ -3816,9 +3925,13 @@ body:has(.bw-cashier-dashboard) .fi-page-header-main-ctn > .fi-header {
     align-items: center;
     gap: 8px;
     margin-top: 6px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
 }
 
 .bw-pos-action-button {
+    min-height: 44px;
+    min-width: 44px;
     display: inline-flex;
     align-items: center;
     gap: 6px;
@@ -4018,7 +4131,7 @@ body:has(.bw-cashier-dashboard) .fi-page-header-main-ctn > .fi-header {
 .bw-informe-kpi-grid {
     display: grid;
     gap: 16px;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
 }
 
 .bw-informe-kpi {
@@ -4062,6 +4175,7 @@ body:has(.bw-cashier-dashboard) .fi-page-header-main-ctn > .fi-header {
 }
 
 .bw-informe-kpi-value {
+    overflow-wrap: anywhere;
     color: #202027;
     font-size: 28px;
     font-weight: 800;
@@ -4078,6 +4192,7 @@ body:has(.bw-cashier-dashboard) .fi-page-header-main-ctn > .fi-header {
 }
 
 .bw-informe-section {
+    min-width: 0;
     border: 1px solid #efe7ec;
     border-radius: 12px;
     background: #ffffff;
@@ -4378,6 +4493,7 @@ body:has(.bw-pos-order-page) {
 .bw-pos-order-page .bw-pos-feedback,
 .bw-pos-order-page .bw-pos-summary-total,
 .bw-pos-order-page .bw-pos-fast-tender-box,
+.bw-pos-order-page .bw-pos-table-flow-actions,
 .bw-pos-order-page .bw-pos-paid-status {
     flex-shrink: 0;
 }
@@ -4389,6 +4505,10 @@ body:has(.bw-pos-order-page) {
     overflow-y: auto;
     overscroll-behavior: contain;
     scrollbar-gutter: stable;
+}
+
+.bw-pos-order-page .bw-pos-summary-lines > * {
+    flex-shrink: 0;
 }
 
 .bw-pos-order-page .bw-pos-charge-submit {
@@ -4405,12 +4525,27 @@ body:has(.bw-pos-order-page) {
 
 @media (max-width: 980px) {
     .bw-pos-order-page .bw-pos-order-main {
-        grid-template-rows: auto minmax(150px, 0.85fr) minmax(250px, 1.15fr);
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-rows: auto auto auto;
+        overflow: visible;
+    }
+
+    /* ponytail: use document scrolling when panels cannot fit vertically. */
+    .bw-pos-order-page {
+        height: auto;
+        max-height: none;
+        overflow: visible;
+    }
+
+    body:has(.bw-pos-order-page) {
+        overflow: auto;
     }
 
     .bw-pos-order-page .bw-pos-order-content,
     .bw-pos-order-page .bw-pos-order-summary {
         min-height: 0;
+        overflow: visible;
+        height: auto;
     }
 
     .bw-pos-order-page .bw-pos-order-summary {
@@ -4422,12 +4557,17 @@ body:has(.bw-pos-order-page) {
         max-height: none;
         overflow-y: auto;
     }
+
+    .bw-pos-order-page .bw-pos-product-grid,
+    .bw-pos-order-page .bw-pos-combo-grid {
+        overflow: visible;
+    }
 }
 
 @media (max-width: 760px) {
     .bw-pos-order-page .bw-pos-order-main {
         width: min(100% - 24px, 560px);
-        grid-template-rows: auto minmax(120px, 0.8fr) minmax(235px, 1.2fr);
+        grid-template-rows: auto auto auto;
         gap: 12px;
         padding-top: 14px;
         padding-bottom: 14px;
@@ -4456,9 +4596,15 @@ body:has(.bw-pos-order-page) {
 /* POS touch-first redesign: shell, cards, states and service entry. */
 .bw-pos-order-page .bw-pos-order-main {
     width: min(calc(100% - 32px), 1440px);
-    grid-template-columns: minmax(0, 1fr) clamp(340px, 28vw, 390px);
+    grid-template-columns: minmax(0, 1fr) clamp(336px, 28vw, 390px);
     gap: 16px;
     padding: 16px 0 18px;
+}
+
+@media (max-width: 980px) {
+    .bw-pos-order-page .bw-pos-order-main {
+        grid-template-columns: minmax(0, 1fr);
+    }
 }
 
 .bw-pos-order-page .bw-pos-order-content {
@@ -4515,7 +4661,7 @@ body:has(.bw-pos-order-page) {
     flex: 0 0 auto;
     gap: 10px;
     border-radius: 11px;
-    padding: 0 12px;
+    padding: 8px 12px;
     text-align: left;
     overflow: hidden;
 }
@@ -4529,7 +4675,8 @@ body:has(.bw-pos-order-page) {
     flex: 1 1 auto;
     overflow: hidden;
     text-overflow: ellipsis;
-    white-space: nowrap;
+    white-space: normal;
+    overflow-wrap: anywhere;
 }
 
 .bw-pos-order-page .bw-pos-product-grid,
@@ -4541,7 +4688,7 @@ body:has(.bw-pos-order-page) {
 
 .bw-pos-order-page .bw-pos-product-grid,
 .bw-pos-order-page .bw-pos-combo-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr));
     gap: 14px;
     margin-top: 0;
     padding: 0 4px 4px 0;
@@ -4724,19 +4871,7 @@ body:has(.bw-pos-order-page) {
 .bw-pos-order-state.is-cancelled { background: #fde8eb; color: #b42332; }
 .bw-pos-order-state.is-neutral { background: #f0edf1; color: #625b66; }
 
-@media (min-width: 981px) and (max-width: 1200px) {
-    .bw-pos-order-page .bw-pos-product-grid,
-    .bw-pos-order-page .bw-pos-combo-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    .bw-pos-order-page .bw-pos-order-content {
-        grid-template-columns: 148px minmax(0, 1fr);
-        gap: 12px;
-    }
-}
-
-@media (max-width: 980px) {
+@media (max-width: 1279px) {
     .bw-pos-order-page .bw-pos-order-content {
         display: flex;
         gap: 12px;
@@ -4744,11 +4879,12 @@ body:has(.bw-pos-order-page) {
 
     .bw-pos-order-page .bw-pos-catalog-nav-bar {
         flex: 0 0 auto;
-        overflow: visible;
+        overflow: hidden;
         padding: 10px;
     }
 
     .bw-pos-order-page .bw-pos-category-pills {
+        flex: 0 0 auto;
         flex-direction: row;
         overflow-x: auto;
         overflow-y: hidden;
@@ -4756,6 +4892,7 @@ body:has(.bw-pos-order-page) {
 
     .bw-pos-order-page .bw-pos-cat-pill {
         width: auto;
+        max-width: 220px;
     }
 
     .bw-pos-order-page .bw-pos-product-grid,
@@ -4765,6 +4902,9 @@ body:has(.bw-pos-order-page) {
         grid-row: auto;
     }
 
+}
+
+@media (max-width: 980px) {
     .bw-pos-service-options-five {
         grid-template-areas: none;
     }
@@ -4774,12 +4914,6 @@ body:has(.bw-pos-order-page) {
     }
 }
 
-@media (max-width: 760px) {
-    .bw-pos-order-page .bw-pos-product-grid,
-    .bw-pos-order-page .bw-pos-combo-grid {
-        grid-template-columns: 1fr;
-    }
-}
 /* POS touch icon system: Heroicons SVG alignment and touch feedback. */
 .bw-pos-cat-pill,
 .bw-pos-tender-tabs button,
@@ -4816,7 +4950,7 @@ body:has(.bw-pos-order-page) {
 }
 /* POS combo hierarchy: make the combo identity primary. */
 .bw-pos-order-page .bw-pos-combo-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
 }
 
 .bw-pos-order-page .bw-pos-combo-card {
@@ -4859,20 +4993,18 @@ body:has(.bw-pos-order-page) {
 }
 
 .bw-pos-order-page .bw-pos-combo-copy strong {
-    display: -webkit-box;
-    overflow: hidden;
+    display: block;
+    overflow-wrap: anywhere;
+    overflow: visible;
     color: #202027;
     font-size: 17px;
     font-weight: 800;
     line-height: 1.2;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2;
 }
 
 .bw-pos-order-page .bw-pos-combo-copy .bw-pos-combo-options {
     display: block;
-    overflow: hidden;
-    max-height: 2.8em;
+    overflow: visible;
     border-radius: 0;
     background: transparent;
     padding: 0;
@@ -4896,12 +5028,6 @@ body:has(.bw-pos-order-page) {
     justify-self: stretch;
     padding: 0 12px;
     font-size: 12px;
-}
-/* POS combo hierarchy mobile fallback. */
-@media (max-width: 760px) {
-    .bw-pos-order-page .bw-pos-combo-grid {
-        grid-template-columns: 1fr;
-    }
 }
 /* POS category rail: prevent clipped touch targets. */
 .bw-pos-order-page .bw-pos-catalog-nav-bar {
@@ -4959,7 +5085,7 @@ body:has(.bw-pos-order-page) {
     }
 }
 
-@media (max-width: 980px) {
+@media (max-width: 1279px) {
     .bw-pos-order-page .bw-pos-category-pills {
         flex: 0 0 auto;
         min-height: 48px;
@@ -5039,10 +5165,8 @@ body:has(.bw-pos-order-page) {
     font-weight: 800;
     line-height: 1.2;
     min-height: 2.4em;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
+    display: block;
+    overflow-wrap: anywhere;
 }
 
 .bw-pos-order-page .bw-pos-product-copy span {
@@ -5240,16 +5364,18 @@ body:has(.bw-pos-order-page) {
 }
 
 .bw-pos-product-mass-button {
-    min-height: 32px;
+    min-width: 44px;
+    min-height: 44px;
     border: 1px solid #e5dce5;
     border-radius: 8px;
     background: #fbfafc;
     color: #29262f;
     cursor: pointer;
-    font-size: 11.5px;
+    font-size: 14px;
     font-weight: 750;
     line-height: 1.1;
     padding: 4px 6px;
+    overflow-wrap: anywhere;
 }
 
 .bw-pos-product-mass-button:hover,
@@ -5306,34 +5432,25 @@ body:has(.bw-pos-order-page) {
     gap: 5px;
 }
 
-.bw-pos-combo-mass-row .bw-pos-btn-step-large {
-    min-width: 36px;
-    min-height: 36px;
+.bw-pos-order-page .bw-pos-summary-line {
+    grid-template-columns: minmax(0, 1fr) auto;
 }
 
-@media (min-width: 981px) and (max-width: 1100px) {
-    .bw-pos-order-page .bw-pos-order-main {
-        grid-template-columns: minmax(0, 1fr) 336px;
-        gap: 10px;
-    }
+.bw-pos-order-page .bw-pos-line-info {
+    grid-column: 1 / -1;
+}
 
-    .bw-pos-order-page .bw-pos-product-grid,
-    .bw-pos-order-page .bw-pos-combo-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 10px;
-    }
+.bw-pos-order-page .bw-pos-line-controls {
+    grid-column: 1 / -1;
+}
 
-    .bw-pos-order-page .bw-pos-summary-line {
-        grid-template-columns: minmax(0, 1fr) auto;
-    }
+.bw-pos-order-page .bw-pos-line-total {
+    grid-column: 2;
+    white-space: nowrap;
+}
 
-    .bw-pos-order-page .bw-pos-line-controls {
-        gap: 4px;
-    }
-
-    .bw-pos-order-page .bw-pos-line-total {
-        grid-column: 2;
-    }
+.bw-pos-order-page .bw-pos-summary-line.is-sent .bw-pos-line-quantity {
+    grid-column: 1;
 }
 
 @media (max-width: 640px) {
@@ -5383,9 +5500,6 @@ body:has(.bw-pos-order-page) {
     min-height: 44px;
 }
 
-.bw-pos-product-mass-button {
-    font-size: 14px;
-}
 
 .bw-pos-order-page .bw-pos-combo-card {
     width: 100%;
@@ -5460,17 +5574,102 @@ body:has(.bw-pos-order-page) {
     grid-column: 1 / -1;
 }
 
+.bw-cash-closing-page .bw-cash-opening-main {
+    align-items: start;
+    padding: 16px;
+}
+
 .bw-cash-closing-page .bw-cash-opening-card {
-    max-width: 920px;
+    width: min(100%, 960px);
+    max-width: 960px;
+    padding: clamp(20px, 2vw, 24px);
+}
+
+.bw-cash-closing-layout {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+    align-items: start;
+    gap: 24px;
+    margin-top: 20px;
+}
+
+.bw-cash-closing-count {
+    grid-column: 1;
+}
+
+.bw-cash-closing-withdrawal {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+}
+
+.bw-cash-closing-result {
+    min-height: 70px;
+}
+
+@media (max-width: 800px) {
+    .bw-cash-closing-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .bw-cash-closing-withdrawal {
+        grid-column: 1;
+        grid-row: auto;
+    }
+}
+
+.bw-cash-closing-page .bw-cash-summary-grid {
+    margin-top: 0;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 160px), 1fr));
+}
+
+.bw-cash-closing-page .bw-cash-summary-grid .bw-cash-summary-row {
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+}
+
+.bw-cash-closing-page .bw-cash-summary-grid .bw-cash-summary-row:last-child {
+    grid-column: span 2;
+}
+
+@media (max-width: 480px) {
+    .bw-cash-closing-page .bw-cash-summary-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .bw-cash-closing-page .bw-cash-summary-grid .bw-cash-summary-row:last-child {
+        grid-column: auto;
+    }
+}
+
+.bw-cash-closing-page .bw-cash-summary-row {
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 16px;
+    margin-top: 0;
+}
+
+.bw-cash-closing-page .bw-cash-summary-row strong {
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
+.bw-cash-closing-page .bw-cash-gaveta-confirm {
+    min-height: 44px;
+}
+
+.bw-cash-closing-page .bw-cash-gaveta-confirm input {
+    flex-shrink: 0;
 }
 
 .bw-cash-closing-page .bw-cash-opening-form {
-    position: sticky;
-    bottom: 0;
-    z-index: 5;
-    border-top: 1px solid #e5dce5;
+    position: static;
+    margin-top: 0;
+    gap: 8px;
     background: #fff;
-    padding-top: 14px;
+    padding-top: 0;
 }
 
 .bw-ti-page {
@@ -5821,5 +6020,31 @@ body:has(.bw-pos-order-page) {
         transition-duration: 0.01ms !important;
         animation-duration: 0.01ms !important;
         animation-iteration-count: 1 !important;
+    }
+}
+
+@media (max-height: 600px) and (min-width: 981px) {
+    .bw-pos-order-page {
+        height: auto;
+        max-height: none;
+        overflow: visible;
+    }
+
+    body:has(.bw-pos-order-page) {
+        overflow: auto;
+    }
+
+    .bw-pos-order-page .bw-pos-order-main,
+    .bw-pos-order-page .bw-pos-order-content,
+    .bw-pos-order-page .bw-pos-order-summary {
+        height: auto;
+        overflow: visible;
+    }
+
+    .bw-pos-order-page .bw-pos-product-grid,
+    .bw-pos-order-page .bw-pos-combo-grid,
+    .bw-pos-order-page .bw-pos-summary-lines {
+        max-height: 60dvh;
+        overflow-y: auto;
     }
 }

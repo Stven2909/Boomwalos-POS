@@ -65,7 +65,7 @@
         <div class="bw-informe-section">
             <h3 class="bw-informe-section-title">Sesiones cerradas</h3>
             @if (count($sesiones) > 0)
-                <table class="bw-informe-table">
+                <div class="bw-informe-table-scroll" tabindex="0" role="region" aria-label="Tabla del informe"><table class="bw-informe-table">
                     <thead>
                         <tr>
                             <th>Cierre</th>
@@ -99,7 +99,7 @@
                             </tr>
                         @endforeach
                     </tbody>
-                </table>
+                </table></div>
             @else
                 <div class="bw-informe-empty">No hay sesiones cerradas en el rango seleccionado.</div>
             @endif
@@ -108,7 +108,7 @@
         @if (count($detallePagos) > 0)
             <div class="bw-informe-section">
                 <h3 class="bw-informe-section-title">Pagos de la sesión #{{ $sesionSeleccionada }}</h3>
-                <table class="bw-informe-table">
+                <div class="bw-informe-table-scroll" tabindex="0" role="region" aria-label="Tabla del informe"><table class="bw-informe-table">
                     <thead>
                         <tr>
                             <th>Pedido</th>
@@ -129,7 +129,7 @@
                             </tr>
                         @endforeach
                     </tbody>
-                </table>
+                </table></div>
             </div>
         @endif
     </div>

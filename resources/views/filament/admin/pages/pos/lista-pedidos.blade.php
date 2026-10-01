@@ -1,7 +1,7 @@
 <x-filament-panels::page>
     <div class="bw-pos-page bw-pos-orders-page">
         @include('filament.admin.components.pos-header', [
-            'backUrl' => \App\Filament\Pages\Pos\ServiceSelection::getUrl(),
+            'backUrl' => \App\Filament\Pages\Dashboard::getUrl(),
             'backLabel' => 'Inicio',
             'rightLabel' => $this->actorName() . ' · CONSULTA DE PEDIDOS',
             'showGavetaButton' => true,
@@ -10,8 +10,8 @@
         <main class="bw-pos-service-main bw-pos-orders-main">
             <section class="bw-pos-service-intro bw-pos-page-intro" aria-labelledby="orders-title">
                 <span class="bw-pos-step-label">CAJA · CONSULTA DE PEDIDOS</span>
-                <h1 id="orders-title">Pedidos del Turno</h1>
-                <p>Revisa pedidos activos, pendientes de cobro y reimprime tickets del turno.</p>
+                <h1 id="orders-title">Pedidos</h1>
+                <p>Revisa pedidos activos, pendientes de cobro y reimprime tickets.</p>
             </section>
 
             <nav class="bw-pos-zone-tabs" aria-label="Filtros de pedidos">
@@ -55,7 +55,7 @@
                 <div class="bw-pos-feedback" role="status">{{ $feedback }}</div>
             @endif
 
-            <section class="bw-pos-orders-list" aria-label="Pedidos del día">
+            <section class="bw-pos-orders-list" aria-label="Listado de pedidos">
                 @forelse ($this->orders as $order)
                     @php
                         $orderStateClass = match ($order->estado_comercial?->value) {

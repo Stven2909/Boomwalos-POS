@@ -1,6 +1,8 @@
 <x-filament-panels::page>
     <div class="bw-pos-page bw-pos-service-page">
         @include('filament.admin.components.pos-header', [
+            'backUrl' => \App\Filament\Pages\Dashboard::getUrl(),
+            'backLabel' => 'Menú',
             'centerLabel' => $this->operationContext(),
             'rightLabel' => $this->actorName(),
             'showGavetaButton' => true,
@@ -60,7 +62,7 @@
                     </span>
                     <strong>Consultar pedido</strong>
                     <span>
-                        {{ $this->openCount }} abiertos hoy
+                        {{ $this->openCount > 0 ? 'Pedidos abiertos' : 'Sin pedidos abiertos' }}
                         @if ($this->openCount > 0)
                             <b class="bw-pos-pending-badge">{{ $this->openCount }}</b>
                         @endif
@@ -83,7 +85,7 @@
                     </span>
                     <strong>Pedidos por cobrar</strong>
                     <span>
-                        {{ $this->pendingCount }} en caja
+                        {{ $this->pendingCount > 0 ? 'Pendientes en caja' : 'Sin pendientes en caja' }}
                         @if ($this->pendingCount > 0)
                             <b class="bw-pos-pending-badge">{{ $this->pendingCount }}</b>
                         @endif
@@ -112,13 +114,6 @@
                 </div>
             @endif
 
-            <footer class="bw-pos-service-footer">
-                <p>Accesible para táctil · zonas de toque amplias · alto contraste</p>
-                <a href="{{ \App\Filament\Pages\Dashboard::getUrl() }}" class="bw-pos-secondary-button">
-                    <x-heroicon-o-x-mark class="h-5 w-5" />
-                    Cancelar
-                </a>
-            </footer>
         </main>
     </div>
 </x-filament-panels::page>

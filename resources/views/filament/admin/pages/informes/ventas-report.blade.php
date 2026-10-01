@@ -82,7 +82,7 @@
                 $maxMonto = count($topProductos) > 0 ? max(array_column($topProductos, 'monto_total')) : 0;
             @endphp
             @if ($maxMonto > 0)
-                <table class="bw-informe-table">
+                <div class="bw-informe-table-scroll" tabindex="0" role="region" aria-label="Tabla del informe"><table class="bw-informe-table">
                     <thead>
                         <tr>
                             <th>Producto</th>
@@ -110,7 +110,7 @@
                             </tr>
                         @endforeach
                     </tbody>
-                </table>
+                </table></div>
             @else
                 <div class="bw-informe-empty">No hay datos en el rango seleccionado.</div>
             @endif
@@ -122,7 +122,7 @@
             @endphp
             <div class="bw-informe-section">
                 <h3 class="bw-informe-section-title">Ventas por sucursal</h3>
-                <table class="bw-informe-table">
+                <div class="bw-informe-table-scroll" tabindex="0" role="region" aria-label="Tabla del informe"><table class="bw-informe-table">
                     <thead>
                         <tr>
                             <th>Sucursal</th>
@@ -143,7 +143,7 @@
                             </tr>
                         @endforeach
                     </tbody>
-                </table>
+                </table></div>
             </div>
         @endif
     </div>

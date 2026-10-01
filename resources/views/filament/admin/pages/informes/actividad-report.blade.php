@@ -52,7 +52,7 @@
         <div class="bw-informe-section">
             <h3 class="bw-informe-section-title">Registro de actividad</h3>
             @if (count($eventos) > 0)
-                <table class="bw-informe-table">
+                <div class="bw-informe-table-scroll" tabindex="0" role="region" aria-label="Tabla del informe"><table class="bw-informe-table">
                     <thead>
                         <tr>
                             <th>Fecha</th>
@@ -73,7 +73,7 @@
                             </tr>
                         @endforeach
                     </tbody>
-                </table>
+                </table></div>
 
                 @if ($totalPaginas > 1)
                     <div class="bw-informe-pagination">
