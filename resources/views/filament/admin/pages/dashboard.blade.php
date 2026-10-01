@@ -68,7 +68,7 @@
                     </span>
                     <span class="bw-cashier-module-copy">
                         <span class="bw-cashier-module-title">Mesas</span>
-                        <span class="bw-cashier-module-description">Sala y terraza</span>
+                        <span class="bw-cashier-module-description">Ver mesas</span>
                     </span>
                 </a>
 
@@ -162,7 +162,7 @@
                 </div>
                 <h2 class="mt-5 text-lg font-bold text-[#1D1B1E]">Mesas</h2>
                 <p class="mt-1 text-sm leading-relaxed text-gray-500">
-                    Asigna, abre y cierra mesas en el salón.
+                    Asigna, abre y cierra mesas.
                 </p>
             </a>
 

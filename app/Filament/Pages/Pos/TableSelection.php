@@ -52,13 +52,26 @@ class TableSelection extends PosPage
         }
 
         $zona = ZonaMesa::tryFrom((string) request()->query('zona', ZonaMesa::SALON->value));
-        $this->zona = ($zona ?? ZonaMesa::SALON)->value;
+        $available = $this->availableZones;
+        $this->zona = in_array($zona, $available, true) ? $zona->value : ($available[0] ?? ZonaMesa::SALON)->value;
         $this->entryMode = request()->query('entrada') === 'mesas' ? 'mesas' : 'service';
+    }
+
+    public function getAvailableZonesProperty(): array
+    {
+        $zones = Mesa::query()->where('establecimiento_id', $this->establishment()->getKey())
+            ->where('activa', true)->distinct()->pluck('zona')->all();
+
+        return array_values(array_filter(ZonaMesa::cases(), fn ($zone) => in_array($zone->value, $zones, true)));
     }
 
     public function setZone(string $zona): void
     {
-        $this->zona = (ZonaMesa::tryFrom($zona) ?? ZonaMesa::SALON)->value;
+        $zone = ZonaMesa::tryFrom($zona);
+        if (! in_array($zone, $this->availableZones, true)) {
+            return;
+        }
+        $this->zona = $zone->value;
         $this->selectedMesaId = null;
         $this->selectedMesaNumero = null;
     }

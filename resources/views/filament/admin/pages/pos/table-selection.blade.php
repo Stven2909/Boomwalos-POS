@@ -17,8 +17,9 @@
                 <p>Verde disponible · morado cuenta abierta · ámbar cobrado pendiente de entrega</p>
             </section>
 
+            @if (count($this->availableZones) > 1)
             <nav class="bw-pos-zone-tabs" aria-label="Zonas del establecimiento">
-                @foreach (\App\Enums\ZonaMesa::cases() as $zone)
+                @foreach ($this->availableZones as $zone)
                     <button
                         type="button"
                         wire:click="setZone('{{ $zone->value }}')"
@@ -29,6 +30,7 @@
                     </button>
                 @endforeach
             </nav>
+            @endif
 
             <div class="bw-pos-state-legend" aria-label="Estados de mesa">
                 <span><i class="is-free" aria-hidden="true"></i>Libre</span>

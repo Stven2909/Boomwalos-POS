@@ -175,8 +175,6 @@ class DemoPosSeeder extends Seeder
 
         foreach ([
             ZonaMesa::SALON->value => range(1, 8),
-            ZonaMesa::TERRAZA->value => range(9, 12),
-            ZonaMesa::BAR->value => range(13, 16),
         ] as $zona => $numbers) {
             foreach ($numbers as $number) {
                 Mesa::firstOrCreate(
