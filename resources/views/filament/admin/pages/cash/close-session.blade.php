@@ -1,7 +1,10 @@
 <x-filament-panels::page>
     <div class="bw-pos-page bw-cash-closing-page">
         @include('filament.admin.components.pos-header', [
-            'rightLabel' => $this->operationContext,
+            'rightLabel' => mb_strtoupper(auth()->user()->nombre) . ' · ' . $this->operationContext,
+            'backUrl' => \App\Filament\Pages\Dashboard::getUrl(),
+            'backLabel' => 'Volver al menú',
+            'centerLogo' => true,
         ])
 
         <main class="bw-cash-opening-main">
@@ -16,6 +19,9 @@
 
                 @if ($feedback)
                     <div class="bw-pos-feedback is-error" role="alert">{{ $feedback }}</div>
+                    @if ($hasPendingOrders)
+                        <a href="{{ \App\Filament\Pages\Pos\ListaPedidos::getUrl(['filtro' => 'todos']) }}" class="bw-pos-secondary-button">Ver pedidos pendientes</a>
+                    @endif
                 @endif
 
                 @if ($this->hasActiveSession)

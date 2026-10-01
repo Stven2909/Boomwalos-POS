@@ -26,6 +26,8 @@ class CloseSession extends Page
 
     public ?string $feedback = null;
 
+    public bool $hasPendingOrders = false;
+
     public bool $gavetaCerrada = false;
 
     public function getRequerirConfirmacionGavetaProperty(): bool
@@ -97,6 +99,7 @@ class CloseSession extends Page
 
     public function closeSession(): void
     {
+        $this->hasPendingOrders = false;
         $this->validate([
             'efectivoContado' => ['required', 'regex:/^\d+(\.\d{1,2})?$/'],
         ], [
@@ -121,6 +124,8 @@ class CloseSession extends Page
         try {
             app(CierreCajaService::class)->cerrar($sesion, $this->efectivoContado, auth()->user());
         } catch (ValidationException|AuthorizationException $exception) {
+            $this->hasPendingOrders = $exception instanceof ValidationException
+                && array_key_exists('pedidos_abiertos', $exception->errors());
             $this->feedback = $exception instanceof AuthorizationException
                 ? $exception->getMessage()
                 : collect($exception->errors())->flatten()->first() ?? 'No se pudo cerrar la caja.';

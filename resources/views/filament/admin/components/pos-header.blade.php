@@ -1,5 +1,6 @@
 @props([
     'centerLabel' => null,
+    'centerLogo' => false,
     'rightLabel' => 'OPERACIÓN DEL POS',
     'backUrl' => null,
     'backAction' => null,
@@ -27,7 +28,11 @@
         @endif
     </div>
 
-    @if ($centerLabel)
+    @if ($centerLogo)
+        <div class="bw-pos-header-context">
+            <img src="{{ $posBranding->logoUrl() }}" alt="{{ $posBranding->displayName() }}" class="bw-pos-logo">
+        </div>
+    @elseif ($centerLabel)
         <div class="bw-pos-header-context">
             <x-heroicon-o-table-cells class="h-5 w-5" />
             <span>{{ $centerLabel }}</span>
