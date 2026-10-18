@@ -19,6 +19,9 @@ return [
 
     'timeout' => (int) env('FISCAL_API_TIMEOUT', 15),
 
+    // Timeout (segundos) de la sonda de conectividad previa a la venta.
+    'probe_timeout' => (int) env('FISCAL_PROBE_TIMEOUT', 3),
+
     'gateway' => env('FISCAL_GATEWAY', 'http'),
 
     'provisioning_token' => env('PROVISIONING_TOKEN', env('FISCAL_PROVISIONING_TOKEN', env('POSFACT_MASTER_KEY'))),

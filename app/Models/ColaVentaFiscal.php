@@ -16,7 +16,10 @@ class ColaVentaFiscal extends Model
         'payload_envio',
         'estado',
         'intentos',
+        'contingencia',
+        'contingencia_desde',
         'ultimo_error',
+        'proximo_intento_at',
     ];
 
     protected function casts(): array
@@ -25,6 +28,9 @@ class ColaVentaFiscal extends Model
             'payload_envio' => 'array',
             'estado' => EstadoColaVentaFiscal::class,
             'intentos' => 'integer',
+            'contingencia' => 'boolean',
+            'contingencia_desde' => 'datetime',
+            'proximo_intento_at' => 'datetime',
         ];
     }
 

@@ -48,11 +48,13 @@ class CobroService
             throw new AuthorizationException('No tienes permiso para cobrar pedidos.');
         }
 
-        [$pago, $comandaJob, $ticketJob] = DB::transaction(function () use ($pedido, $metodo, $montoRecibido, $actor, $tarjeta): array {
-            return $this->applyCharge($pedido, $metodo, $montoRecibido, $actor, tarjeta: $tarjeta);
+        $identidad = $this->fiscalSaleRegistrar->preparar($pedido);
+
+        [$pago, $comandaJob, $ticketJob] = DB::transaction(function () use ($pedido, $metodo, $montoRecibido, $actor, $tarjeta, $identidad): array {
+            return $this->applyCharge($pedido, $metodo, $montoRecibido, $actor, tarjeta: $tarjeta, identidad: $identidad);
         });
 
-        $this->registrarVentaFiscal($pago);
+        $this->registrarVentaFiscal($pago, $identidad);
 
         if ($comandaJob && $comandaJob->estado === EstadoImpresion::PENDIENTE) {
             ProcessPrintJob::dispatch($comandaJob->getKey())->afterCommit();
@@ -82,11 +84,13 @@ class CobroService
             throw new AuthorizationException('No tienes permiso para cobrar pedidos.');
         }
 
-        [$pago] = DB::transaction(function () use ($pedido, $metodo, $montoRecibido, $actor, $tarjeta): array {
-            return $this->applyCharge($pedido, $metodo, $montoRecibido, $actor, tarjeta: $tarjeta);
+        $identidad = $this->fiscalSaleRegistrar->preparar($pedido);
+
+        [$pago] = DB::transaction(function () use ($pedido, $metodo, $montoRecibido, $actor, $tarjeta, $identidad): array {
+            return $this->applyCharge($pedido, $metodo, $montoRecibido, $actor, tarjeta: $tarjeta, identidad: $identidad);
         });
 
-        $this->registrarVentaFiscal($pago);
+        $this->registrarVentaFiscal($pago, $identidad);
 
         return $pago;
     }
@@ -97,6 +101,7 @@ class CobroService
         ?string $montoRecibido,
         User $actor,
         ?array $tarjeta = null,
+        array $identidad = [],
     ): array {
         $establecimientoId = $this->establishmentId();
 
@@ -172,7 +177,7 @@ class CobroService
         ]);
 
         $comandaJob = $this->createComandaJob($pedido, $pendingLines);
-        $ticketJob = $this->createTicketJob($pedido, $pago, $actor);
+        $ticketJob = $this->createTicketJob($pedido, $pago, $actor, $identidad);
 
         if ($comandaJob) {
             $this->audit($pedido, $actor, 'comanda_en_cola', [
@@ -225,10 +230,10 @@ class CobroService
         return $job;
     }
 
-    private function createTicketJob(Pedido $pedido, Pago $pago, User $actor): ?TrabajoImpresion
+    private function createTicketJob(Pedido $pedido, Pago $pago, User $actor, array $identidad = []): ?TrabajoImpresion
     {
         $printer = Impresora::buscar(TipoImpresora::TICKET);
-        $contenido = $this->ticketRenderer->render($pedido, $pago, $actor);
+        $contenido = $this->ticketRenderer->render($pedido, $pago, $actor, $identidad);
         $uid = hash('sha256', $pedido->getKey().'|TICKET');
 
         return TrabajoImpresion::firstOrCreate(
@@ -244,9 +249,9 @@ class CobroService
         );
     }
 
-    private function registrarVentaFiscal(Pago $pago): void
+    private function registrarVentaFiscal(Pago $pago, array $identidad = []): void
     {
-        $this->fiscalSaleRegistrar->register($pago);
+        $this->fiscalSaleRegistrar->register($pago, $identidad);
     }
 
     private function validateCard(?array $tarjeta): void

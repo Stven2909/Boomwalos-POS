@@ -96,12 +96,13 @@ Scripts incluidos en el repo: `resources/scripts/windows/{kiosk.cmd, watchdog.ps
 
 ## Fase 6 — Servicios (Task Scheduler)
 
-Tres tareas disparadas al inicio de sesión de `pos-terminal` (con `delayed start` 10 s):
+Cuatro tareas disparadas al inicio de sesión de `pos-terminal` (con `delayed start` 10 s):
 
 | Tarea | Acción |
 |---|---|
 | `pos-web` | `php artisan serve --host=127.0.0.1 --port=8000` |
 | `pos-queue` | `php artisan queue:work database --tries=3 --sleep=3 --timeout=90` |
+| `pos-scheduler` | `php artisan schedule:work` (reintento fiscal automático; ver Fase 7) |
 | `pos-kiosk` | `kiosk.cmd` (Fase 9) — **hace polling a localhost:8000 antes de abrir Chrome**, evita la carrera de arranque |
 
 Nota: el servidor embebido es de 1 proceso — suficiente para 1 terminal/1 cajero. Si crece, migrar a Nginx en otra fase.
@@ -124,6 +125,25 @@ FISCAL_HMAC_TIMESTAMP_HEADER=X-Timestamp
 ```
 - Validar con un DTE de prueba que `cola_ventas_fiscales` se vacía y aparece en ApiFact.
 - Con `QUEUE_CONNECTION=database` nada se pierde por caída de Internet; se reprocesa sola al reconectar.
+
+### Contingencia automática (modelo diferido)
+
+Si al cobrar la sonda de conectividad (`fiscal.probe_timeout`, por defecto 3 s) no alcanza la API fiscal:
+
+- La venta se marca en **contingencia** (`cola_ventas_fiscales.contingencia=true`, `contingencia_desde`).
+- El payload viaja como **modelo diferido**: `tipoModelo=2`, `tipoOperacion=2`, `tipoContingencia=3` (falla de
+  internet del emisor), con el `codigo_generacion` (UUID) y `fecha_emision` **de la venta** (retroactiva).
+- El ticket imprime un **comprobante transitorio no fiscal** (leyenda `MODELO DE FACTURACIÓN: DIFERIDO` /
+  `TIPO DE TRANSMISIÓN: POR CONTINGENCIA` + código de generación + fecha/hora). No lleva firma ni sello MH.
+- El reintento es automático con backoff **1 → 2 → 5 → 15 min** (tope 15 min, cumple el mínimo normativo).
+  No se rinde: sigue en `PENDIENTE` hasta reconectar.
+- Al reconectar, la tarea `pos-scheduler` (`php artisan schedule:work`) llama a
+  `pos:enviar-fiscales-pendientes` cada minuto y solo envía las ventas cuyo reintento ya venció.
+  Manual: `php artisan pos:enviar-fiscales-pendientes`.
+- El mismo scheduler corre `pos:reconciliar-fiscales` cada 5 min: consulta a ApiFact el DTE fiscal
+  (sello + número de control), marca la venta `SINCRONIZADO` y **reimprime el DTE final** en el ticket
+  (con sello), completando el comprobante transitorio. Manual: `php artisan pos:reconciliar-fiscales`.
+  (El kiosko no recibe webhooks: ApiFact rechaza localhost/IP privada, por eso la conciliación es por *pull*.)
 
 ## Fase 8 — Impresora térmica + gaveta
 
@@ -176,7 +196,10 @@ Mientras no haya impresora física, el modo **manual** (llave + confirmación en
 - [ ] Cobro + corte/factura impresos (ruta USB o LAN según llegue la impresora).
 - [ ] Apertura/cierre de turno → gaveta abre y audita (`gaveta_abierta`, `caja_abierta`, `caja_cerrada` en `evento_auditorias`).
 - [ ] DTE enviado a ApiFact y visible en el portal (`webfact`).
-- [ ] Caída de Internet simulada (desconectar cable) → venta OK, cola retiene; al reconectar se vacía.
+- [ ] Caída de Internet simulada (desconectar cable) → venta OK, ticket transitorio (modelo diferido) impreso,
+      cola retiene con backoff; al reconectar se vacía sola (≤15 min) y el DTE se firma en ApiFact.
+- [ ] Tras reconectar, `pos:reconciliar-fiscales` marca la venta `SINCRONIZADO` y reimprime el ticket con el
+      sello de recepción y el número de control (DTE final).
 - [ ] Reinicio del equipo → todo vuelve solo (web, cola, kiosk).
 - [ ] **NTP/hora (crítico para el HMAC fiscal):** `w32tm /query /status` con `Stratum ≥ 2` y sync reciente; hora local igual a `America/El_Salvador`. Verificar con un DTE real que el sello horario sea aceptado.
 - [ ] Opcional: tarea diaria silenciosa `w32tm /resync` contra el drift.

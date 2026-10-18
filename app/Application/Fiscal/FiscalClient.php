@@ -41,4 +41,30 @@ class FiscalClient implements FiscalGatewayInterface
 
         return $respuesta->json();
     }
+
+    public function consultarVenta(ConfiguracionFiscal $config, string $codigoGeneracion): array
+    {
+        $path = '/api/v1/dte/'.rawurlencode($codigoGeneracion);
+        $url = rtrim((string) config('fiscal.url'), '/') . $path;
+
+        $timestamp = time();
+        $nonce = (string) Str::uuid();
+
+        $firma = HmacSigner::sign('GET', $path, $timestamp, $nonce, '', (string) $config->cliente_secret);
+
+        $respuesta = Http::withHeaders([
+            (string) config('fiscal.hmac.key_header') => (string) $config->cliente_key,
+            (string) config('fiscal.hmac.timestamp_header') => (string) $timestamp,
+            (string) config('fiscal.hmac.nonce_header', 'X-Nonce') => $nonce,
+            (string) config('fiscal.hmac.header') => $firma,
+        ])
+            ->timeout((int) config('fiscal.timeout', 10))
+            ->get($url);
+
+        if (! $respuesta->successful()) {
+            throw new FiscalApiException($respuesta->status(), (string) $respuesta->body());
+        }
+
+        return $respuesta->json();
+    }
 }

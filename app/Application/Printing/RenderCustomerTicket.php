@@ -7,6 +7,7 @@ use App\Enums\MetodoPago;
 use App\Models\Pago;
 use App\Models\Pedido;
 use App\Models\User;
+use Illuminate\Support\Carbon;
 
 class RenderCustomerTicket
 {
@@ -14,7 +15,7 @@ class RenderCustomerTicket
         private readonly BrandingServiceInterface $branding,
     ) {}
 
-    public function render(Pedido $pedido, Pago $pago, User $actor): string
+    public function render(Pedido $pedido, Pago $pago, User $actor, array $fiscal = []): string
     {
         $pedido->loadMissing([
             'establecimiento',
@@ -75,6 +76,23 @@ class RenderCustomerTicket
         $lineas[] = '';
         $lineas[] = 'ATENDIDO POR: ' . $actor->nombre;
 
+        if (($fiscal['contingencia'] ?? false) === true) {
+            $lineas[] = str_repeat('-', 32);
+            $lineas[] = 'COMPROBANTE TRANSITORIO';
+            $lineas[] = 'MODELO DE FACTURACIÓN: DIFERIDO';
+            $lineas[] = 'TIPO DE TRANSMISIÓN: POR CONTINGENCIA';
+
+            if (! empty($fiscal['codigo_generacion'])) {
+                $lineas[] = 'Código de generación: ' . $fiscal['codigo_generacion'];
+            }
+
+            $lineas[] = 'Fecha y hora de emisión: ' . $this->fechaEmision($fiscal['fecha_emision'] ?? null);
+            $lineas[] = 'Este comprobante no sustituye al Documento';
+            $lineas[] = 'Tributario Electrónico. Conserve este ticket;';
+            $lineas[] = 'el DTE firmado se le entregará al restablecerse';
+            $lineas[] = 'el servicio de transmisión.';
+        }
+
         $footer = $this->branding->ticketFooter();
         if ($footer) {
             $lineas[] = $footer;
@@ -94,6 +112,17 @@ class RenderCustomerTicket
         $lineas[] = '¡GRACIAS POR SU PREFERENCIA!';
 
         return implode("\n", $lineas) . "\n";
+    }
+
+    private function fechaEmision(?string $iso): string
+    {
+        try {
+            return Carbon::parse($iso ?? now())
+                ->setTimezone('America/El_Salvador')
+                ->format('d/m/Y H:i');
+        } catch (\Throwable) {
+            return now()->setTimezone('America/El_Salvador')->format('d/m/Y H:i');
+        }
     }
 
     private function establecimiento(Pedido $pedido): string

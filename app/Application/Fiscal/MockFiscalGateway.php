@@ -14,4 +14,14 @@ class MockFiscalGateway implements FiscalGatewayInterface
             'estado' => 'RECIBIDA',
         ];
     }
+
+    public function consultarVenta(ConfiguracionFiscal $config, string $codigoGeneracion): array
+    {
+        return [
+            'codigoGeneracion' => $codigoGeneracion,
+            'numeroControl' => 'MOCK-CONTROL',
+            'estadoFiscal' => 'SEALED',
+            'selloRecepcion' => 'MOCK-SELLO',
+        ];
+    }
 }

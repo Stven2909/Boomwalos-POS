@@ -21,6 +21,10 @@ class VentaFiscalPos extends Model
         'metodo_pago',
         'receptor',
         'fiscal_sale_id',
+        'codigo_generacion',
+        'numero_control',
+        'sello_recepcion',
+        'fecha_emision',
         'estado',
         'sincronizado_at',
     ];
@@ -31,6 +35,7 @@ class VentaFiscalPos extends Model
             'monto_total' => 'decimal:2',
             'receptor' => 'array',
             'estado' => EstadoVentaFiscal::class,
+            'fecha_emision' => 'datetime',
             'sincronizado_at' => 'datetime',
         ];
     }
