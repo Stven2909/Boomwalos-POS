@@ -5,7 +5,7 @@ use App\Http\Controllers\EstablishmentContextController;
 use App\Http\Controllers\Printing\TicketPdfController;
 
 Route::get('/', function () {
-    return view('welcome');
+    return redirect()->to('/admin/login');
 });
 
 // Ruta de redirección para evitar error 500 Route [login] not defined en peticiones web no autenticadas
