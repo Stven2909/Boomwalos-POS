@@ -606,6 +606,10 @@ body:has(.bw-pos-page) .fi-page-content {
     font-weight: 600;
 }
 
+.bw-pos-read-only-state + .bw-pos-read-only-charge {
+    margin-top: 16px;
+}
+
 .bw-pos-feedback {
     border-radius: 10px;
     background: #edf8f3;

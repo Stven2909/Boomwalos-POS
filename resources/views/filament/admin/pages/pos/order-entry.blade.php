@@ -228,20 +228,30 @@
                         </section>
                     @endif
                 @else
-                    <div class="bw-pos-read-only-state" role="status">
-                        @if ($pedido->estado_comercial?->value === 'PENDIENTE_COBRO')
+                    @if ($pedido->estado_comercial?->value === 'PENDIENTE_COBRO')
+                        <div class="bw-pos-read-only-state" role="status">
                             <x-heroicon-o-banknotes class="h-7 w-7" />
                             <strong>Enviado a caja</strong>
                             <span>La cuenta quedó registrada y espera cobro.</span>
-                        @elseif ($pedido->estado_comercial?->value === 'CANCELADO')
+                        </div>
+                        @if ($this->canGoToCharge)
+                            <button type="button" wire:click="goToCharge" class="bw-pos-charge-submit bw-pos-read-only-charge">
+                                <x-heroicon-o-banknotes class="h-5 w-5" />
+                                <span>COBRAR {{ $this->money($this->total) }}</span>
+                            </button>
+                        @endif
+                    @elseif ($pedido->estado_comercial?->value === 'CANCELADO')
+                        <div class="bw-pos-read-only-state" role="status">
                             <x-heroicon-o-x-circle class="h-7 w-7" />
                             <strong>Pedido cancelado</strong>
-                        @else
+                        </div>
+                    @else
+                        <div class="bw-pos-read-only-state" role="status">
                             <x-heroicon-o-check-badge class="h-7 w-7" />
                             <strong>Pedido cobrado</strong>
                             <span>Pendiente de entrega.</span>
-                        @endif
-                    </div>
+                        </div>
+                    @endif
                 @endif
             </section>
 

@@ -944,6 +944,18 @@ class OrderEntry extends PosPage
         return true;
     }
 
+    public function getCanGoToChargeProperty(): bool
+    {
+        return $this->pedido->estado_comercial === EstadoComercialPedido::PENDIENTE_COBRO
+            && $this->activeDetails->isNotEmpty()
+            && auth()->user()?->can('cobrar_pedido');
+    }
+
+    public function goToCharge(): void
+    {
+        $this->redirect(ChargeOrder::getUrl(['pedido' => $this->pedido->getKey()]));
+    }
+
     public function getIsDeviceOrderProperty(): bool
     {
         return $this->pedido->origen_pedido === OrigenPedido::DISPOSITIVO;
