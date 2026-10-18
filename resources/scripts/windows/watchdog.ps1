@@ -3,18 +3,18 @@
 # ----------------------------------------------------------------------------
 # Ejecutar como tarea programada con intervalo de 60 segundos.
 # Comprueba, en orden:
-#   1. Que el POS web responda en $WebUrl. Si el puerto no escucha relanza
-#      pos-web (+pos-queue); si el puerto escucha pero la app no responde,
-#      mata el proceso PHP que escucha y relanza ambos.
-#   2. Que la cola de trabajos no tenga trabajos "procesando" atascados más de
-#      $QueueStuckMinutes. Si los hay, reinicia el stack PHP (serve + queue).
-#   3. Que el navegador kiosk siga abierto. Si no hay chrome con el perfil
-#      kiosk, relanza kiosk.cmd (que hace polling a localhost:8000).
+#   1. WEB: que el POS responda en $WebUrl. Se usa 127.0.0.1 (NO "localhost")
+#      para evitar el fallback a IPv6 ::1, que da falsos negativos cuando
+#      `artisan serve` escucha solo en IPv4. Reinicia el stack solo tras
+#      $WebFailThreshold fallos CONSECUTIVOS (evita reinicios por parpadeos).
+#   2. COLA: trabajos "procesando" atascados > $QueueStuckMinutes → reinicia.
+#   3. KIOSK: si no hay chrome del perfil kiosk, relanza kiosk.cmd OCULTO
+#      (via run-hidden.vbs, para no mostrar ninguna ventana de consola).
 # Log con rotación diaria (conserva $LogKeepDays archivos).
 # ----------------------------------------------------------------------------
-# NOTA OPERATIVA 1: al detectar cola atascada, el watchdog mata TODOS los
-#   procesos php.exe de la máquina (no solo los de pos-web/pos-queue). No
-#   correr tinker/debug manual en la terminal mientras el watchdog está activo.
+# NOTA OPERATIVA 1: al reiniciar el stack mata TODOS los php.exe de la máquina
+#   y el Chrome del perfil kiosk. No correr tinker/debug manual en la terminal
+#   mientras el watchdog está activo.
 # NOTA OPERATIVA 2 (deuda técnica): la detección de cola consulta las columnas
 #   reserved_at/available_at de la tabla `jobs` directamente por SQL. Si una
 #   futura migración de Laravel renombra esas columnas, el script deja de
@@ -24,12 +24,13 @@
 param(
     [string]$PosRoot = 'C:\pos',
     [string]$AppRoot = '',
-    [string]$WebUrl = 'http://localhost:8000',
+    [string]$WebUrl = 'http://127.0.0.1:8000',
     [string]$PhpPath = 'C:\php\php.exe',
-    [string]$KioskCmd = 'C:\pos\kiosk.cmd',
-    [string]$TaskWeb = 'pos-web',
-    [string]$TaskQueue = 'pos-queue',
+    [string]$KioskCmd = 'C:\pos\boomwalos-pos\resources\scripts\windows\kiosk.cmd',
+    [string]$RunHidden = 'C:\pos\run-hidden.vbs',
+    [string]$TaskStartup = 'pos-startup',
     [int]$QueueStuckMinutes = 5,
+    [int]$WebFailThreshold = 3,
     [int]$LogKeepDays = 7
 )
 
@@ -39,6 +40,7 @@ if (-not $AppRoot) { $AppRoot = Join-Path $PosRoot 'boomwalos-pos' }
 $DbFile = Join-Path $AppRoot 'database\database.sqlite'
 $LogDir = Join-Path $PosRoot 'logs'
 $LogFile = Join-Path $LogDir 'watchdog.log'
+$WebFailFile = Join-Path $LogDir 'web-fail.count'
 
 New-Item -ItemType Directory -Force -Path $LogDir | Out-Null
 
@@ -63,7 +65,7 @@ function Test-PosWeb {
             $r = Invoke-WebRequest -UseBasicParsing -Uri $WebUrl -TimeoutSec 3
             if ($r.StatusCode -lt 500) { return $true }
         } catch { }
-        Start-Sleep -Seconds 5
+        Start-Sleep -Seconds 3
     }
     return $false
 }
@@ -81,31 +83,56 @@ function Get-QueueStuckCount {
     return ([int]($out -join '').Trim())
 }
 
+function Start-Hidden {
+    # Lanza un proceso sin ventana visible, usando el shim run-hidden.vbs.
+    param([string]$Exe, [string]$Arguments)
+    if (Test-Path $RunHidden) {
+        Start-Process -FilePath 'wscript.exe' -ArgumentList @($RunHidden, $Exe, $Arguments) -WindowStyle Hidden
+    } else {
+        Start-Process -FilePath $Exe -ArgumentList $Arguments -WindowStyle Hidden
+    }
+}
+
+function Restart-PosStack {
+    param([string]$Reason)
+    Write-Log "STACK: reiniciando stack completo ($Reason)."
+    Get-Process -Name php -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
+    Get-CimInstance Win32_Process -Filter "Name='chrome.exe'" -ErrorAction SilentlyContinue |
+        Where-Object { $_.CommandLine -like '*pos-kiosk-profile*' } |
+        ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }
+    Start-Sleep -Seconds 2
+    schtasks /run /tn $TaskStartup | Out-Null
+}
+
 # --- 1. WEB ---
 $webOk = Test-PosWeb
-if (-not $webOk) {
-    $listener = Get-PortListener 8000
-    if (-not $listener) {
-        Write-Log 'WEB: no responde y puerto 8000 sin listener. Relanzando pos-web y pos-queue.'
-        schtasks /run /tn $TaskWeb | Out-Null
-        schtasks /run /tn $TaskQueue | Out-Null
+if ($webOk) {
+    if (Test-Path $WebFailFile) { Remove-Item $WebFailFile -Force -ErrorAction SilentlyContinue }
+} else {
+    $fails = 0
+    if (Test-Path $WebFailFile) {
+        $fails = [int](((Get-Content $WebFailFile -ErrorAction SilentlyContinue) -join '').Trim())
+    }
+    $fails++
+    Set-Content -Path $WebFailFile -Value $fails -Encoding ASCII
+
+    if ($fails -ge $WebFailThreshold) {
+        $listener = Get-PortListener 8000
+        if ($listener) {
+            Restart-PosStack "puerto 8000 escucha pero la app no responde (PID $($listener.OwningProcess))"
+        } else {
+            Restart-PosStack 'no responde, puerto 8000 sin listener'
+        }
+        Remove-Item $WebFailFile -Force -ErrorAction SilentlyContinue
     } else {
-        Write-Log "WEB: puerto 8000 escucha pero la app no responde. Reiniciando PHP (PID $($listener.OwningProcess))."
-        Stop-Process -Id $listener.OwningProcess -Force -ErrorAction SilentlyContinue
-        Start-Sleep -Seconds 2
-        schtasks /run /tn $TaskWeb | Out-Null
-        schtasks /run /tn $TaskQueue | Out-Null
+        Write-Log "WEB: sin respuesta (fallo $fails/$WebFailThreshold consecutivo); aun no reinicio."
     }
 }
 
 # --- 2. COLA ---
 $stuck = Get-QueueStuckCount
 if ($stuck -gt 0) {
-    Write-Log "COLA: $stuck trabajo(s) atascado(s) hace > $QueueStuckMinutes min. Reiniciando stack PHP."
-    Get-Process -Name php -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
-    Start-Sleep -Seconds 2
-    schtasks /run /tn $TaskWeb | Out-Null
-    schtasks /run /tn $TaskQueue | Out-Null
+    Restart-PosStack "$stuck trabajo(s) atascado(s) hace > $QueueStuckMinutes min"
 }
 
 # --- 3. KIOSK ---
@@ -114,6 +141,6 @@ $kioskPid = Get-CimInstance Win32_Process -Filter "Name='chrome.exe'" |
     Select-Object -First 1 -ExpandProperty ProcessId
 
 if (-not $kioskPid) {
-    Write-Log 'KIOSK: sin instancia de chrome kiosk. Relanzando kiosk.cmd.'
-    Start-Process -FilePath $KioskCmd -WorkingDirectory (Split-Path $KioskCmd -Parent)
+    Write-Log 'KIOSK: sin instancia de chrome kiosk. Relanzando kiosk.cmd (oculto).'
+    Start-Hidden -Exe 'cmd.exe' -Arguments "/c $KioskCmd"
 }

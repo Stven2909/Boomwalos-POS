@@ -1,7 +1,7 @@
 @echo off
 setlocal EnableExtensions
 
-set "KIOSK_URL=http://localhost:8000"
+set "KIOSK_URL=http://127.0.0.1:8000"
 set "CHROME_PATH=C:\Program Files\Google\Chrome\Application\chrome.exe"
 set "PROFILE_DIR=C:\pos-kiosk-profile"
 set /a tries=0
