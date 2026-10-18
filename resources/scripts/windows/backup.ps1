@@ -36,19 +36,28 @@ if (-not (Test-Path $DbFile)) {
     Write-Error "No se encontró la base SQLite: $DbFile"
 }
 
-$phpCode = '
-$src = new SQLite3($argv[1], SQLITE3_OPEN_READONLY);
-$dst = new SQLite3($argv[2]);
-if (! $src->backup($dst)) { fwrite(STDERR, "backup() fallo\n"); exit(1); }
-$src->close();
-$dst->close();
-echo "ok\n";
-'
+$phpCode = @'
+<?php
+ $src = new SQLite3($argv[1], SQLITE3_OPEN_READONLY);
+ $dst = new SQLite3($argv[2]);
+ if (!$src->backup($dst)) {
+     fwrite(STDERR, "backup failed\n");
+     exit(1);
+ }
+ $src->close();
+ $dst->close();
+ echo "ok\n";
+'@
 
-& $PhpPath -r $phpCode $DbFile $DestDb
-if ($LASTEXITCODE -ne 0) {
-    Write-Error "SQLite backup devolvió código $LASTEXITCODE."
-}
+ $tempScript = Join-Path $env:TEMP 'pos-sqlite-backup.php'
+ Set-Content -Path $tempScript -Value $phpCode -Encoding UTF8
+
+ & $PhpPath $tempScript $DbFile $DestDb
+ if ($LASTEXITCODE -ne 0) {
+     Write-Error "SQLite backup devolvió código $LASTEXITCODE."
+ }
+
+ Remove-Item $tempScript -Force -ErrorAction SilentlyContinue
 
 # --- Logs y .env ---
 Copy-Item -Path "$LogsSource\*.log" -Destination $DestLogs -Force -ErrorAction SilentlyContinue
