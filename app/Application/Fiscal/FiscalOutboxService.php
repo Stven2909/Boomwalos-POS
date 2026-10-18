@@ -189,7 +189,10 @@ class FiscalOutboxService
         $ventas = VentaFiscalPos::query()
             ->with(['establecimiento.configuracionFiscal', 'cola'])
             ->whereNotNull('codigo_generacion')
-            ->where('estado', '!=', EstadoVentaFiscal::SINCRONIZADO->value)
+            ->where(function ($query): void {
+                $query->where('estado', '!=', EstadoVentaFiscal::SINCRONIZADO->value)
+                    ->orWhereNull('sello_recepcion');
+            })
             ->orderBy('id')
             ->limit($limit)
             ->get();
@@ -294,6 +297,8 @@ class FiscalOutboxService
                 $venta->update([
                     'fiscal_sale_id' => $respuesta['codigoGeneracion'] ?? $respuesta['codigo_generacion'] ?? $respuesta['fiscal_sale_id'] ?? $venta->fiscal_sale_id,
                     'codigo_generacion' => $venta->codigo_generacion ?? ($respuesta['codigoGeneracion'] ?? $respuesta['codigo_generacion'] ?? null),
+                    'numero_control' => $venta->numero_control ?? ($respuesta['numeroControl'] ?? $respuesta['numero_control'] ?? null),
+                    'sello_recepcion' => $respuesta['selloRecepcion'] ?? $respuesta['sello_recepcion'] ?? $venta->sello_recepcion,
                     'estado' => EstadoVentaFiscal::SINCRONIZADO->value,
                     'receptor' => null,
                     'sincronizado_at' => now(),
