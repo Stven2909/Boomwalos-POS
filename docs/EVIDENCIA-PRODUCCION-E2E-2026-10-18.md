@@ -44,6 +44,21 @@
 
 ## 2. Venta en Contingencia Offline y Reconciliación (DTE-01 #2)
 
+### Diagrama del Ciclo Completo de Contingencia
+```mermaid
+flowchart TD
+    A["1. Terminal POS sin internet"] --> B["2. Venta cobrada ($1.00) en modo diferido"]
+    B --> C["3. Impresión de Comprobante Transitorio"]
+    C --> D["4. Restablecimiento de red"]
+    D --> E["5. Envío en ráfaga a ApiFact Cloudways"]
+    E --> F["6. Retención reglamentaria (HELD_CONTINGENCIA)"]
+    F --> G["7. Coordinador agrupa y crea Evento de Contingencia v4"]
+    G --> H["8. Hacienda aprueba y sella Evento de Contingencia (Sello 2026D70AA...)"]
+    H --> I["9. Liberación automática del DTE diferido hacia Hacienda"]
+    I --> J["10. Hacienda sella la Factura diferida (Sello 20265470...)"]
+    J --> K["11. POS local sincronizado con su sello definitivo"]
+```
+
 ### 2.1 Fase Offline (Corte de Conectividad)
 1. Simulación de caída de enlace fiscal (`FISCAL_API_URL` a puerto cerrado).
 2. Venta cobrada en efectivo ($1.00 USD, 1 x Agua).
