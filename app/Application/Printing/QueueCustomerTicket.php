@@ -112,7 +112,7 @@ class QueueCustomerTicket implements CustomerTicketDispatcherInterface
             $lines[] = $this->branding->ticketFooter();
         }
 
-        $qrLine = $this->qrLine($pedido);
+        $qrLine = $this->qrLine($pedido, $pago);
 
         if ($qrLine !== null) {
             $lines[] = $qrLine;
@@ -134,7 +134,7 @@ class QueueCustomerTicket implements CustomerTicketDispatcherInterface
         return now()->setTimezone('America/El_Salvador')->format('d/m/Y H:i');
     }
 
-    protected function qrLine(Pedido $pedido): ?string
+    protected function qrLine(Pedido $pedido, Pago $pago): ?string
     {
         $portalUrl = env('WEBFACT_URL', env('FRONTEND_URL', 'https://boomwalos.vercel.app'));
         $tracking = $pedido->numero_seguimiento;
@@ -142,7 +142,9 @@ class QueueCustomerTicket implements CustomerTicketDispatcherInterface
 
         return implode(PHP_EOL, [
             str_repeat('-', 32),
-            '¿SOLICITAR FACTURA O CCF?',
+            $pago->metodo_pago === MetodoPago::TARJETA
+                ? 'PUEDES VER TU FACTURA O CCF'
+                : '¿DESEA FACTURA O CCF?',
             'Escanea el QR o ingresa a:',
             rtrim((string) $portalUrl, '/'),
             'Tracking: ' . $tracking,

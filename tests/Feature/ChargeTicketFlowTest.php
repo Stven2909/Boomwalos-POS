@@ -12,6 +12,7 @@ use App\Models\Impresora;
 use App\Models\Pedido;
 use App\Models\Producto;
 use App\Models\SesionCaja;
+use App\Models\TrabajoImpresion;
 use App\Models\User;
 use App\Services\CobroService;
 use App\Services\PedidoService;
@@ -99,6 +100,31 @@ class ChargeTicketFlowTest extends TestCase
             'entidad_id' => $pago->pedido_id,
             'tipo_evento' => 'ticket_en_cola',
         ]);
+    }
+
+    public function test_card_payment_ticket_invites_to_view_invoice_without_question(): void
+    {
+        Impresora::create([
+            'nombre' => 'Ticket',
+            'tipo' => TipoImpresora::TICKET,
+            'configuracion' => ['driver' => 'queue'],
+        ]);
+
+        $pago = app(CobroService::class)->charge(
+            $this->newOrder(),
+            MetodoPago::TARJETA,
+            null,
+            $this->cashier,
+            ['aprobada' => true, 'referencia' => 'TEST-REF'],
+        );
+
+        $contenido = TrabajoImpresion::query()
+            ->where('pedido_id', $pago->pedido_id)
+            ->where('tipo_trabajo', 'TICKET')
+            ->value('contenido');
+
+        $this->assertStringContainsString('PUEDES VER TU FACTURA O CCF', $contenido);
+        $this->assertStringNotContainsString('¿DESEA FACTURA O CCF?', $contenido);
     }
 
     public function test_charge_without_ticket_printer_creates_error_job(): void

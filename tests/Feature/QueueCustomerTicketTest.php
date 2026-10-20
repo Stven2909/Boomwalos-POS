@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Application\Printing\QueueCustomerTicket;
 use App\Application\Printing\ReprintTicket;
 use App\Enums\MetodoPago;
 use App\Enums\TipoImpresora;
@@ -120,6 +121,26 @@ class QueueCustomerTicketTest extends TestCase
         $this->assertStringContainsString('RECIBIDO $10.00', $contenido);
         $this->assertStringContainsString('CAMBIO  $6.00', $contenido);
         $this->assertStringContainsString('Lucía García', $contenido);
+        $this->assertStringContainsString('¿DESEA FACTURA O CCF?', $contenido);
+    }
+
+    public function test_ticket_copy_depends_on_payment_method(): void
+    {
+        $tarjeta = $this->chargedOrder(MetodoPago::TARJETA);
+        $tarjeta->loadMissing(['mesa', 'detalles.producto', 'detalles.combo', 'detalles.detallePedidoNotas.notaCocina']);
+
+        $contenidoTarjeta = app(QueueCustomerTicket::class)->renderContent($tarjeta, $tarjeta->pago, $this->cashier);
+
+        $this->assertStringContainsString('PUEDES VER TU FACTURA O CCF', $contenidoTarjeta);
+        $this->assertStringNotContainsString('¿DESEA FACTURA O CCF?', $contenidoTarjeta);
+
+        $efectivo = $this->chargedOrder(MetodoPago::EFECTIVO, '10.00');
+        $efectivo->loadMissing(['mesa', 'detalles.producto', 'detalles.combo', 'detalles.detallePedidoNotas.notaCocina']);
+
+        $contenidoEfectivo = app(QueueCustomerTicket::class)->renderContent($efectivo, $efectivo->pago, $this->cashier);
+
+        $this->assertStringContainsString('¿DESEA FACTURA O CCF?', $contenidoEfectivo);
+        $this->assertStringNotContainsString('PUEDES VER TU FACTURA O CCF', $contenidoEfectivo);
     }
 
     public function test_charge_without_printers_creates_error_jobs(): void
