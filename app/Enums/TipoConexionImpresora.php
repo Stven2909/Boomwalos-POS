@@ -7,6 +7,7 @@ enum TipoConexionImpresora: string
     case RED = 'RED';
     case USB = 'USB';
     case PDF = 'PDF';
+    case WINDOWS = 'WINDOWS';
 
     public function label(): string
     {
@@ -14,6 +15,7 @@ enum TipoConexionImpresora: string
             self::RED => 'Red (Ethernet / WiFi)',
             self::USB => 'USB Local',
             self::PDF => 'Simulador PDF / Virtual',
+            self::WINDOWS => 'Windows compartida',
         };
     }
 }

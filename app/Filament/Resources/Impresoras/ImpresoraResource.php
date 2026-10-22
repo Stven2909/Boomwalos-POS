@@ -9,6 +9,7 @@ use App\Filament\Resources\Impresoras\Pages\CreateImpresora;
 use App\Filament\Resources\Impresoras\Pages\EditImpresora;
 use App\Filament\Resources\Impresoras\Pages\ListImpresoras;
 use App\Models\Impresora;
+use App\Rules\WindowsPrinterPath;
 use App\Services\Printing\PrinterTestService;
 use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
@@ -100,6 +101,13 @@ class ImpresoraResource extends Resource
                         ->placeholder('/dev/usb/lp0 o nombre de impresora')
                         ->required(fn ($get) => ($get('conexion') instanceof TipoConexionImpresora ? $get('conexion')->value : $get('conexion')) === TipoConexionImpresora::USB->value)
                         ->visible(fn ($get) => ($get('conexion') instanceof TipoConexionImpresora ? $get('conexion')->value : $get('conexion')) === TipoConexionImpresora::USB->value),
+                    TextInput::make('ruta_windows')
+                        ->label('Ruta compartida')
+                        ->placeholder('\\\\CAJA-PC\\RECIBOS')
+                        ->maxLength(255)
+                        ->rules([new WindowsPrinterPath])
+                        ->required(fn ($get) => ($get('conexion') instanceof TipoConexionImpresora ? $get('conexion')->value : $get('conexion')) === TipoConexionImpresora::WINDOWS->value)
+                        ->visible(fn ($get) => ($get('conexion') instanceof TipoConexionImpresora ? $get('conexion')->value : $get('conexion')) === TipoConexionImpresora::WINDOWS->value),
                     Toggle::make('activa')
                         ->label('Activa')
                         ->default(true),
@@ -131,6 +139,7 @@ class ImpresoraResource extends Resource
                         TipoConexionImpresora::RED => 'success',
                         TipoConexionImpresora::USB => 'gray',
                         TipoConexionImpresora::PDF => 'primary',
+                        TipoConexionImpresora::WINDOWS => 'info',
                     }),
                 TextColumn::make('direccion')
                     ->label('Dirección')

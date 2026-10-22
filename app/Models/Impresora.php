@@ -22,6 +22,7 @@ class Impresora extends Model
         'ip',
         'puerto',
         'dispositivo_usb',
+        'ruta_windows',
         'activa',
         'configuracion',
         'ultima_conexion_exitosa_at',
@@ -128,6 +129,7 @@ class Impresora extends Model
         return match ($this->conexion) {
             TipoConexionImpresora::RED => "{$this->ip}:{$this->puerto}",
             TipoConexionImpresora::USB => ($this->dispositivo_usb ?? 'No configurado'),
+            TipoConexionImpresora::WINDOWS => ($this->ruta_windows ?? 'No configurado'),
             TipoConexionImpresora::PDF => 'Simulador Virtual (PDF)',
             default => 'No configurado',
         };
