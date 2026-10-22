@@ -2,7 +2,7 @@
 
 - Fecha: 2026-10-22
 - App: `boomwalos-pos` (repositorio `C:\laragon\www\boomwalos-pos`) · terminal en `C:\pos\boomwalos-pos`
-- Estado: **Fase 1 implementada (`56466bd` + soporte Windows compartida `8dfdbb0`); Fase 2 implementada en código el 2026-10-22, pendiente cargar el catálogo de la sucursal nueva**
+- Estado: **Fase 1 implementada (`56466bd` + soporte Windows compartida `8dfdbb0`); Fase 2 implementada en código y catálogo de Sucursal 2 capturado en `database/seeders/data/catalogo-planes-de-renderos.php`, pendiente sembrarlo en la base del monitor**
 - Alcance: 2 fases ortogonales — Fase 1 (impresión por área), Fase 2 (catálogo por sucursal)
 
 ## Objetivo

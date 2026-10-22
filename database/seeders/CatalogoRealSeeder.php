@@ -71,6 +71,7 @@ class CatalogoRealSeeder extends Seeder
                     'parent_id' => null,
                     'activa' => true,
                     'icono' => $grupo['icono'] ?? null,
+                    'area' => $grupo['area'] ?? null,
                 ],
             );
 
@@ -84,6 +85,7 @@ class CatalogoRealSeeder extends Seeder
                         'descripcion' => $categoria['descripcion'] ?? null,
                         'parent_id' => $grupoModel->getKey(),
                         'activa' => true,
+                        'area' => $categoria['area'] ?? null,
                     ],
                 );
 
