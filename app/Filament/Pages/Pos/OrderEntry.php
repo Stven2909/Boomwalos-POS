@@ -250,7 +250,9 @@ class OrderEntry extends PosPage
 
     public function selectProduct(int $productoId): void
     {
-        $producto = Producto::query()->find($productoId);
+        $producto = Producto::query()
+            ->porEstablecimiento($this->establishment()->getKey())
+            ->find($productoId);
 
         if (! $producto || $producto->disponibilidad !== DisponibilidadProducto::DISPONIBLE) {
             $this->feedback = 'Este producto ya no está disponible.';
@@ -464,7 +466,9 @@ class OrderEntry extends PosPage
     public function addProduct(int $productoId, ?string $masa = null): void
     {
         try {
-            $producto = Producto::query()->findOrFail($productoId);
+            $producto = Producto::query()
+                ->porEstablecimiento($this->establishment()->getKey())
+                ->findOrFail($productoId);
             app(PedidoService::class)->addProduct($this->pedido, $producto, auth()->user(), $masa);
             $this->feedback = null;
             $this->refreshPedido();
@@ -780,6 +784,7 @@ class OrderEntry extends PosPage
     {
         if ($this->cachedCategories === null) {
             $this->cachedCategories = Categoria::query()
+                ->porEstablecimiento($this->establishment()->getKey())
                 ->where('activa', true)
                 ->orderBy('nombre')
                 ->limit(100)
@@ -793,6 +798,7 @@ class OrderEntry extends PosPage
     {
         if ($this->cachedRootCategories === null) {
             $this->cachedRootCategories = Categoria::query()
+                ->porEstablecimiento($this->establishment()->getKey())
                 ->groups()
                 ->where('activa', true)
                 ->orderBy('nombre')
@@ -808,19 +814,33 @@ class OrderEntry extends PosPage
             return collect();
         }
 
-        $cacheKey = $this->category.'|'.$this->search;
+        $establishmentId = $this->establishment()->getKey();
+        $cacheKey = $this->category.'|'.$this->search.'|'.$establishmentId;
         if (! isset($this->cachedProducts[$cacheKey])) {
             $this->cachedProducts[$cacheKey] = Producto::query()
                 ->with('categoria')
+                ->porEstablecimiento($establishmentId)
                 ->where('disponibilidad', DisponibilidadProducto::DISPONIBLE->value)
-                ->whereHas('categoria', fn ($query) => $query->where('activa', true))
-                ->when($this->category !== 'all', function ($query) {
-                    $cat = Categoria::find($this->category);
+                ->whereHas('categoria', fn ($query) => $query
+                    ->where('activa', true)
+                    ->porEstablecimiento($establishmentId))
+                ->when($this->category !== 'all', function ($query) use ($establishmentId) {
+                    $cat = Categoria::query()
+                        ->porEstablecimiento($establishmentId)
+                        ->find($this->category);
+
                     if ($cat && $cat->isGroup()) {
-                        $childIds = Categoria::where('parent_id', $cat->id)->pluck('id')->all();
+                        $childIds = Categoria::query()
+                            ->where('parent_id', $cat->id)
+                            ->porEstablecimiento($establishmentId)
+                            ->pluck('id')
+                            ->all();
+
                         $query->whereIn('categoria_id', array_merge([$cat->id], $childIds));
+                    } elseif ($cat) {
+                        $query->where('categoria_id', $cat->id);
                     } else {
-                        $query->where('categoria_id', $this->category);
+                        $query->whereRaw('1 = 0');
                     }
                 })
                 ->when($this->search !== '', function ($query) {
@@ -854,7 +874,11 @@ class OrderEntry extends PosPage
 
     public function getSelectedMasaProductProperty(): ?Producto
     {
-        return $this->selectedMasaProductId ? Producto::query()->find($this->selectedMasaProductId) : null;
+        return $this->selectedMasaProductId
+            ? Producto::query()
+                ->porEstablecimiento($this->establishment()->getKey())
+                ->find($this->selectedMasaProductId)
+            : null;
     }
 
     public function getPendingDetailsProperty()
@@ -1119,6 +1143,7 @@ class OrderEntry extends PosPage
         if ($this->cachedAvailableCombos === null) {
             $this->cachedAvailableCombos = Combo::query()
                 ->with('opcionesCombo.productos')
+                ->porEstablecimiento($this->establishment()->getKey())
                 ->where('disponibilidad', DisponibilidadProducto::DISPONIBLE->value)
                 ->orderBy('nombre')
                 ->limit(100)

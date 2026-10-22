@@ -3,13 +3,17 @@
 namespace App\Models;
 
 use App\Enums\DisponibilidadProducto;
+use App\Models\Concerns\BelongsToEstablecimiento;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Storage;
 
 class Combo extends Model
 {
+    use BelongsToEstablecimiento;
+
     protected $fillable = [
+        'establecimiento_id',
         'nombre',
         'precio_fijo',
         'imagen_url',

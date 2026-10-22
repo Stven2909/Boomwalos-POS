@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Productos;
 
+use App\Contracts\EstablishmentContextInterface;
 use App\Enums\DisponibilidadProducto;
 use App\Filament\Resources\Productos\Pages\ManageProductos;
 use App\Models\Producto;
@@ -15,12 +16,14 @@ use Filament\Forms\Components\Toggle;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Filament\Notifications\Notification;
+use Illuminate\Database\Eloquent\Builder;
 use UnitEnum;
 
 class ProductoResource extends Resource
@@ -47,8 +50,26 @@ class ProductoResource extends Resource
         return $schema->components([
             Section::make('Datos del producto')->schema([
                 Grid::make(2)->schema([
+                    Select::make('establecimiento_id')
+                        ->label('Sucursal')
+                        ->relationship('establecimiento', 'nombre')
+                        ->required()
+                        ->live()
+                        ->default(fn () => app(EstablishmentContextInterface::class)->idOrNull())
+                        ->disabled(fn (?Producto $record): bool => $record !== null),
                     TextInput::make('nombre')->label('Nombre')->required()->maxLength(100),
-                    Select::make('categoria_id')->label('Categoría')->relationship('categoria', 'nombre')->searchable()->preload()->required()->native(false),
+                    Select::make('categoria_id')
+                        ->label('Categoría')
+                        ->relationship(
+                            name: 'categoria',
+                            titleAttribute: 'nombre',
+                            modifyQueryUsing: fn (Builder $query, Get $get) => $query
+                                ->where('establecimiento_id', $get('establecimiento_id')),
+                        )
+                        ->searchable()
+                        ->preload()
+                        ->required()
+                        ->native(false),
                     TextInput::make('precio')->label('Precio')->numeric()->minValue(0)->prefix('$')->required(),
                     Select::make('disponibilidad')
                         ->label('Disponibilidad')
@@ -79,6 +100,7 @@ class ProductoResource extends Resource
             ->columns([
                 ImageColumn::make('imagen_url')->label('Imagen')->disk('public')->circular(),
                 TextColumn::make('nombre')->label('Producto')->searchable()->sortable(),
+                TextColumn::make('establecimiento.nombre')->label('Sucursal')->sortable(),
                 TextColumn::make('categoria.nombre')->label('Categoría')->sortable(),
                 TextColumn::make('precio')->label('Precio')->money('USD')->sortable(),
                 TextColumn::make('disponibilidad')->label('Disponibilidad')->badge()->formatStateUsing(fn (?DisponibilidadProducto $state): string => $state?->label() ?? 'Sin estado')->color(fn (?DisponibilidadProducto $state): string => $state === DisponibilidadProducto::DISPONIBLE ? 'success' : 'gray'),
@@ -102,6 +124,12 @@ class ProductoResource extends Resource
                     }),
             ])
             ->toolbarActions([]);
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()
+            ->porEstablecimiento(app(EstablishmentContextInterface::class)->idOrNull());
     }
 
     public static function getPages(): array

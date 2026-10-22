@@ -16,6 +16,21 @@ class Establecimiento extends Model
         'codigo_punto_venta',
     ];
 
+    public function categorias(): HasMany
+    {
+        return $this->hasMany(Categoria::class);
+    }
+
+    public function productos(): HasMany
+    {
+        return $this->hasMany(Producto::class);
+    }
+
+    public function combos(): HasMany
+    {
+        return $this->hasMany(Combo::class);
+    }
+
     public function mesas(): HasMany
     {
         return $this->hasMany(Mesa::class);

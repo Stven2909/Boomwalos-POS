@@ -2,6 +2,8 @@
 
 namespace App\Filament\Resources\Categorias\Pages;
 
+use App\Contracts\EstablishmentContextInterface;
+use App\Filament\Pages\EstablishmentSelection;
 use App\Filament\Resources\Categorias\CategoriaResource;
 use App\Models\Categoria;
 use Filament\Actions\Action;
@@ -31,6 +33,15 @@ class ListCategories extends Page
         return auth()->user()?->can('gestionar_productos') ?? false;
     }
 
+    public function mount(): void
+    {
+        $context = app(EstablishmentContextInterface::class);
+
+        if ($context->idOrNull() === null && $context->accessible()->count() > 1) {
+            $this->redirect(EstablishmentSelection::getUrl());
+        }
+    }
+
     public function content(Schema $schema): Schema
     {
         return $schema->components([
@@ -45,8 +56,16 @@ class ListCategories extends Page
 
     public function getGroupsProperty()
     {
+        $establishmentId = app(EstablishmentContextInterface::class)->idOrNull();
+
         return Categoria::query()
-            ->with(['children' => fn ($q) => $q->withCount('productos')->orderBy('nombre')])
+            ->porEstablecimiento($establishmentId)
+            ->with([
+                'children' => fn ($query) => $query
+                    ->porEstablecimiento($establishmentId)
+                    ->withCount('productos')
+                    ->orderBy('nombre'),
+            ])
             ->withCount('productos')
             ->groups()
             ->orderBy('nombre')
@@ -59,7 +78,9 @@ class ListCategories extends Page
 
     public function editCategoria(int $id): void
     {
-        $record = Categoria::findOrFail($id);
+        $record = Categoria::query()
+            ->porEstablecimiento(app(EstablishmentContextInterface::class)->idOrNull())
+            ->findOrFail($id);
         $this->editCategoriaRecord = $record;
 
         $this->mountAction('editCategoriaAction');
@@ -67,7 +88,9 @@ class ListCategories extends Page
 
     public function deleteCategoria(int $id): void
     {
-        $record = Categoria::findOrFail($id);
+        $record = Categoria::query()
+            ->porEstablecimiento(app(EstablishmentContextInterface::class)->idOrNull())
+            ->findOrFail($id);
 
         if ($record->productos()->exists()) {
             Notification::make()

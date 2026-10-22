@@ -3,6 +3,7 @@
 namespace App\Application\Catalog;
 
 use App\Models\Combo;
+use App\Models\Producto;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -26,6 +27,19 @@ final class SyncComboOptions
                     throw ValidationException::withMessages([
                         'opciones' => 'Cada grupo del combo necesita nombre, cantidad y al menos un producto.',
                     ]);
+                }
+
+                if ($combo->establecimiento_id !== null) {
+                    $validProducts = Producto::query()
+                        ->where('establecimiento_id', $combo->establecimiento_id)
+                        ->whereIn('id', $productIds->all())
+                        ->count();
+
+                    if ($validProducts !== $productIds->count()) {
+                        throw ValidationException::withMessages([
+                            'opciones' => 'Todos los productos del combo deben pertenecer a la misma sucursal.',
+                        ]);
+                    }
                 }
 
                 $optionModel = $combo->opcionesCombo()->create([

@@ -203,6 +203,14 @@ class PedidoService
 
             $producto = Producto::query()->lockForUpdate()->findOrFail($producto->getKey());
 
+            if ($producto->establecimiento_id !== null
+                && $pedido->establecimiento_id !== null
+                && (int) $producto->establecimiento_id !== (int) $pedido->establecimiento_id) {
+                throw ValidationException::withMessages([
+                    'producto' => 'El producto pertenece a otra sucursal.',
+                ]);
+            }
+
             if ($producto->disponibilidad !== DisponibilidadProducto::DISPONIBLE) {
                 throw ValidationException::withMessages([
                     'producto' => "{$producto->nombre} no está disponible para venta.",
@@ -253,6 +261,14 @@ class PedidoService
                 ->with('opcionesCombo.productos')
                 ->lockForUpdate()
                 ->findOrFail($combo->getKey());
+
+            if ($combo->establecimiento_id !== null
+                && $pedido->establecimiento_id !== null
+                && (int) $combo->establecimiento_id !== (int) $pedido->establecimiento_id) {
+                throw ValidationException::withMessages([
+                    'combo' => 'El combo pertenece a otra sucursal.',
+                ]);
+            }
 
             if ($combo->disponibilidad !== DisponibilidadProducto::DISPONIBLE) {
                 throw ValidationException::withMessages([

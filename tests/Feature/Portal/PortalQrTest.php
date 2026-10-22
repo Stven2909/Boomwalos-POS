@@ -176,8 +176,8 @@ class PortalQrTest extends TestCase
             'nrc' => '123456-7',
             'giro' => 'Construcción',
             'direccion' => 'San Salvador',
-            'departamento' => 'San Salvador',
-            'municipio' => 'San Salvador Centro',
+            'departamento' => '06',
+            'municipio' => '14',
         ];
 
         $responseCCF = $this->postJson('/api/v1/portal-qr/solicitar', $payloadCCF);

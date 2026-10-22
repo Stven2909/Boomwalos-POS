@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Combo;
+use App\Models\Establecimiento;
 use App\Models\OpcionCombo;
 use App\Models\OpcionComboProducto;
 use App\Models\Producto;
@@ -15,12 +16,19 @@ class CatalogoRealSeederTest extends TestCase
 {
     use RefreshDatabase;
 
+    private Establecimiento $establecimiento;
+
     protected function setUp(): void
     {
         parent::setUp();
 
         Storage::fake('public');
         config(['pos.catalogo_images_dir' => '']);
+
+        $this->establecimiento = Establecimiento::create([
+            'nombre' => 'Boomwalos Centro Histórico',
+            'direccion' => 'Centro Histórico',
+        ]);
     }
 
     public function test_seed_catalogo_real_crea_el_catalogo_completo(): void
@@ -31,6 +39,35 @@ class CatalogoRealSeederTest extends TestCase
         $this->assertSame(4, Combo::count());
         $this->assertSame(8, OpcionCombo::count());
         $this->assertSame(30, OpcionComboProducto::count());
+
+        $this->assertSame(
+            19,
+            Producto::query()->where('establecimiento_id', $this->establecimiento->getKey())->count(),
+        );
+        $this->assertSame(
+            4,
+            Combo::query()->where('establecimiento_id', $this->establecimiento->getKey())->count(),
+        );
+    }
+
+    public function test_seeder_puede_sembrar_el_mismo_catalogo_en_dos_sucursales_sin_mezclarlo(): void
+    {
+        $otra = Establecimiento::create([
+            'nombre' => 'Los Boomwalos Planes de Renderos',
+            'direccion' => 'Carretera a Panchimalco',
+        ]);
+
+        $primero = new CatalogoRealSeeder();
+        $primero->establecimientoId = $this->establecimiento->getKey();
+        $primero->run();
+
+        $segundo = new CatalogoRealSeeder();
+        $segundo->establecimientoId = $otra->getKey();
+        $segundo->run();
+
+        $this->assertSame(19, Producto::query()->where('establecimiento_id', $this->establecimiento->getKey())->count());
+        $this->assertSame(19, Producto::query()->where('establecimiento_id', $otra->getKey())->count());
+        $this->assertSame(38, Producto::count());
     }
 
     public function test_seed_es_idempotente(): void

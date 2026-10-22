@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Categorias;
 
+use App\Contracts\EstablishmentContextInterface;
 use App\Enums\AreaPreparacion;
 use App\Filament\Resources\Categorias\Pages\ListCategories;
 use App\Models\Categoria;
@@ -15,12 +16,15 @@ use Filament\Forms\Components\Toggle;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Filament\Notifications\Notification;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Validation\Rules\Unique;
 use UnitEnum;
 
 class CategoriaResource extends Resource
@@ -47,10 +51,38 @@ class CategoriaResource extends Resource
         return $schema->components([
             Section::make('Datos de categoría')->schema([
                 Grid::make(2)->schema([
-                    TextInput::make('nombre')->label('Nombre')->required()->maxLength(50)->unique(ignoreRecord: true),
+                    Select::make('establecimiento_id')
+                        ->label('Sucursal')
+                        ->relationship('establecimiento', 'nombre')
+                        ->required()
+                        ->live()
+                        ->default(fn () => app(EstablishmentContextInterface::class)->idOrNull())
+                        ->disabled(fn (?Categoria $record): bool => $record !== null),
+                    TextInput::make('nombre')
+                        ->label('Nombre')
+                        ->required()
+                        ->maxLength(50)
+                        ->unique(
+                            ignoreRecord: true,
+                            modifyRuleUsing: fn (Unique $rule, Get $get) => $rule
+                                ->where('establecimiento_id', $get('establecimiento_id')),
+                        ),
                     Select::make('parent_id')
                         ->label('Grupo al que pertenece')
-                        ->options(fn () => Categoria::query()->groups()->where('activa', true)->pluck('nombre', 'id'))
+                        ->options(function (Get $get): array {
+                            $establecimientoId = $get('establecimiento_id');
+
+                            if (! $establecimientoId) {
+                                return [];
+                            }
+
+                            return Categoria::query()
+                                ->porEstablecimiento((int) $establecimientoId)
+                                ->groups()
+                                ->where('activa', true)
+                                ->pluck('nombre', 'id')
+                                ->all();
+                        })
                         ->nullable()
                         ->default(null)
                         ->placeholder('Ninguno — es un grupo'),
@@ -97,6 +129,7 @@ class CategoriaResource extends Resource
                         : '<span class="inline-flex items-center rounded-md bg-gray-100 px-2 py-1 text-xs font-semibold text-gray-700">Categoría</span>'
                     ),
                 TextColumn::make('nombre')->label('Nombre')->searchable()->sortable(),
+                TextColumn::make('establecimiento.nombre')->label('Sucursal')->sortable(),
                 TextColumn::make('parent.nombre')
                     ->label('Grupo padre')
                     ->getStateUsing(fn (Categoria $record): ?string => $record->parent?->nombre),
@@ -142,6 +175,12 @@ class CategoriaResource extends Resource
                     }),
             ])
             ->toolbarActions([]);
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()
+            ->porEstablecimiento(app(EstablishmentContextInterface::class)->idOrNull());
     }
 
     public static function getPages(): array

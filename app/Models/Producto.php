@@ -2,15 +2,21 @@
 
 namespace App\Models;
 
+use App\Contracts\EstablishmentContextInterface;
 use App\Enums\DisponibilidadProducto;
+use App\Models\Concerns\BelongsToEstablecimiento;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 
 class Producto extends Model
 {
+    use BelongsToEstablecimiento;
+
     protected $fillable = [
+        'establecimiento_id',
         'categoria_id',
         'nombre',
         'precio',
@@ -18,6 +24,34 @@ class Producto extends Model
         'disponibilidad',
         'requiere_masa',
     ];
+
+    protected static function booted(): void
+    {
+        static::creating(function (Producto $producto): void {
+            if ($producto->establecimiento_id !== null) {
+                return;
+            }
+
+            $producto->establecimiento_id = $producto->categoria?->establecimiento_id
+                ?? app(EstablishmentContextInterface::class)->idOrNull();
+        });
+
+        static::saving(function (Producto $producto): void {
+            if ($producto->categoria_id === null || $producto->establecimiento_id === null) {
+                return;
+            }
+
+            $categoryEstablishmentId = Categoria::query()
+                ->whereKey($producto->categoria_id)
+                ->value('establecimiento_id');
+
+            if ($categoryEstablishmentId !== null && (int) $categoryEstablishmentId !== (int) $producto->establecimiento_id) {
+                throw ValidationException::withMessages([
+                    'categoria_id' => 'La categoría pertenece a otra sucursal.',
+                ]);
+            }
+        });
+    }
 
     protected function casts(): array
     {

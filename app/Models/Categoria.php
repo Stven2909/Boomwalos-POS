@@ -2,15 +2,21 @@
 
 namespace App\Models;
 
+use App\Contracts\EstablishmentContextInterface;
 use App\Enums\AreaPreparacion;
+use App\Models\Concerns\BelongsToEstablecimiento;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Validation\ValidationException;
 
 class Categoria extends Model
 {
+    use BelongsToEstablecimiento;
+
     protected $fillable = [
+        'establecimiento_id',
         'nombre',
         'descripcion',
         'activa',
@@ -18,6 +24,34 @@ class Categoria extends Model
         'icono',
         'area',
     ];
+
+    protected static function booted(): void
+    {
+        static::creating(function (Categoria $categoria): void {
+            if ($categoria->establecimiento_id !== null) {
+                return;
+            }
+
+            $categoria->establecimiento_id = $categoria->parent?->establecimiento_id
+                ?? app(EstablishmentContextInterface::class)->idOrNull();
+        });
+
+        static::saving(function (Categoria $categoria): void {
+            if ($categoria->parent_id === null || $categoria->establecimiento_id === null) {
+                return;
+            }
+
+            $parentEstablishmentId = self::query()
+                ->whereKey($categoria->parent_id)
+                ->value('establecimiento_id');
+
+            if ($parentEstablishmentId !== null && (int) $parentEstablishmentId !== (int) $categoria->establecimiento_id) {
+                throw ValidationException::withMessages([
+                    'parent_id' => 'El grupo padre pertenece a otra sucursal.',
+                ]);
+            }
+        });
+    }
 
     public function parent(): BelongsTo
     {

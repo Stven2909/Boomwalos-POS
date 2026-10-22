@@ -47,6 +47,8 @@ class PosTicketDemo extends Command
 
     public function handle(EstablishmentContextInterface $context): int
     {
+        $context->reset();
+
         try {
             $establishmentId = $this->resolveEstablishmentId($context);
             $context->set($establishmentId);

@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Combos;
 
 use App\Application\Catalog\SyncComboOptions;
+use App\Contracts\EstablishmentContextInterface;
 use App\Enums\DisponibilidadProducto;
 use App\Filament\Resources\Combos\Pages\ManageCombos;
 use App\Models\Combo;
@@ -18,12 +19,14 @@ use Filament\Forms\Components\Repeater;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Filament\Notifications\Notification;
+use Illuminate\Database\Eloquent\Builder;
 use UnitEnum;
 
 class ComboResource extends Resource
@@ -50,6 +53,13 @@ class ComboResource extends Resource
         return $schema->components([
             Section::make('Datos del combo')->schema([
                 Grid::make(2)->schema([
+                    Select::make('establecimiento_id')
+                        ->label('Sucursal')
+                        ->relationship('establecimiento', 'nombre')
+                        ->required()
+                        ->live()
+                        ->default(fn () => app(EstablishmentContextInterface::class)->idOrNull())
+                        ->disabled(fn (?Combo $record): bool => $record !== null),
                     TextInput::make('nombre')->label('Nombre')->required()->maxLength(100),
                     TextInput::make('precio_fijo')->label('Precio fijo')->numeric()->minValue(0)->prefix('$')->required(),
                     Select::make('disponibilidad')
@@ -83,7 +93,23 @@ class ComboResource extends Resource
                                 Toggle::make('es_obligatorio')->label('Grupo obligatorio')->default(true),
                                 Select::make('producto_ids')
                                     ->label('Productos permitidos')
-                                    ->options(fn (): array => Producto::query()->with('categoria')->orderBy('nombre')->get()->mapWithKeys(fn (Producto $product): array => [$product->getKey() => $product->nombre . ' · ' . ($product->categoria?->nombre ?? 'Sin categoría')])->all())
+                                    ->options(function (Get $get): array {
+                                        $establecimientoId = $get('establecimiento_id', isAbsolute: true);
+
+                                        if (! $establecimientoId) {
+                                            return [];
+                                        }
+
+                                        return Producto::query()
+                                            ->with('categoria')
+                                            ->where('establecimiento_id', $establecimientoId)
+                                            ->orderBy('nombre')
+                                            ->get()
+                                            ->mapWithKeys(fn (Producto $product): array => [
+                                                $product->getKey() => $product->nombre.' · '.($product->categoria?->nombre ?? 'Sin categoría'),
+                                            ])
+                                            ->all();
+                                    })
                                     ->multiple()
                                     ->searchable()
                                     ->preload()
@@ -104,6 +130,7 @@ class ComboResource extends Resource
             ->columns([
                 ImageColumn::make('imagen_url')->label('Imagen')->disk('public')->circular(),
                 TextColumn::make('nombre')->label('Combo')->searchable()->sortable(),
+                TextColumn::make('establecimiento.nombre')->label('Sucursal')->sortable(),
                 TextColumn::make('precio_fijo')->label('Precio')->money('USD')->sortable(),
                 TextColumn::make('opciones_combo_count')->label('Grupos')->counts('opcionesCombo'),
                 TextColumn::make('disponibilidad')->label('Disponibilidad')->badge()->formatStateUsing(fn (?DisponibilidadProducto $state): string => $state?->label() ?? 'Sin estado')->color(fn (?DisponibilidadProducto $state): string => $state === DisponibilidadProducto::DISPONIBLE ? 'success' : 'gray'),
@@ -137,6 +164,12 @@ class ComboResource extends Resource
                     }),
             ])
             ->toolbarActions([]);
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()
+            ->porEstablecimiento(app(EstablishmentContextInterface::class)->idOrNull());
     }
 
     public static function getPages(): array

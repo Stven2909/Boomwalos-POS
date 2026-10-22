@@ -2,12 +2,15 @@
 
 namespace Database\Seeders;
 
+use App\Contracts\EstablishmentContextInterface;
 use App\Enums\DisponibilidadProducto;
 use App\Models\Categoria;
 use App\Models\Combo;
+use App\Models\Establecimiento;
 use App\Models\Producto;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Storage;
+use RuntimeException;
 
 class CatalogoRealSeeder extends Seeder
 {
@@ -15,19 +18,54 @@ class CatalogoRealSeeder extends Seeder
 
     private const CARPETA_IMAGENES_COMBOS = 'combos';
 
+    public ?int $establecimientoId = null;
+
+    public ?string $dataFile = null;
+
+    private int $branchId = 0;
+
     public function run(): void
     {
-        $catalogo = require __DIR__.'/data/catalogo.php';
+        $this->branchId = $this->resolveEstablecimientoId();
+        $catalogo = require $this->dataFile ?? __DIR__.'/data/catalogo.php';
 
         $this->sembrarGrupos($catalogo['grupos'] ?? []);
         $this->sembrarCombos($catalogo['combos'] ?? []);
+    }
+
+    private function resolveEstablecimientoId(): int
+    {
+        if ($this->establecimientoId !== null) {
+            if (! Establecimiento::query()->whereKey($this->establecimientoId)->exists()) {
+                throw new RuntimeException("La sucursal {$this->establecimientoId} no existe.");
+            }
+
+            return $this->establecimientoId;
+        }
+
+        $contextId = app(EstablishmentContextInterface::class)->idOrNull();
+
+        if ($contextId !== null) {
+            return $contextId;
+        }
+
+        $firstId = Establecimiento::query()->orderBy('id')->value('id');
+
+        if ($firstId === null) {
+            throw new RuntimeException('No hay sucursales. Crea una o indica el ID con --establecimiento.');
+        }
+
+        return (int) $firstId;
     }
 
     private function sembrarGrupos(array $grupos): void
     {
         foreach ($grupos as $grupo) {
             $grupoModel = Categoria::updateOrCreate(
-                ['nombre' => $grupo['nombre']],
+                [
+                    'establecimiento_id' => $this->branchId,
+                    'nombre' => $grupo['nombre'],
+                ],
                 [
                     'descripcion' => $grupo['descripcion'] ?? null,
                     'parent_id' => null,
@@ -38,7 +76,10 @@ class CatalogoRealSeeder extends Seeder
 
             foreach ($grupo['categorias'] ?? [] as $categoria) {
                 $categoriaModel = Categoria::updateOrCreate(
-                    ['nombre' => $categoria['nombre']],
+                    [
+                        'establecimiento_id' => $this->branchId,
+                        'nombre' => $categoria['nombre'],
+                    ],
                     [
                         'descripcion' => $categoria['descripcion'] ?? null,
                         'parent_id' => $grupoModel->getKey(),
@@ -58,7 +99,11 @@ class CatalogoRealSeeder extends Seeder
         $imagenUrl = $this->copiarImagen($datos['imagen'] ?? null, self::CARPETA_IMAGENES_PRODUCTOS);
 
         $producto = Producto::updateOrCreate(
-            ['nombre' => $datos['nombre'], 'categoria_id' => $categoria->getKey()],
+            [
+                'establecimiento_id' => $this->branchId,
+                'categoria_id' => $categoria->getKey(),
+                'nombre' => $datos['nombre'],
+            ],
             [
                 'precio' => $datos['precio'],
                 'disponibilidad' => DisponibilidadProducto::DISPONIBLE,
@@ -77,7 +122,10 @@ class CatalogoRealSeeder extends Seeder
             $imagenUrl = $this->copiarImagen($datos['imagen'] ?? null, self::CARPETA_IMAGENES_COMBOS);
 
             $combo = Combo::updateOrCreate(
-                ['nombre' => $datos['nombre']],
+                [
+                    'establecimiento_id' => $this->branchId,
+                    'nombre' => $datos['nombre'],
+                ],
                 [
                     'precio_fijo' => $datos['precio_fijo'],
                     'disponibilidad' => DisponibilidadProducto::DISPONIBLE,
@@ -89,7 +137,20 @@ class CatalogoRealSeeder extends Seeder
             }
 
             foreach ($datos['opciones'] ?? [] as $opcion) {
-                $productos = Producto::whereIn('nombre', $opcion['productos'] ?? [])->get();
+                $nombres = $opcion['productos'] ?? [];
+                $productos = Producto::query()
+                    ->where('establecimiento_id', $this->branchId)
+                    ->whereIn('nombre', $nombres)
+                    ->get();
+
+                $faltantes = collect($nombres)->diff($productos->pluck('nombre'));
+
+                if ($faltantes->isNotEmpty()) {
+                    throw new RuntimeException(
+                        "El combo {$datos['nombre']} referencia productos inexistentes en la sucursal: "
+                        .$faltantes->implode(', '),
+                    );
+                }
 
                 $opcionModel = $combo->opcionesCombo()->updateOrCreate(
                     ['nombre' => $opcion['nombre']],
