@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-use App\Application\Printing\RenderKitchenComanda;
 use App\Contracts\AuditLoggerInterface;
 use App\Contracts\EstablishmentContextInterface;
 use App\Enums\DisponibilidadProducto;
@@ -12,14 +11,11 @@ use App\Enums\EstadoLineaPedido;
 use App\Enums\EstadoMesa;
 use App\Enums\MasaPupusa;
 use App\Enums\OrigenPedido;
-use App\Enums\TipoImpresora;
 use App\Enums\TipoPedido;
-use App\Enums\TipoTrabajoImpresion;
 use App\Jobs\ProcessPrintJob;
 use App\Models\Combo;
 use App\Models\DetallePedido;
 use App\Models\Establecimiento;
-use App\Models\Impresora;
 use App\Models\Mesa;
 use App\Models\Pedido;
 use App\Models\Producto;
@@ -28,8 +24,10 @@ use App\Models\TrabajoImpresion;
 use App\Models\User;
 use App\Services\Orders\ComboSelectionValidator;
 use App\Services\Orders\PedidoNumberService;
+use App\Services\Printing\ComandaDispatcher;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -40,7 +38,7 @@ class PedidoService
         private readonly AuditLoggerInterface $auditLogger,
         private readonly ComboSelectionValidator $comboSelectionValidator,
         private readonly PedidoNumberService $pedidoNumberService,
-        private readonly RenderKitchenComanda $comandaRenderer,
+        private readonly ComandaDispatcher $comandaDispatcher,
         private readonly PoliticaFlujosPos $flowPolicy,
     ) {}
 
@@ -501,9 +499,12 @@ class PedidoService
         });
     }
 
-    public function sendPendingBatch(Pedido $pedido, User $actor): TrabajoImpresion
+    /**
+     * @return Collection<int, TrabajoImpresion>
+     */
+    public function sendPendingBatch(Pedido $pedido, User $actor): Collection
     {
-        return DB::transaction(function () use ($pedido, $actor): TrabajoImpresion {
+        return DB::transaction(function () use ($pedido, $actor): Collection {
             $pedido = $this->lockPedido($pedido);
             $this->ensureEditable($pedido);
 
@@ -519,30 +520,22 @@ class PedidoService
                 ]);
             }
 
-            $printer = Impresora::buscar(TipoImpresora::COMANDA, $pedido->establecimiento_id);
-            $contenido = $this->comandaRenderer->render($pedido, $pendingLines);
-            $lineIds = $pendingLines->pluck('id')->map(fn ($id): int => (int) $id)->all();
-            sort($lineIds);
-            $uid = hash('sha256', $pedido->getKey().'|COMANDA|'.implode(',', $lineIds));
+            $jobs = $this->comandaDispatcher->dispatch($pedido, $pendingLines);
 
-            $job = TrabajoImpresion::create([
-                'impresora_id' => $printer?->getKey(),
-                'pedido_id' => $pedido->getKey(),
-                'tipo_trabajo' => TipoTrabajoImpresion::COMANDA,
-                'estado' => $printer ? EstadoImpresion::PENDIENTE : EstadoImpresion::ERROR,
-                'contenido' => $contenido,
-                'original_uid' => $uid,
-                'ultimo_error' => $printer ? null : 'No hay impresora de comanda configurada.',
-            ]);
+            $conImpresora = $jobs->contains(
+                fn (TrabajoImpresion $job): bool => $job->estado === EstadoImpresion::PENDIENTE,
+            );
 
-            $pendingLines->each(fn (DetallePedido $detalle): bool => $detalle->update(['tanda_id' => $job->getKey()]));
-
-            $this->audit($pedido, $actor, $printer ? 'comanda_en_cola' : 'comanda_sin_impresora', [
-                'trabajo_impresion_id' => $job->getKey(),
+            $this->audit($pedido, $actor, $conImpresora ? 'comanda_en_cola' : 'comanda_sin_impresora', [
+                'trabajos_impresion' => $jobs->map(fn (TrabajoImpresion $job): array => [
+                    'id' => $job->getKey(),
+                    'area' => $job->area?->value,
+                    'estado' => $job->estado->value,
+                ])->values()->all(),
             ]);
 
             $this->audit($pedido, $actor, 'pedido_enviado_cocina', [
-                'trabajo_impresion_id' => $job->getKey(),
+                'trabajo_impresion_ids' => $jobs->pluck('id')->all(),
                 'detalles' => $pendingLines->map(fn (DetallePedido $detalle): array => [
                     'id' => $detalle->getKey(),
                     'producto_id' => $detalle->producto_id,
@@ -550,11 +543,13 @@ class PedidoService
                 ])->values()->all(),
             ]);
 
-            if ($printer) {
-                ProcessPrintJob::dispatch($job->getKey())->afterCommit();
-            }
+            $jobs->each(function (TrabajoImpresion $job): void {
+                if ($job->estado === EstadoImpresion::PENDIENTE) {
+                    ProcessPrintJob::dispatch($job->getKey())->afterCommit();
+                }
+            });
 
-            return $job;
+            return $jobs;
         });
     }
 

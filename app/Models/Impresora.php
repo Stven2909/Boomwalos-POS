@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Contracts\EstablishmentContextInterface;
+use App\Enums\AreaPreparacion;
 use App\Enums\TipoConexionImpresora;
 use App\Enums\TipoImpresora;
 use Illuminate\Database\Eloquent\Builder;
@@ -15,6 +16,7 @@ class Impresora extends Model
     protected $fillable = [
         'nombre',
         'tipo',
+        'area',
         'establecimiento_id',
         'conexion',
         'ip',
@@ -29,6 +31,7 @@ class Impresora extends Model
     {
         return [
             'tipo' => TipoImpresora::class,
+            'area' => AreaPreparacion::class,
             'conexion' => TipoConexionImpresora::class,
             'configuracion' => 'array',
             'activa' => 'boolean',
@@ -62,6 +65,13 @@ class Impresora extends Model
         return $query->where('tipo', $tipo);
     }
 
+    public function scopePorArea(Builder $query, ?AreaPreparacion $area): Builder
+    {
+        return $area === null
+            ? $query->whereNull('area')
+            : $query->where('area', $area->value);
+    }
+
     public static function buscar(TipoImpresora $tipo, ?int $establecimientoId = null): ?self
     {
         $establecimientoId ??= app(EstablishmentContextInterface::class)->idOrNull();
@@ -81,6 +91,36 @@ class Impresora extends Model
             ->porTipo($tipo)
             ->whereNull('establecimiento_id')
             ->first();
+    }
+
+    public static function buscarPorArea(TipoImpresora $tipo, ?AreaPreparacion $area, ?int $establecimientoId = null): ?self
+    {
+        $establecimientoId ??= app(EstablishmentContextInterface::class)->idOrNull();
+
+        if ($establecimientoId === null) {
+            return null;
+        }
+
+        $query = static::activas()
+            ->porTipo($tipo)
+            ->where('establecimiento_id', $establecimientoId)
+            ->orderBy('id');
+
+        if ($area !== null) {
+            $printer = (clone $query)->where('area', $area->value)->first();
+
+            if ($printer) {
+                return $printer;
+            }
+        }
+
+        $printer = (clone $query)->whereNull('area')->first();
+
+        if ($printer) {
+            return $printer;
+        }
+
+        return (clone $query)->first();
     }
 
     public function direccionConexion(): string

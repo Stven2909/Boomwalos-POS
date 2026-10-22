@@ -132,7 +132,7 @@
                         </a>
                         <a href="{{ $this->printerUrl() }}">
                             <x-heroicon-o-printer class="h-5 w-5" />
-                            <span><strong>Comanda</strong><small>{{ $this->dependencies['comanda'] ? 'Configurada' : 'Sin impresora' }}</small></span>
+                            <span><strong>Comanda</strong><small>{{ $this->dependencies['comanda'] ? 'Configurada' : 'Sin impresora' }}@if (! empty($this->dependencies['comandas_sin_area'])) · Falta: {{ implode(', ', $this->dependencies['comandas_sin_area']) }}@endif</small></span>
                             <i class="{{ $this->dependencies['comanda'] ? 'is-ok' : 'is-warning' }}"></i>
                         </a>
                         <a href="{{ $this->printerUrl() }}">

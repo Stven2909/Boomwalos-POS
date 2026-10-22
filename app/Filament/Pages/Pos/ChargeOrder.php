@@ -136,7 +136,7 @@ class ChargeOrder extends PosPage
                 ? ['aprobada' => $this->tarjetaAprobada]
                 : null;
 
-            [, $comandaJob, $ticketResult] = app(CobroService::class)->chargeAndSend(
+            [, $comandaJobs, $ticketResult] = app(CobroService::class)->chargeAndSend(
                 $this->pedido,
                 MetodoPago::tryFrom($this->metodoPago) ?? MetodoPago::EFECTIVO,
                 $this->metodoPago === MetodoPago::EFECTIVO->value ? $this->montoRecibido : null,
@@ -150,7 +150,7 @@ class ChargeOrder extends PosPage
                 default => ' Ticket de cliente en cola de impresión.',
             };
 
-            $kitchenMessage = $comandaJob
+            $kitchenMessage = $comandaJobs->isNotEmpty()
                 ? ' Los productos pendientes se enviaron a cocina.'
                 : ' La comanda ya estaba enviada.';
 

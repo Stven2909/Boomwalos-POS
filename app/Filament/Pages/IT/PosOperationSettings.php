@@ -3,6 +3,7 @@
 namespace App\Filament\Pages\IT;
 
 use App\Contracts\EstablishmentContextInterface;
+use App\Enums\AreaPreparacion;
 use App\Enums\FlujoPos;
 use App\Enums\TipoImpresora;
 use App\Filament\Concerns\GuardsEstablishment;
@@ -161,10 +162,17 @@ class PosOperationSettings extends Page
     {
         $establishmentId = $this->establishment->getKey();
 
+        $areasSinImpresora = collect(AreaPreparacion::cases())
+            ->filter(fn (AreaPreparacion $area): bool => Impresora::buscarPorArea(TipoImpresora::COMANDA, $area, $establishmentId) === null)
+            ->map(fn (AreaPreparacion $area): string => $area->label())
+            ->values()
+            ->all();
+
         return [
             'mesas' => Mesa::query()->where('establecimiento_id', $establishmentId)->where('activa', true)->count(),
             'comanda' => Impresora::buscar(TipoImpresora::COMANDA, $establishmentId) !== null,
             'ticket' => Impresora::buscar(TipoImpresora::TICKET, $establishmentId) !== null,
+            'comandas_sin_area' => $areasSinImpresora,
             'fiscal' => ConfiguracionFiscal::query()->where('establecimiento_id', $establishmentId)->where('fiscal_habilitada', true)->exists(),
             'caja' => SesionCaja::query()->where('establecimiento_id', $establishmentId)->whereNull('fecha_cierre')->exists(),
         ];

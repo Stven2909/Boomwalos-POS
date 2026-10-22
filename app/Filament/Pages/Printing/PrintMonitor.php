@@ -3,6 +3,7 @@
 namespace App\Filament\Pages\Printing;
 
 use App\Contracts\EstablishmentContextInterface;
+use App\Enums\AreaPreparacion;
 use App\Enums\EstadoImpresion;
 use App\Jobs\ProcessPrintJob;
 use App\Models\TrabajoImpresion;
@@ -27,6 +28,8 @@ class PrintMonitor extends Page
     public string $filterEstado = 'all';
 
     public string $filterTipo = 'all';
+
+    public string $filterArea = 'all';
 
     public ?string $feedback = null;
 
@@ -78,6 +81,11 @@ class PrintMonitor extends Page
             ->with(['impresora', 'pedido'])
             ->when($this->filterEstado !== 'all', fn (Builder $q) => $q->where('estado', $this->filterEstado))
             ->when($this->filterTipo !== 'all', fn (Builder $q) => $q->where('tipo_trabajo', $this->filterTipo))
+            ->when($this->filterArea !== 'all', function (Builder $q): void {
+                $this->filterArea === 'none'
+                    ? $q->whereNull('area')
+                    : $q->where('area', $this->filterArea);
+            })
             ->latest()
             ->limit(100)
             ->get();
@@ -91,6 +99,11 @@ class PrintMonitor extends Page
     public function setFilterTipo(string $tipo): void
     {
         $this->filterTipo = $tipo;
+    }
+
+    public function setFilterArea(string $area): void
+    {
+        $this->filterArea = $area;
     }
 
     public function estadoOptions(): array
@@ -111,6 +124,17 @@ class PrintMonitor extends Page
             'COMANDA' => 'Comanda',
             'TICKET' => 'Ticket',
             'CORTE_CAJA' => 'Corte de caja',
+        ];
+    }
+
+    public function areaOptions(): array
+    {
+        return [
+            'all' => 'Todas',
+            ...collect(AreaPreparacion::cases())
+                ->mapWithKeys(fn (AreaPreparacion $area): array => [$area->value => $area->label()])
+                ->all(),
+            'none' => 'Sin área',
         ];
     }
 

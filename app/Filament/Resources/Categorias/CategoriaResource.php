@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Categorias;
 
+use App\Enums\AreaPreparacion;
 use App\Filament\Resources\Categorias\Pages\ListCategories;
 use App\Models\Categoria;
 use BackedEnum;
@@ -54,6 +55,12 @@ class CategoriaResource extends Resource
                         ->default(null)
                         ->placeholder('Ninguno — es un grupo'),
                     Textarea::make('descripcion')->label('Descripción')->rows(2)->maxLength(500)->columnSpanFull(),
+                    Select::make('area')
+                        ->label('Área de preparación')
+                        ->options(AreaPreparacion::class)
+                        ->nullable()
+                        ->placeholder('Hereda del grupo')
+                        ->helperText('Área a la que se envían las comandas de esta categoría. Si se deja vacío, hereda la del grupo padre.'),
                 ]),
             ]),
             Section::make('Apariencia en el POS')->schema([
@@ -93,6 +100,10 @@ class CategoriaResource extends Resource
                 TextColumn::make('parent.nombre')
                     ->label('Grupo padre')
                     ->getStateUsing(fn (Categoria $record): ?string => $record->parent?->nombre),
+                TextColumn::make('area')
+                    ->label('Área')
+                    ->badge()
+                    ->getStateUsing(fn (Categoria $record): string => $record->areaResuelta()?->label() ?? 'Cocina'),
                 TextColumn::make('children_count')
                     ->label('Subcats')
                     ->counts('children')

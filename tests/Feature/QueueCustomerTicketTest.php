@@ -67,6 +67,7 @@ class QueueCustomerTicketTest extends TestCase
             'nombre' => 'Cocina',
             'tipo' => TipoImpresora::COMANDA,
             'activa' => true,
+            'establecimiento_id' => $this->establishment->getKey(),
             'configuracion' => ['driver' => 'queue'],
         ]);
 

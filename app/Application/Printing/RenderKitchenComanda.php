@@ -3,6 +3,7 @@
 namespace App\Application\Printing;
 
 use App\Contracts\BrandingServiceInterface;
+use App\Enums\AreaPreparacion;
 use App\Models\Pedido;
 
 class RenderKitchenComanda
@@ -11,7 +12,7 @@ class RenderKitchenComanda
         private readonly BrandingServiceInterface $branding,
     ) {}
 
-    public function render(Pedido $pedido, ?iterable $detalles = null): string
+    public function render(Pedido $pedido, ?iterable $detalles = null, ?AreaPreparacion $area = null): string
     {
         $pedido->loadMissing([
             'establecimiento',
@@ -24,7 +25,7 @@ class RenderKitchenComanda
         $lineas = [];
 
         $lineas[] = $this->establecimiento($pedido);
-        $lineas[] = 'COMANDA';
+        $lineas[] = $area === null ? 'COMANDA' : 'COMANDA - '.mb_strtoupper($area->label());
         $lineas[] = $this->destino($pedido);
         $lineas[] = 'Pedido: '.$pedido->codigo_corto;
         $lineas[] = 'Fecha: '.now()->setTimezone('America/El_Salvador')->format('d/m/Y H:i');

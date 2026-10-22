@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\AreaPreparacion;
 use App\Enums\EstadoImpresion;
 use App\Enums\TipoTrabajoImpresion;
 use Illuminate\Database\Eloquent\Model;
@@ -16,6 +17,7 @@ class TrabajoImpresion extends Model
         'tanda_id',
         'pedido_id',
         'tipo_trabajo',
+        'area',
         'es_reimpresion',
         'reimpresion_de_id',
         'motivo_reimpresion',
@@ -33,6 +35,7 @@ class TrabajoImpresion extends Model
         return [
             'es_reimpresion' => 'boolean',
             'tipo_trabajo' => TipoTrabajoImpresion::class,
+            'area' => AreaPreparacion::class,
             'estado' => EstadoImpresion::class,
             'intentos' => 'integer',
             'impreso_at' => 'datetime',

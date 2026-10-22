@@ -205,9 +205,9 @@ class PosFlowConfigurationTest extends TestCase
 
         app(PedidoService::class)->sendPendingBatch($pedido, $this->cashier);
         app(PedidoService::class)->sendToCashRegister($pedido, $this->cashier);
-        [, $comanda] = app(CobroService::class)->chargeAndSend($pedido, MetodoPago::EFECTIVO, '3.00', $this->cashier);
+        [, $comandas] = app(CobroService::class)->chargeAndSend($pedido, MetodoPago::EFECTIVO, '3.00', $this->cashier);
 
-        $this->assertNull($comanda);
+        $this->assertTrue($comandas->isEmpty());
         $this->assertSame(EstadoComercialPedido::CERRADO, $pedido->fresh()->estado_comercial);
         $this->assertSame(EstadoMesa::LIBRE, $mesa->fresh()->estado);
         $this->assertSame(1, TrabajoImpresion::query()->where('pedido_id', $pedido->getKey())->where('tipo_trabajo', 'COMANDA')->count());
@@ -225,11 +225,15 @@ class PosFlowConfigurationTest extends TestCase
         $service = app(PedidoService::class);
         $pedido = $service->startOrder(TipoPedido::PARA_LLEVAR, $this->cashier);
         $service->addProduct($pedido, $this->product, $this->cashier);
-        $firstJob = $service->sendPendingBatch($pedido, $this->cashier);
+        $firstJobs = $service->sendPendingBatch($pedido, $this->cashier);
         $service->addProduct($pedido, $second, $this->cashier);
 
-        [, $secondJob] = app(CobroService::class)->chargeAndSend($pedido, MetodoPago::EFECTIVO, '5.00', $this->cashier);
+        [, $secondJobs] = app(CobroService::class)->chargeAndSend($pedido, MetodoPago::EFECTIVO, '5.00', $this->cashier);
 
+        $firstJob = $firstJobs->first();
+        $secondJob = $secondJobs->first();
+
+        $this->assertNotNull($firstJob);
         $this->assertNotNull($secondJob);
         $this->assertNotSame($firstJob->getKey(), $secondJob->getKey());
         $this->assertStringContainsString('Horchata de morro', $firstJob->contenido);

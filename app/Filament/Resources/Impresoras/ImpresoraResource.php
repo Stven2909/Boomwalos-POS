@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Impresoras;
 
+use App\Enums\AreaPreparacion;
 use App\Enums\TipoConexionImpresora;
 use App\Enums\TipoImpresora;
 use App\Filament\Resources\Impresoras\Pages\CreateImpresora;
@@ -62,6 +63,12 @@ class ImpresoraResource extends Resource
                             ->label('Tipo')
                             ->options(TipoImpresora::class)
                             ->required(),
+                        Select::make('area')
+                            ->label('Área de preparación')
+                            ->options(AreaPreparacion::class)
+                            ->placeholder('Sin área (default de la sucursal)')
+                            ->helperText('Solo para comandas. Dirige las líneas de esa área a esta impresora.')
+                            ->visible(fn ($get) => ($get('tipo') instanceof TipoImpresora ? $get('tipo')->value : $get('tipo')) === TipoImpresora::COMANDA->value),
                     ]),
                     Select::make('establecimiento_id')
                         ->label('Sucursal')
@@ -112,6 +119,11 @@ class ImpresoraResource extends Resource
                     ->label('Tipo')
                     ->badge()
                     ->color(fn (TipoImpresora $state): string => $state === TipoImpresora::COMANDA ? 'warning' : 'info'),
+                TextColumn::make('area')
+                    ->label('Área')
+                    ->badge()
+                    ->placeholder('Default')
+                    ->formatStateUsing(fn ($state): string => $state instanceof AreaPreparacion ? $state->label() : 'Default'),
                 TextColumn::make('conexion')
                     ->label('Conexión')
                     ->badge()

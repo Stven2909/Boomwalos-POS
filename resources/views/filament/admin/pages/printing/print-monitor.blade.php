@@ -26,6 +26,15 @@
             </select>
         </div>
 
+        <div class="flex items-center gap-2">
+            <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Área:</label>
+            <select wire:change="setFilterArea($event.target.value)" class="rounded-lg border-gray-300 text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300">
+                @foreach ($this->areaOptions() as $value => $label)
+                    <option value="{{ $value }}" {{ $filterArea === $value ? 'selected' : '' }}>{{ $label }}</option>
+                @endforeach
+            </select>
+        </div>
+
         @if ($this->failedCount() > 0)
             <button
                 wire:click="retryAllFailed"
@@ -44,6 +53,7 @@
                     <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">ID</th>
                     <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Pedido</th>
                     <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Tipo</th>
+                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Área</th>
                     <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Impresora</th>
                     <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Estado</th>
                     <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Intentos</th>
@@ -67,6 +77,13 @@
                             <span class="inline-flex rounded-full px-2 py-0.5 text-xs font-semibold {{ $job->tipo_trabajo?->value === 'COMANDA' ? 'bg-amber-100 text-amber-800' : 'bg-blue-100 text-blue-800' }}">
                                 {{ $job->tipo_trabajo?->label() ?? $job->tipo_trabajo }}
                             </span>
+                        </td>
+                        <td class="whitespace-nowrap px-4 py-3 text-sm">
+                            @if ($job->area)
+                                <span class="inline-flex rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700 dark:bg-amber-900/30 dark:text-amber-300">{{ $job->area->label() }}</span>
+                            @else
+                                <span class="text-gray-400">—</span>
+                            @endif
                         </td>
                         <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-700 dark:text-gray-300">{{ $job->impresora?->nombre ?? '—' }}</td>
                         <td class="whitespace-nowrap px-4 py-3 text-sm">

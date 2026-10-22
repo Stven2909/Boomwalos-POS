@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\Application\Printing\QueueTicketResult;
 use App\Application\Printing\RenderCustomerTicket;
-use App\Application\Printing\RenderKitchenComanda;
 use App\Contracts\AuditLoggerInterface;
 use App\Contracts\EstablishmentContextInterface;
 use App\Enums\EstadoComercialPedido;
@@ -22,8 +21,8 @@ use App\Models\Pedido;
 use App\Models\SesionCaja;
 use App\Models\TrabajoImpresion;
 use App\Models\User;
+use App\Services\Printing\ComandaDispatcher;
 use Illuminate\Auth\Access\AuthorizationException;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -33,7 +32,7 @@ class CobroService
         private readonly EstablishmentContextInterface $establishmentContext,
         private readonly AuditLoggerInterface $auditLogger,
         private readonly FiscalSaleRegistrar $fiscalSaleRegistrar,
-        private readonly RenderKitchenComanda $comandaRenderer,
+        private readonly ComandaDispatcher $comandaDispatcher,
         private readonly RenderCustomerTicket $ticketRenderer,
     ) {}
 
@@ -50,15 +49,17 @@ class CobroService
 
         $identidad = $this->fiscalSaleRegistrar->preparar($pedido);
 
-        [$pago, $comandaJob, $ticketJob] = DB::transaction(function () use ($pedido, $metodo, $montoRecibido, $actor, $tarjeta, $identidad): array {
+        [$pago, $comandaJobs, $ticketJob] = DB::transaction(function () use ($pedido, $metodo, $montoRecibido, $actor, $tarjeta, $identidad): array {
             return $this->applyCharge($pedido, $metodo, $montoRecibido, $actor, tarjeta: $tarjeta, identidad: $identidad);
         });
 
         $this->registrarVentaFiscal($pago, $identidad);
 
-        if ($comandaJob && $comandaJob->estado === EstadoImpresion::PENDIENTE) {
-            ProcessPrintJob::dispatch($comandaJob->getKey())->afterCommit();
-        }
+        $comandaJobs->each(function (TrabajoImpresion $job): void {
+            if ($job->estado === EstadoImpresion::PENDIENTE) {
+                ProcessPrintJob::dispatch($job->getKey())->afterCommit();
+            }
+        });
 
         if ($ticketJob && $ticketJob->estado === EstadoImpresion::PENDIENTE) {
             ProcessPrintJob::dispatch($ticketJob->getKey())->afterCommit();
@@ -70,7 +71,7 @@ class CobroService
             default => QueueTicketResult::created($ticketJob),
         };
 
-        return [$pago, $comandaJob, $ticketResult];
+        return [$pago, $comandaJobs, $ticketResult];
     }
 
     public function charge(
@@ -176,12 +177,16 @@ class CobroService
             'codigo_corto' => $pedido->codigo_corto,
         ]);
 
-        $comandaJob = $this->createComandaJob($pedido, $pendingLines);
+        $comandaJobs = $this->comandaDispatcher->dispatch($pedido, $pendingLines);
         $ticketJob = $this->createTicketJob($pedido, $pago, $actor, $identidad);
 
-        if ($comandaJob) {
+        if ($comandaJobs->isNotEmpty()) {
             $this->audit($pedido, $actor, 'comanda_en_cola', [
-                'trabajo_impresion_id' => $comandaJob->getKey(),
+                'trabajos_impresion' => $comandaJobs->map(fn (TrabajoImpresion $job): array => [
+                    'id' => $job->getKey(),
+                    'area' => $job->area?->value,
+                    'estado' => $job->estado->value,
+                ])->values()->all(),
             ]);
         }
         $this->audit($pedido, $actor, 'ticket_en_cola', [
@@ -198,41 +203,12 @@ class CobroService
             'motivo' => 'Cobro completado. Mesa liberada.',
         ]);
 
-        return [$pago->fresh(['pedido']), $comandaJob, $ticketJob];
-    }
-
-    private function createComandaJob(Pedido $pedido, Collection $pendingLines): ?TrabajoImpresion
-    {
-        if ($pendingLines->isEmpty()) {
-            return null;
-        }
-
-        $printer = Impresora::buscar(TipoImpresora::COMANDA, $pedido->establecimiento_id);
-        $contenido = $this->comandaRenderer->render($pedido, $pendingLines);
-        $lineIds = $pendingLines->pluck('id')->map(fn ($id): int => (int) $id)->all();
-        sort($lineIds);
-        $uid = hash('sha256', $pedido->getKey().'|COMANDA|'.implode(',', $lineIds));
-
-        $job = TrabajoImpresion::firstOrCreate(
-            ['original_uid' => $uid],
-            [
-                'impresora_id' => $printer?->getKey(),
-                'pedido_id' => $pedido->getKey(),
-                'tipo_trabajo' => TipoTrabajoImpresion::COMANDA,
-                'estado' => $printer ? EstadoImpresion::PENDIENTE : EstadoImpresion::ERROR,
-                'contenido' => $contenido,
-                'ultimo_error' => $printer ? null : 'No hay impresora de comanda configurada.',
-            ],
-        );
-
-        $pendingLines->each(fn ($line): bool => $line->update(['tanda_id' => $job->getKey()]));
-
-        return $job;
+        return [$pago->fresh(['pedido']), $comandaJobs, $ticketJob];
     }
 
     private function createTicketJob(Pedido $pedido, Pago $pago, User $actor, array $identidad = []): ?TrabajoImpresion
     {
-        $printer = Impresora::buscar(TipoImpresora::TICKET);
+        $printer = Impresora::buscar(TipoImpresora::TICKET, $pedido->establecimiento_id);
         $contenido = $this->ticketRenderer->render($pedido, $pago, $actor, $identidad);
         $uid = hash('sha256', $pedido->getKey().'|TICKET');
 

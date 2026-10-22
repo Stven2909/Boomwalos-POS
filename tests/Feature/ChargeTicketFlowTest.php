@@ -66,6 +66,7 @@ class ChargeTicketFlowTest extends TestCase
         Impresora::create([
             'nombre' => 'Cocina',
             'tipo' => TipoImpresora::COMANDA,
+            'establecimiento_id' => $this->establishment->getKey(),
             'configuracion' => ['driver' => 'queue'],
         ]);
     }

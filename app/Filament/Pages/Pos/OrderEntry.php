@@ -544,11 +544,23 @@ class OrderEntry extends PosPage
     public function sendToKitchen(): void
     {
         try {
-            $job = app(PedidoService::class)->sendPendingBatch($this->pedido, auth()->user());
-            $printMessage = $job->estado === EstadoImpresion::PENDIENTE
-                ? ' Comanda en cola de impresión.'
+            $jobs = app(PedidoService::class)->sendPendingBatch($this->pedido, auth()->user());
+
+            $enCola = $jobs->filter(fn ($job): bool => $job->estado === EstadoImpresion::PENDIENTE)->count();
+            $sinImpresora = $jobs->count() - $enCola;
+            $areas = $jobs->pluck('area')->filter()->map(fn ($area): string => $area->label())->implode(', ');
+
+            $printMessage = $enCola > 0
+                ? " {$enCola} en cola de impresión."
                 : ' No hay una impresora de comanda configurada.';
-            $this->feedback = "Comanda enviada.{$printMessage} La cuenta sigue abierta.";
+
+            if ($sinImpresora > 0 && $enCola > 0) {
+                $printMessage .= " {$sinImpresora} sin impresora.";
+            }
+
+            $destino = $areas !== '' ? " ({$areas})" : '';
+
+            $this->feedback = "Comanda enviada{$destino}.{$printMessage} La cuenta sigue abierta.";
             $this->refreshPedido();
         } catch (ValidationException $exception) {
             $this->feedback = collect($exception->errors())->flatten()->first() ?? 'No se pudo enviar el pedido.';

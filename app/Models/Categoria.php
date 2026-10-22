@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\AreaPreparacion;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -15,6 +16,7 @@ class Categoria extends Model
         'activa',
         'parent_id',
         'icono',
+        'area',
     ];
 
     public function parent(): BelongsTo
@@ -75,6 +77,16 @@ class Categoria extends Model
     {
         return [
             'activa' => 'boolean',
+            'area' => AreaPreparacion::class,
         ];
+    }
+
+    public function areaResuelta(): ?AreaPreparacion
+    {
+        if ($this->area instanceof AreaPreparacion) {
+            return $this->area;
+        }
+
+        return $this->parent?->areaResuelta();
     }
 }
