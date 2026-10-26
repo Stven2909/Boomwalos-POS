@@ -75,6 +75,10 @@ class CatalogoRealSeeder extends Seeder
                 ],
             );
 
+            foreach ($grupo['productos'] ?? [] as $producto) {
+                $this->crearProducto($grupoModel, $producto);
+            }
+
             foreach ($grupo['categorias'] ?? [] as $categoria) {
                 $categoriaModel = Categoria::updateOrCreate(
                     [

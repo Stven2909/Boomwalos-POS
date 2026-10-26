@@ -34,12 +34,12 @@ class CatalogoPlanesDeRenderosTest extends TestCase
             ->whereNull('parent_id')
             ->count());
 
-        $this->assertSame(23, Categoria::query()
+        $this->assertSame(4, Categoria::query()
             ->where('establecimiento_id', $branch->getKey())
             ->whereNotNull('parent_id')
             ->count());
 
-        $this->assertSame(179, Producto::query()
+        $this->assertSame(176, Producto::query()
             ->where('establecimiento_id', $branch->getKey())
             ->count());
 
