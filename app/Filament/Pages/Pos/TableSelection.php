@@ -8,8 +8,8 @@ use App\Enums\EstadoMesa;
 use App\Enums\FlujoPos;
 use App\Enums\OrigenPedido;
 use App\Enums\TipoPedido;
-use App\Enums\ZonaMesa;
 use App\Models\Mesa;
+use App\Models\UbicacionMesa;
 use App\Services\PedidoService;
 use App\Services\PoliticaFlujosPos;
 use Illuminate\Validation\ValidationException;
@@ -22,7 +22,7 @@ class TableSelection extends PosPage
 
     protected string $view = 'filament.admin.pages.pos.table-selection';
 
-    public string $zona = ZonaMesa::SALON->value;
+    public string $zona = '';
 
     public string $entryMode = 'service';
 
@@ -51,28 +51,48 @@ class TableSelection extends PosPage
             return;
         }
 
-        $zona = ZonaMesa::tryFrom((string) request()->query('zona', ZonaMesa::SALON->value));
         $available = $this->availableZones;
-        $this->zona = in_array($zona, $available, true) ? $zona->value : ($available[0] ?? ZonaMesa::SALON)->value;
+        $requested = (string) request()->query('zona', '');
+        $names     = array_column($available, 'nombre');
+
+        $this->zona      = in_array($requested, $names, true) ? $requested : ($available[0]['nombre'] ?? '');
         $this->entryMode = request()->query('entrada') === 'mesas' ? 'mesas' : 'service';
     }
 
+    /**
+     * Devuelve las ubicaciones activas de la sucursal que tienen al menos una mesa activa,
+     * ordenadas por 'orden', como arrays ['nombre' => ..., 'etiqueta' => ...].
+     */
     public function getAvailableZonesProperty(): array
     {
-        $zones = Mesa::query()->where('establecimiento_id', $this->establishment()->getKey())
-            ->where('activa', true)->distinct()->pluck('zona')->all();
+        $estId = $this->establishment()->getKey();
 
-        return array_values(array_filter(ZonaMesa::cases(), fn ($zone) => in_array($zone->value, $zones, true)));
+        $conMesas = Mesa::query()
+            ->where('establecimiento_id', $estId)
+            ->where('activa', true)
+            ->distinct()
+            ->pluck('zona')
+            ->all();
+
+        return UbicacionMesa::query()
+            ->where('establecimiento_id', $estId)
+            ->where('activa', true)
+            ->whereIn('nombre', $conMesas)
+            ->orderBy('orden')
+            ->get(['nombre'])
+            ->map(fn (UbicacionMesa $u) => ['nombre' => $u->nombre, 'etiqueta' => $u->nombre])
+            ->values()
+            ->all();
     }
 
     public function setZone(string $zona): void
     {
-        $zone = ZonaMesa::tryFrom($zona);
-        if (! in_array($zone, $this->availableZones, true)) {
+        $names = array_column($this->availableZones, 'nombre');
+        if (! in_array($zona, $names, true)) {
             return;
         }
-        $this->zona = $zone->value;
-        $this->selectedMesaId = null;
+        $this->zona              = $zona;
+        $this->selectedMesaId   = null;
         $this->selectedMesaNumero = null;
     }
 
@@ -114,7 +134,7 @@ class TableSelection extends PosPage
             return;
         }
 
-        $this->selectedMesaId = $mesa->getKey();
+        $this->selectedMesaId     = $mesa->getKey();
         $this->selectedMesaNumero = (string) $mesa->numero;
     }
 

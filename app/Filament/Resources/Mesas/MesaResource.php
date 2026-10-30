@@ -2,15 +2,15 @@
 
 namespace App\Filament\Resources\Mesas;
 
+use App\Contracts\EstablishmentContextInterface;
 use App\Enums\EstadoMesa;
-use App\Enums\ZonaMesa;
 use App\Filament\Resources\Mesas\Pages\ManageMesas;
-use App\Models\Establecimiento;
 use App\Models\Mesa;
+use App\Models\UbicacionMesa;
 use BackedEnum;
-use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
+use Filament\Actions\RestoreAction;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
@@ -22,8 +22,8 @@ use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
-use Filament\Notifications\Notification;
 use UnitEnum;
 
 class MesaResource extends Resource
@@ -47,6 +47,16 @@ class MesaResource extends Resource
 
     public static function form(Schema $schema): Schema
     {
+        $estId = app(EstablishmentContextInterface::class)->idOrNull();
+
+        $ubicaciones = $estId
+            ? UbicacionMesa::where('establecimiento_id', $estId)
+                ->where('activa', true)
+                ->orderBy('orden')
+                ->pluck('nombre', 'nombre')
+                ->all()
+            : [];
+
         return $schema
             ->components([
                 Section::make('Configuración de mesa')
@@ -58,10 +68,18 @@ class MesaResource extends Resource
                                     ->label('Número de mesa')
                                     ->required()
                                     ->maxLength(10)
-                                    ->unique(ignoreRecord: true),
+                                    ->unique(
+                                        table: 'mesas',
+                                        column: 'numero',
+                                        modifyRuleUsing: function ($rule) use ($estId) {
+                                            return $rule->where('establecimiento_id', $estId)
+                                                        ->whereNull('deleted_at');
+                                        },
+                                        ignoreRecord: true,
+                                    ),
                                 Select::make('zona')
-                                    ->label('Zona')
-                                    ->options(collect(ZonaMesa::cases())->mapWithKeys(fn (ZonaMesa $zone): array => [$zone->value => $zone->label()])->all())
+                                    ->label('Ubicación')
+                                    ->options($ubicaciones)
                                     ->native(false)
                                     ->required(),
                                 Toggle::make('activa')
@@ -75,35 +93,40 @@ class MesaResource extends Resource
 
     public static function table(Table $table): Table
     {
+        $estId = app(EstablishmentContextInterface::class)->idOrNull();
+
         return $table
+            ->query(Mesa::withTrashed()->where('establecimiento_id', $estId))
             ->columns([
                 TextColumn::make('numero')->label('Mesa')->sortable()->searchable(),
-                TextColumn::make('zona')->label('Zona')->badge()->formatStateUsing(fn (?ZonaMesa $state): string => $state?->label() ?? 'Sin zona'),
-                TextColumn::make('estado')->label('Estado operativo')->badge()->color(fn (?EstadoMesa $state): string => $state === EstadoMesa::OCUPADA ? 'primary' : 'success')->formatStateUsing(fn (?EstadoMesa $state): string => $state?->label() ?? 'Sin estado'),
+                TextColumn::make('zona')->label('Ubicación')->badge(),
+                TextColumn::make('estado')
+                    ->label('Estado operativo')
+                    ->badge()
+                    ->color(fn (?EstadoMesa $state): string => $state === EstadoMesa::OCUPADA ? 'primary' : 'success')
+                    ->formatStateUsing(fn (?EstadoMesa $state): string => $state?->label() ?? 'Sin estado'),
                 IconColumn::make('activa')->label('Activa')->boolean(),
+                TextColumn::make('deleted_at')->label('Eliminada')->dateTime('d/m/Y')->placeholder('—'),
             ])
             ->filters([
                 SelectFilter::make('zona')
-                    ->options(collect(ZonaMesa::cases())->mapWithKeys(fn (ZonaMesa $zone): array => [$zone->value => $zone->label()])->all()),
+                    ->label('Ubicación')
+                    ->options(
+                        $estId
+                            ? UbicacionMesa::where('establecimiento_id', $estId)
+                                ->orderBy('orden')
+                                ->pluck('nombre', 'nombre')
+                                ->all()
+                            : []
+                    ),
                 SelectFilter::make('estado')
                     ->options(collect(EstadoMesa::cases())->mapWithKeys(fn (EstadoMesa $state): array => [$state->value => $state->label()])->all()),
+                TrashedFilter::make(),
             ])
             ->recordActions([
                 EditAction::make()->label('Editar'),
-                DeleteAction::make()
-                    ->label('Eliminar')
-                    ->before(function (DeleteAction $action): void {
-                        $mesa = $action->getRecord();
-
-                        if ($mesa instanceof Mesa && $mesa->pedidos()->exists()) {
-                            Notification::make()
-                                ->title('No se puede eliminar esta mesa')
-                                ->body('Tiene historial de pedidos. Desactívala para conservar la trazabilidad.')
-                                ->danger()
-                                ->send();
-                            $action->halt();
-                        }
-                    }),
+                RestoreAction::make()->label('Restaurar'),
+                DeleteAction::make()->label('Eliminar'),
             ])
             ->toolbarActions([]);
     }

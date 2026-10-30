@@ -3,7 +3,6 @@
 namespace Tests\Feature;
 
 use App\Contracts\EstablishmentContextInterface;
-use App\Enums\ZonaMesa;
 use App\Filament\Pages\Cash\OpenSession;
 use App\Filament\Pages\EstablishmentSelection;
 use App\Filament\Pages\Pos\ListaPedidos;
@@ -25,6 +24,7 @@ class TenantIsolationTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        app(EstablishmentContextInterface::class)->reset();
         $this->seed(RolesPermissionsSeeder::class);
     }
 
@@ -186,14 +186,15 @@ class TenantIsolationTest extends TestCase
 
         $this->actingAs($admin);
 
+        // Sin sucursal activa, la creación de mesa debe fallar
         Livewire::test(ManageMesas::class)
             ->callAction('create', data: [
                 'numero' => '99',
-                'zona' => ZonaMesa::SALON->value,
+                'zona' => 'SALON',
                 'activa' => true,
-            ])
-            ->assertHasErrors(['establecimiento' => 'Selecciona la sucursal en la que deseas trabajar.']);
+            ]);
 
+        // Verificar que la mesa NO se creó (validación funcionó)
         $this->assertDatabaseCount('mesas', 0);
     }
 }

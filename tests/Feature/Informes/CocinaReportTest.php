@@ -6,7 +6,6 @@ use App\Enums\EstadoCocina;
 use App\Enums\EstadoMesa;
 use App\Enums\OrigenPedido;
 use App\Enums\TipoPedido;
-use App\Enums\ZonaMesa;
 use App\Models\Establecimiento;
 use App\Models\EventoAuditoria;
 use App\Models\Mesa;
@@ -46,7 +45,7 @@ class CocinaReportTest extends TestCase
         $mesa = Mesa::create([
             'establecimiento_id' => $this->establishment->getKey(),
             'numero' => (string) random_int(1, 999),
-            'zona' => ZonaMesa::SALON,
+            'zona' => 'SALON',
             'estado' => EstadoMesa::LIBRE,
             'activa' => true,
         ]);
@@ -185,7 +184,7 @@ class CocinaReportTest extends TestCase
         $mesaOther = Mesa::create([
             'establecimiento_id' => $otherEstablishment->getKey(),
             'numero' => '999',
-            'zona' => ZonaMesa::SALON,
+            'zona' => 'SALON',
             'estado' => EstadoMesa::LIBRE,
             'activa' => true,
         ]);

@@ -13,18 +13,29 @@ class ManageMesas extends ManageRecords
 {
     protected static string $resource = MesaResource::class;
 
+    protected function requireEstablishmentContext(): void
+    {
+        $establecimientoId = app(EstablishmentContextInterface::class)->idOrNull();
+
+        if ($establecimientoId === null) {
+            throw ValidationException::withMessages([
+                'establecimiento' => 'Selecciona la sucursal en la que deseas trabajar.',
+            ]);
+        }
+    }
+
     protected function getHeaderActions(): array
     {
         return [
-            CreateAction::make()
+            CreateAction::make('create')
                 ->label('Nueva mesa')
+                ->before(function (): void {
+                    $this->requireEstablishmentContext();
+                })
                 ->mutateFormDataUsing(function (array $data): array {
                     return [
                         ...$data,
-                        'establecimiento_id' => app(EstablishmentContextInterface::class)->idOrNull()
-                            ?? throw ValidationException::withMessages([
-                                'establecimiento' => 'Selecciona la sucursal en la que deseas trabajar.',
-                            ]),
+                        'establecimiento_id' => app(EstablishmentContextInterface::class)->id(),
                         'estado' => EstadoMesa::LIBRE,
                     ];
                 }),

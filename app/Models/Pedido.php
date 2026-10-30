@@ -39,7 +39,8 @@ class Pedido extends Model
 
     public function mesa(): BelongsTo
     {
-        return $this->belongsTo(Mesa::class);
+        // withTrashed: los pedidos históricos siguen mostrando la mesa aunque esté soft-deleted.
+        return $this->belongsTo(Mesa::class)->withTrashed();
     }
 
     public function establecimiento(): BelongsTo

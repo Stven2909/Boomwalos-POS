@@ -10,11 +10,11 @@ use App\Enums\MasaPupusa;
 use App\Enums\MetodoPago;
 use App\Enums\OrigenPedido;
 use App\Enums\TipoPedido;
-use App\Enums\ZonaMesa;
 use App\Models\Categoria;
 use App\Models\Combo;
 use App\Models\DetallePedido;
 use App\Models\Mesa;
+use App\Models\UbicacionMesa;
 use App\Models\Pedido;
 use App\Models\Producto;
 use App\Services\CobroService;
@@ -91,7 +91,7 @@ class OrderEntry extends PosPage
 
     public bool $mesaModalOpen = false;
 
-    public string $mesaZona = ZonaMesa::SALON->value;
+    public string $mesaZona = '';
 
     public function mount(Pedido $pedido): void
     {
@@ -736,7 +736,7 @@ class OrderEntry extends PosPage
 
     public function openMesaPicker(): void
     {
-        $this->mesaZona = $this->pedido->mesa?->zona?->value ?? ZonaMesa::SALON->value;
+        $this->mesaZona = $this->pedido->mesa?->zona ?? '';
         $this->mesaModalOpen = true;
     }
 
@@ -747,7 +747,7 @@ class OrderEntry extends PosPage
 
     public function setMesaZona(string $zona): void
     {
-        $this->mesaZona = (ZonaMesa::tryFrom($zona) ?? ZonaMesa::SALON)->value;
+        $this->mesaZona = $zona;
     }
 
     public function assignTable(int $mesaId): void
@@ -1055,6 +1055,27 @@ class OrderEntry extends PosPage
             }])
             ->orderBy('numero')
             ->get();
+    }
+
+    /** Ubicaciones activas para el modal de cambio de mesa, en orden. */
+    public function getAvailableZonesForMesaModalProperty(): array
+    {
+        $estId = $this->establishment()->getKey();
+
+        $conMesas = Mesa::query()
+            ->where('establecimiento_id', $estId)
+            ->where('activa', true)
+            ->distinct()
+            ->pluck('zona')
+            ->all();
+
+        return UbicacionMesa::query()
+            ->where('establecimiento_id', $estId)
+            ->where('activa', true)
+            ->whereIn('nombre', $conMesas)
+            ->orderBy('orden')
+            ->pluck('nombre')
+            ->all();
     }
 
     public function comboSelectionTotal(int $optionId): int

@@ -902,7 +902,6 @@ Página en Ajustes que muestra todos los `TrabajoImpresion`:
 | `TipoImpresora` | `TICKET`, `COMANDA` | `app/Enums/TipoImpresora.php` |
 | `TipoPedido` | `MESA`, `PARA_LLEVAR` | `app/Enums/TipoPedido.php` |
 | `TipoTrabajoImpresion` | `TICKET`, `COMANDA` | `app/Enums/TipoTrabajoImpresion.php` |
-| `ZonaMesa` | `SALON`, `TERRAZA`, `BAR` | `app/Enums/ZonaMesa.php` |
 
 ---
 

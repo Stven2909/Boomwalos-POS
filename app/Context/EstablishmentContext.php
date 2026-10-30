@@ -15,6 +15,8 @@ class EstablishmentContext implements EstablishmentContextInterface
 
     private ?Establecimiento $establishment = null;
 
+    private ?int $userId = null;
+
     public function id(): int
     {
         return $this->idOrNull() ?? throw ValidationException::withMessages([
@@ -24,16 +26,27 @@ class EstablishmentContext implements EstablishmentContextInterface
 
     public function idOrNull(): ?int
     {
+        $this->refreshUserScope();
+
+        if ($this->establishmentId !== null && ! $this->canAccess($this->establishmentId)) {
+            $this->establishmentId = null;
+            $this->establishment = null;
+        }
+
         if ($this->establishmentId !== null) {
             return $this->establishmentId;
         }
 
         $sessionId = $this->sessionId();
 
-        if ($sessionId !== null && $this->canAccess($sessionId)) {
-            $this->establishmentId = $sessionId;
+        if ($sessionId !== null) {
+            if ($this->canAccess($sessionId)) {
+                $this->establishmentId = $sessionId;
 
-            return $sessionId;
+                return $sessionId;
+            }
+
+            $this->clear();
         }
 
         $available = $this->accessible();
@@ -73,6 +86,8 @@ class EstablishmentContext implements EstablishmentContextInterface
 
     public function set(int $establishmentId): Establecimiento
     {
+        $this->refreshUserScope();
+
         $establishment = Establecimiento::query()->find($establishmentId);
 
         if (! $establishment) {
@@ -108,10 +123,13 @@ class EstablishmentContext implements EstablishmentContextInterface
     {
         $this->establishmentId = null;
         $this->establishment = null;
+        $this->userId = auth()->id();
     }
 
     public function accessible(): Collection
     {
+        $this->refreshUserScope();
+
         $user = auth()->user();
 
         if (! $user instanceof User || $user->hasRole('administrador')) {
@@ -129,6 +147,8 @@ class EstablishmentContext implements EstablishmentContextInterface
 
     public function canAccess(int $establishmentId): bool
     {
+        $this->refreshUserScope();
+
         $user = auth()->user();
 
         if (! $user instanceof User) {
@@ -148,6 +168,18 @@ class EstablishmentContext implements EstablishmentContextInterface
         return ! config('pos.require_explicit_establishment', false)
             && Establecimiento::query()->count() === 1
             && Establecimiento::query()->whereKey($establishmentId)->exists();
+    }
+
+    private function refreshUserScope(): void
+    {
+        $userId = auth()->id();
+
+        if ($this->userId !== null && $userId !== $this->userId) {
+            $this->establishmentId = null;
+            $this->establishment = null;
+        }
+
+        $this->userId = $userId;
     }
 
     private function sessionId(): ?int

@@ -11,7 +11,6 @@ use App\Enums\EstadoWebhookPos;
 use App\Enums\MetodoPago;
 use App\Enums\TipoDocumento;
 use App\Enums\TipoPedido;
-use App\Enums\ZonaMesa;
 use App\Jobs\EnviarVentasFiscalesJob;
 use App\Models\Categoria;
 use App\Models\ConfiguracionFiscal;
@@ -66,7 +65,7 @@ class FiscalOutboxTest extends TestCase
         $this->table = Mesa::create([
             'establecimiento_id' => $this->establishment->getKey(),
             'numero' => '8',
-            'zona' => ZonaMesa::SALON,
+            'zona' => 'SALON',
             'estado' => EstadoMesa::LIBRE,
         ]);
 

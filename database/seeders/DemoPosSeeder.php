@@ -9,7 +9,6 @@ use App\Enums\EstadoMesa;
 use App\Enums\OrigenPedido;
 use App\Enums\TipoPedido;
 use App\Enums\TipoImpresora;
-use App\Enums\ZonaMesa;
 use App\Models\Categoria;
 use App\Models\Combo;
 use App\Models\DetallePedido;
@@ -174,7 +173,7 @@ class DemoPosSeeder extends Seeder
         }
 
         foreach ([
-            ZonaMesa::SALON->value => range(1, 8),
+            'SALON' => range(1, 8),
         ] as $zona => $numbers) {
             foreach ($numbers as $number) {
                 Mesa::firstOrCreate(

@@ -7,7 +7,6 @@ use App\Enums\EstadoComercialPedido;
 use App\Enums\EstadoMesa;
 use App\Enums\MetodoPago;
 use App\Enums\TipoPedido;
-use App\Enums\ZonaMesa;
 use App\Filament\Pages\Pos\ChargeOrder;
 use App\Filament\Pages\Pos\OrderEntry;
 use App\Models\Categoria;
@@ -70,7 +69,7 @@ class OrderEntryChargeButtonTest extends TestCase
         $this->table = Mesa::create([
             'establecimiento_id' => $this->establishment->getKey(),
             'numero' => '12',
-            'zona' => ZonaMesa::SALON,
+            'zona' => 'SALON',
             'estado' => EstadoMesa::LIBRE,
         ]);
 

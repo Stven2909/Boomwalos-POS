@@ -6,7 +6,6 @@ use App\Enums\EstadoComercialPedido;
 use App\Enums\EstadoMesa;
 use App\Enums\MetodoPago;
 use App\Enums\TipoPedido;
-use App\Enums\ZonaMesa;
 use App\Filament\Pages\Cash\CloseSession;
 use App\Filament\Pages\Cash\OpenSession;
 use App\Models\Categoria;
@@ -58,7 +57,7 @@ class CashCloseFlowTest extends TestCase
         $this->table = Mesa::create([
             'establecimiento_id' => $this->establishment->getKey(),
             'numero' => '8',
-            'zona' => ZonaMesa::SALON,
+            'zona' => 'SALON',
             'estado' => EstadoMesa::LIBRE,
         ]);
 
@@ -112,7 +111,7 @@ class CashCloseFlowTest extends TestCase
         $secondTable = Mesa::create([
             'establecimiento_id' => $this->establishment->getKey(),
             'numero' => '9',
-            'zona' => ZonaMesa::SALON,
+            'zona' => 'SALON',
             'estado' => EstadoMesa::LIBRE,
         ]);
         $pedido2 = $service->startOrder(TipoPedido::MESA, $this->cashier, $secondTable->getKey());
@@ -123,7 +122,7 @@ class CashCloseFlowTest extends TestCase
         $thirdTable = Mesa::create([
             'establecimiento_id' => $this->establishment->getKey(),
             'numero' => '10',
-            'zona' => ZonaMesa::SALON,
+            'zona' => 'SALON',
             'estado' => EstadoMesa::LIBRE,
         ]);
         $pedido3 = $service->startOrder(TipoPedido::MESA, $this->cashier, $thirdTable->getKey());
@@ -256,7 +255,7 @@ class CashCloseFlowTest extends TestCase
         $secondTable = Mesa::create([
             'establecimiento_id' => $this->establishment->getKey(),
             'numero' => '9',
-            'zona' => ZonaMesa::SALON,
+            'zona' => 'SALON',
             'estado' => EstadoMesa::LIBRE,
         ]);
         $pedido2 = $service->startOrder(TipoPedido::MESA, $this->cashier, $secondTable->getKey());

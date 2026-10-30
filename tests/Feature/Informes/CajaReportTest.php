@@ -9,7 +9,6 @@ use App\Enums\EstadoMesa;
 use App\Enums\MetodoPago;
 use App\Enums\OrigenPedido;
 use App\Enums\TipoPedido;
-use App\Enums\ZonaMesa;
 use App\Models\Categoria;
 use App\Models\DetallePedido;
 use App\Models\Establecimiento;
@@ -76,7 +75,7 @@ class CajaReportTest extends TestCase
         $mesa = Mesa::create([
             'establecimiento_id' => $this->establishment->getKey(),
             'numero' => (string) random_int(1, 999),
-            'zona' => ZonaMesa::SALON,
+            'zona' => 'SALON',
             'estado' => EstadoMesa::LIBRE,
             'activa' => true,
         ]);

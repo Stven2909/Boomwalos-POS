@@ -7,7 +7,6 @@ use App\Enums\EstadoMesa;
 use App\Enums\EstadoVentaFiscal;
 use App\Enums\MetodoPago;
 use App\Enums\TipoPedido;
-use App\Enums\ZonaMesa;
 use App\Models\Categoria;
 use App\Models\ConfiguracionFiscal;
 use App\Models\Establecimiento;
@@ -55,7 +54,7 @@ class FiscalContingenciaTest extends TestCase
         $this->table = Mesa::create([
             'establecimiento_id' => $this->establishment->getKey(),
             'numero' => '9',
-            'zona' => ZonaMesa::SALON,
+            'zona' => 'SALON',
             'estado' => EstadoMesa::LIBRE,
         ]);
 

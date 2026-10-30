@@ -6,7 +6,6 @@ use App\Contracts\EstablishmentContextInterface;
 use App\Enums\EstadoComercialPedido;
 use App\Enums\EstadoMesa;
 use App\Enums\TipoPedido;
-use App\Enums\ZonaMesa;
 use App\Filament\Pages\Pos\OrderEntry;
 use App\Models\Categoria;
 use App\Models\Establecimiento;
@@ -66,7 +65,7 @@ class CustomerNameTest extends TestCase
         $this->table = Mesa::create([
             'establecimiento_id' => $this->establishment->getKey(),
             'numero' => '4',
-            'zona' => ZonaMesa::SALON,
+            'zona' => 'SALON',
             'estado' => EstadoMesa::LIBRE,
         ]);
 

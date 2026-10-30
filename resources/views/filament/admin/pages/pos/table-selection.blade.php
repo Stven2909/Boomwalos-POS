@@ -22,11 +22,11 @@
                 @foreach ($this->availableZones as $zone)
                     <button
                         type="button"
-                        wire:click="setZone('{{ $zone->value }}')"
-                        class="bw-pos-zone-tab {{ $zona === $zone->value ? 'is-active' : '' }}"
-                        aria-pressed="{{ $zona === $zone->value ? 'true' : 'false' }}"
+                        wire:click="setZone('{{ $zone['nombre'] }}')"
+                        class="bw-pos-zone-tab {{ $zona === $zone['nombre'] ? 'is-active' : '' }}"
+                        aria-pressed="{{ $zona === $zone['nombre'] ? 'true' : 'false' }}"
                     >
-                        {{ $zone->label() }}
+                        {{ $zone['etiqueta'] }}
                     </button>
                 @endforeach
             </nav>
@@ -76,7 +76,7 @@
                 @empty
                     <div class="bw-pos-empty-state">
                         <x-heroicon-o-table-cells class="h-8 w-8" />
-                        <strong>No hay mesas configuradas en esta zona.</strong>
+                        <strong>No hay mesas configuradas en esta ubicación.</strong>
                         <span>El administrador puede agregarlas desde la configuración del establecimiento.</span>
                     </div>
                 @endforelse

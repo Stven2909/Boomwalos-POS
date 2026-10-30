@@ -11,7 +11,6 @@ use App\Enums\MetodoPago;
 use App\Enums\OrigenPedido;
 use App\Enums\TipoImpresora;
 use App\Enums\TipoPedido;
-use App\Enums\ZonaMesa;
 use App\Models\Categoria;
 use App\Models\Combo;
 use App\Models\DetallePedido;
@@ -109,11 +108,11 @@ class ReportesTestDataSeeder extends Seeder
         // ── Mesas ──────────────────────────────────────────
         $mesaA = Mesa::firstOrCreate(
             ['numero' => 'INFO-1', 'establecimiento_id' => $sucursalA->getKey()],
-            ['zona' => ZonaMesa::SALON, 'estado' => EstadoMesa::LIBRE, 'activa' => true],
+            ['zona' => 'SALON', 'estado' => EstadoMesa::LIBRE, 'activa' => true],
         );
         $mesaB = Mesa::firstOrCreate(
             ['numero' => 'INFO-2', 'establecimiento_id' => $sucursalB->getKey()],
-            ['zona' => ZonaMesa::SALON, 'estado' => EstadoMesa::LIBRE, 'activa' => true],
+            ['zona' => 'SALON', 'estado' => EstadoMesa::LIBRE, 'activa' => true],
         );
 
         $this->seedCodigoCortoSequence($sucursalA->getKey());

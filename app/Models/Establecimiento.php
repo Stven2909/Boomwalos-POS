@@ -36,6 +36,11 @@ class Establecimiento extends Model
         return $this->hasMany(Mesa::class);
     }
 
+    public function ubicacionesMesa(): HasMany
+    {
+        return $this->hasMany(UbicacionMesa::class)->orderBy('orden');
+    }
+
     public function pedidos(): HasMany
     {
         return $this->hasMany(Pedido::class);

@@ -760,14 +760,14 @@
                     </header>
 
                     <nav class="bw-pos-zone-tabs" aria-label="Zonas del establecimiento">
-                        @foreach (\App\Enums\ZonaMesa::cases() as $zone)
+                        @foreach ($this->availableZonesForMesaModal as $zoneName)
                             <button
                                 type="button"
-                                wire:click="setMesaZona('{{ $zone->value }}')"
-                                class="bw-pos-zone-tab {{ $mesaZona === $zone->value ? 'is-active' : '' }}"
-                                aria-pressed="{{ $mesaZona === $zone->value ? 'true' : 'false' }}"
+                                wire:click="setMesaZona('{{ $zoneName }}')"
+                                class="bw-pos-zone-tab {{ $mesaZona === $zoneName ? 'is-active' : '' }}"
+                                aria-pressed="{{ $mesaZona === $zoneName ? 'true' : 'false' }}"
                             >
-                                {{ $zone->label() }}
+                                {{ $zoneName }}
                             </button>
                         @endforeach
                     </nav>

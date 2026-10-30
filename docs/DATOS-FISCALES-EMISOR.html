@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ficha fiscal del emisor — Los Boomwalos</title>
+<style>
+  :root { --ink:#1a1a1a; --muted:#5b6470; --line:#d8dde3; --accent:#0f766e; --soft:#f4f7f9; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 32px 24px 48px;
+    font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: var(--ink); background: #eef1f4; font-size: 13px; line-height: 1.5;
+  }
+  .sheet {
+    max-width: 900px; margin: 0 auto; background: #fff; padding: 44px 48px 56px;
+    box-shadow: 0 2px 18px rgba(20,30,40,.10); border-radius: 4px;
+  }
+  header { border-bottom: 3px solid var(--accent); padding-bottom: 18px; margin-bottom: 26px; }
+  .brand { display:flex; justify-content:space-between; align-items:flex-start; gap:16px; flex-wrap:wrap; }
+  h1 { font-size: 22px; margin: 0 0 4px; letter-spacing:.2px; }
+  .sub { color: var(--muted); font-size: 12.5px; }
+  .tag {
+    display:inline-block; background: var(--soft); color: var(--accent);
+    border: 1px solid #cfe3e0; border-radius: 999px; padding: 3px 11px;
+    font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing:.5px;
+  }
+  h2 { font-size: 13.5px; text-transform: uppercase; letter-spacing: .8px; color: var(--accent);
+       margin: 28px 0 10px; padding-bottom: 5px; border-bottom: 1px solid var(--line); }
+  h3 { font-size: 12px; text-transform: uppercase; letter-spacing:.5px; color:#33404c;
+       margin: 18px 0 7px; }
+  table { width: 100%; border-collapse: collapse; margin: 4px 0 6px; }
+  th, td { text-align: left; padding: 6px 9px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  table.kv th { width: 34%; font-weight: 600; color: #33404c; background: #fafbfc; }
+  table.grid thead th { background: var(--soft); color:#33404c; font-size: 10.5px;
+                        text-transform: uppercase; letter-spacing:.35px; white-space:nowrap; }
+  table.grid td { font-size: 11.5px; }
+  tbody tr:last-child td, tbody tr:last-child th { border-bottom: none; }
+  code, .mono { background:#f2f4f6; border:1px solid #e3e7ea; border-radius:3px;
+                padding:1px 4px; font-size:10.8px; font-family: Consolas, "Courier New", monospace;
+                word-break: break-all; }
+  .note { background: var(--soft); border-left: 3px solid var(--accent); padding: 9px 13px;
+          font-size: 12px; color:#2b3640; margin: 8px 0 14px; }
+  ul, ol { margin: 6px 0 6px 20px; padding: 0; }
+  li { margin: 4px 0; }
+  .muted { color: var(--muted); font-size: 12px; }
+  .ok { color: #0f766e; font-weight: 600; }
+  footer { margin-top: 32px; padding-top: 14px; border-top: 1px solid var(--line);
+           font-size: 11px; color: var(--muted); display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+  @media print {
+    body { background:#fff; padding:0; font-size: 10.8px; }
+    .sheet { box-shadow:none; max-width:none; padding: 16mm 14mm; border-radius:0; }
+    h2 { page-break-after: avoid; }
+    table, tr { page-break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+<div class="sheet">
+  <header>
+    <div class="brand">
+      <div>
+        <h1>Ficha fiscal del emisor</h1>
+        <div class="sub">Los Boomwalos · Documento preparado para el contador</div>
+      </div>
+      <div style="text-align:right">
+        <span class="tag">Facturación electrónica</span>
+        <div class="sub" style="margin-top:6px">Elaborado: 29/10/2026</div>
+      </div>
+    </div>
+  </header>
+
+  <div class="note">
+    Contiene datos fiscales y de configuración. <strong>No incluye</strong> contraseñas,
+    certificados <code>.p12</code>, llaves de API ni credenciales del portal MH.
+  </div>
+
+  <h2>1. Identificación del emisor</h2>
+  <table class="kv">
+    <tbody>
+      <tr><th>Razón social</th><td>INVERSIONES TICAS S. A. DE C. V.</td></tr>
+      <tr><th>NIT</th><td>06141601141064</td></tr>
+      <tr><th>NRC</th><td>2310805</td></tr>
+      <tr><th>Nombre comercial</th><td>Los Boomwalos Restaurante</td></tr>
+      <tr><th>Actividad económica</th><td>56106 — Pupusería</td></tr>
+      <tr><th>Teléfono</th><td>77447362</td></tr>
+      <tr><th>Correo electrónico</th><td>los_boomwalos@hotmail.com</td></tr>
+      <tr><th>Ambiente de facturación</th><td><span class="ok">01 — Producción</span></td></tr>
+      <tr><th>Tipo de establecimiento</th><td>02 — Casa Matriz (CAT-009)</td></tr>
+      <tr><th>Modalidad</th><td>Facturación electrónica (DTE), transmisión en línea</td></tr>
+    </tbody>
+  </table>
+
+  <h2>2. Dirección fiscal</h2>
+  <table class="kv">
+    <tbody>
+      <tr><th>Departamento</th><td><code>06</code> — San Salvador</td></tr>
+      <tr><th>Municipio</th><td><code>23</code> — San Salvador Centro</td></tr>
+      <tr><th>Distrito</th><td><code>14</code> — San Salvador</td></tr>
+      <tr><th>Complemento</th><td>Carretera a Panchimalco 1/2 km, Los Planes de Renderos, San Salvador</td></tr>
+    </tbody>
+  </table>
+
+  <h2>3. Establecimientos y puntos de venta</h2>
+  <table class="grid">
+    <thead><tr><th>Código</th><th>Nombre</th><th>Tipo</th><th>Estado</th></tr></thead>
+    <tbody>
+      <tr><td><code>M001</code></td><td>Boomwalos Los Planes de Renderos</td><td>Casa Matriz</td><td>Activo</td></tr>
+      <tr><td><code>P001</code></td><td>Caja Principal</td><td>Punto de venta</td><td>Activo</td></tr>
+    </tbody>
+  </table>
+  <ul class="muted">
+    <li>Al MH se envía el código <code>M001</code> y <code>P001</code>; el nombre del local no viaja en el DTE.</li>
+    <li>No aplica CAI: en DTE la numeración se controla por establecimiento y punto de venta.</li>
+  </ul>
+
+  <h2>4. Documentos emitidos</h2>
+
+  <h3>4.1 Identificación</h3>
+  <table class="grid">
+    <thead>
+      <tr><th>#</th><th>Número de control</th><th>Código de generación</th><th>Tipo</th><th>Ambiente</th><th>Estado</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>1</td>
+        <td><span class="mono">DTE-01-M001P001-000000000000001</span></td>
+        <td><span class="mono">BF78BD58-1ABD-494B-986A-4BA4EC4ED296</span></td>
+        <td>Factura (01)</td><td>01</td><td>SEALED</td>
+      </tr>
+      <tr>
+        <td>2</td>
+        <td><span class="mono">DTE-01-M001P001-000000000000002</span></td>
+        <td><span class="mono">13DFBDFD-6C8E-4B70-9F11-B90E5DC436C3</span></td>
+        <td>Factura (01)</td><td>01</td><td>SEALED</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>4.2 Montos y sello</h3>
+  <table class="grid">
+    <thead>
+      <tr><th>#</th><th>Fecha</th><th>Hora</th><th>Total</th><th>IVA</th><th>Receptor</th><th>Sello de recepción</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>1</td><td>2026-10-18</td><td>16:52:00</td><td>$1.00</td><td>$0.12</td>
+        <td>Consumidor Final</td><td><span class="mono">202622548D808AAF4EB5955EECF8C960DAD9Q2KA</span></td>
+      </tr>
+      <tr>
+        <td>2</td><td>2026-10-18</td><td>18:32:45</td><td>$1.00</td><td>$0.12</td>
+        <td>Consumidor Final</td><td><span class="mono">20265470981A418946E18EADE5E264B8A26AKL6N</span></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>5. Correlativos</h2>
+  <p class="muted" style="margin-top:0">Establecimiento <code>M001</code> · punto de venta <code>P001</code>.</p>
+  <table class="grid">
+    <thead>
+      <tr><th>Tipo DTE</th><th>Descripción</th><th>Último número usado</th><th>Siguiente número</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>01</td><td>Factura</td><td>2</td><td>3</td></tr>
+      <tr><td>03</td><td>Comprobante de Crédito Fiscal</td><td>0</td><td>1</td></tr>
+      <tr><td>05</td><td>Nota de Crédito</td><td>0</td><td>1</td></tr>
+      <tr><td>14</td><td>Sujeto Excluido</td><td>0</td><td>1</td></tr>
+      <tr><td>15</td><td>Comprobante de Donación</td><td>0</td><td>1</td></tr>
+    </tbody>
+  </table>
+  <p class="muted">Existen registros históricos de correlativos en 0 correspondientes a configuraciones anteriores;
+    no afectan la numeración vigente. También hay un punto de venta adicional creado el 22/10/2026
+    que nunca se usó y no tiene correlativos asignados.</p>
+
+  <h2>6. Información disponible en el sistema</h2>
+  <table class="grid">
+    <thead>
+      <tr><th>Recurso</th><th>Contenido</th><th>Formato</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>JSON firmado del DTE</td><td>Documento completo tal como se envió al MH (emisor, receptor, ítems, resumen, sello)</td><td>JSON</td></tr>
+      <tr><td>Representación gráfica</td><td>PDF del DTE sellado</td><td>PDF</td></tr>
+      <tr><td>Registro de ventas fiscales</td><td>Referencia, establecimiento, estado, monto, método de pago, ID fiscal, fecha de sincronización</td><td>Pantalla</td></tr>
+      <tr><td>Informe de ventas</td><td>Resumen por período, métodos de pago, productos más vendidos, ventas por sucursal</td><td>Pantalla / impresión</td></tr>
+      <tr><td>Informe de caja</td><td>Sesiones de caja y detalle de pagos</td><td>Pantalla / impresión</td></tr>
+    </tbody>
+  </table>
+  <ul class="muted">
+    <li>El POS no genera todavía una exportación directa a CSV/Excel; se puede agregar si el contador la necesita.</li>
+    <li>No existe un reporte llamado “libro de ventas”. Se puede armar a partir del registro de ventas fiscales y de los DTE sellados.</li>
+    <li>Solo los DTE sellados por Hacienda tienen PDF disponible.</li>
+  </ul>
+
+  <h2>7. Configuración técnica de facturación</h2>
+  <table class="kv">
+    <tbody>
+      <tr><th>Plataforma</th><td>ApiFact (servicio propio de integración con Hacienda)</td></tr>
+      <tr><th>Integración POS</th><td>API REST autenticada con firma HMAC</td></tr>
+      <tr><th>Esquema Factura</th><td>MH <code>fe-f-v2</code> (DTE 01)</td></tr>
+      <tr><th>Esquema Crédito Fiscal</th><td>MH <code>fe-ccf-v4</code> (DTE 03)</td></tr>
+      <tr><th>Esquema Sujeto Excluido</th><td>MH <code>fe-fse-v2</code> (DTE 14)</td></tr>
+      <tr><th>Validación previa</th><td>Cada DTE se valida contra el JSON Schema oficial antes de firmar</td></tr>
+      <tr><th>Firma</th><td>Certificado <code>.p12</code> registrado en el MH</td></tr>
+      <tr><th>Contingencia</th><td>Emisión diferida + evento de contingencia ante el MH</td></tr>
+    </tbody>
+  </table>
+
+  <h2>8. Aclaraciones relevantes</h2>
+  <ol>
+    <li><strong>Dirección anterior.</strong> Los dos DTE ya emitidos (18/10/2026) conservan la dirección
+      anterior (“Plaza Universitaria, Centro Histórico de San Salvador”) dentro del JSON firmado.
+      Son válidos e inmutables; la dirección no afecta montos, IVA ni el sello.
+      El cambio aplica a partir de la próxima emisión.</li>
+    <li><strong>Casa Matriz.</strong> El código <code>02</code> quedó configurado en el emisor.
+      El esquema oficial de la Factura Electrónica (DTE 01) no incluye el campo
+      <code>tipoEstablecimiento</code>, por lo que no se imprime en la factura.
+      Se usa en los eventos de contingencia.</li>
+    <li><strong>Anulaciones.</strong> No hay anulaciones ni reemisiones pendientes.</li>
+    <li><strong>Correlativos.</strong> No se reiniciaron ni se alteraron con estos cambios.</li>
+  </ol>
+
+  <h2>9. Pendiente de confirmar</h2>
+  <ul>
+    <li>Representante legal y documento de identidad.</li>
+    <li>Fecha de inicio de actividades.</li>
+    <li>Régimen tributario / calidad de contribuyente.</li>
+    <li>Si la dirección registrada en el RUC ya coincide con la del local.</li>
+  </ul>
+
+  <h2>10. Información que no se comparte</h2>
+  <p class="muted">Por seguridad no se incluyen: usuario y contraseña del portal MH,
+    certificado <code>.p12</code> ni su contraseña, <code>PROVISIONING_TOKEN</code>,
+    <code>client_secret</code>, llaves HMAC, ni credenciales de base de datos o servidor.</p>
+
+  <footer>
+    <span>Boomwalos POS · ApiFact</span>
+    <span>Documento informativo — no sustituye declaraciones ni libros fiscales</span>
+  </footer>
+</div>
+</body>
+</html>

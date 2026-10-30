@@ -10,7 +10,6 @@ use App\Enums\EstadoVentaFiscal;
 use App\Enums\MetodoPago;
 use App\Enums\TipoDocumento;
 use App\Enums\TipoPedido;
-use App\Enums\ZonaMesa;
 use App\Filament\Resources\ConfiguracionFiscal\ConfiguracionFiscalResource;
 use App\Filament\Resources\ConfiguracionFiscal\Pages\ManageConfiguracionFiscal;
 use App\Filament\Resources\DocumentoFiscal\DocumentoFiscalResource;
@@ -78,7 +77,7 @@ class FiscalAdminUiTest extends TestCase
         $this->table = Mesa::create([
             'establecimiento_id' => $this->establishment->getKey(),
             'numero' => '8',
-            'zona' => ZonaMesa::SALON,
+            'zona' => 'SALON',
             'estado' => EstadoMesa::LIBRE,
         ]);
 

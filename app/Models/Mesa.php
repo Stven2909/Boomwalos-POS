@@ -3,13 +3,15 @@
 namespace App\Models;
 
 use App\Enums\EstadoMesa;
-use App\Enums\ZonaMesa;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Mesa extends Model
 {
+    use SoftDeletes;
+
     protected $fillable = [
         'establecimiento_id',
         'numero',
@@ -22,7 +24,7 @@ class Mesa extends Model
     {
         return [
             'estado' => EstadoMesa::class,
-            'zona' => ZonaMesa::class,
+            // 'zona' es texto libre con el nombre de la ubicación actual.
             'activa' => 'boolean',
         ];
     }
