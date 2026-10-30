@@ -45,4 +45,42 @@ class PedidoNumberService
 
         return $tracking;
     }
+
+    /**
+     * Devuelve el último código corto consumido por un borrador eliminado.
+     * Solo lo hace si nadie más lo está usando, para no repetir números.
+     */
+    public function releaseLastCode(int $establishmentId, ?int $codigo, ?string $fecha): void
+    {
+        if ($codigo === null || $fecha === null) {
+            return;
+        }
+
+        $secuencia = DB::table('secuencias_pedidos')
+            ->where('establecimiento_id', $establishmentId)
+            ->where('fecha', $fecha)
+            ->lockForUpdate()
+            ->first();
+
+        if (! $secuencia || (int) $secuencia->ultimo_valor !== $codigo) {
+            return;
+        }
+
+        $enUso = DB::table('pedidos')
+            ->where('establecimiento_id', $establishmentId)
+            ->where('fecha_codigo', $fecha)
+            ->where('codigo_corto', $codigo)
+            ->exists();
+
+        if ($enUso) {
+            return;
+        }
+
+        DB::table('secuencias_pedidos')
+            ->where('id', $secuencia->id)
+            ->update([
+                'ultimo_valor' => max(0, $codigo - 1),
+                'updated_at' => now(),
+            ]);
+    }
 }

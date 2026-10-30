@@ -6,7 +6,17 @@
             recallDigits: '',
             manualOpen: false,
             manualDigits: '',
+            customerModalOpen: false,
+            customerName: @js((string) $nombreCliente),
             currentTotal: {{ (float) $this->total }},
+
+            openCustomer() {
+                this.customerName = @js((string) $nombreCliente);
+                this.customerModalOpen = true;
+            },
+            saveCustomer() {
+                $wire.saveCustomerName(this.customerName);
+            },
 
             openRecall() {
                 this.recallDigits = '';
@@ -61,7 +71,7 @@
                 this.manualOpen = false;
             }
         }"
-        @keydown.window.escape="recallOpen = false; manualOpen = false"
+        @keydown.window.escape="recallOpen = false; manualOpen = false; customerModalOpen = false"
     >
         @include('filament.admin.components.pos-header', [
             'backUrl' => \App\Filament\Pages\Pos\ServiceSelection::getUrl(),
@@ -93,6 +103,18 @@
                             <x-heroicon-o-shopping-bag class="h-4 w-4" />
                             <span>Para Llevar</span>
                         </div>
+                    @endif
+
+                    @if ($pedido->estado_comercial->isPayable())
+                    <button
+                        type="button"
+                        @click="openCustomer()"
+                        class="bw-pos-customer-pill {{ $pedido->nombre_cliente ? 'has-name' : '' }}"
+                        title="Agregar o editar el nombre del cliente (opcional)"
+                    >
+                        <x-heroicon-o-user class="h-4 w-4" aria-hidden="true" />
+                        <span>{{ $pedido->nombre_cliente ?: 'Cliente (opcional)' }}</span>
+                    </button>
                     @endif
                 </div>
 
@@ -487,6 +509,16 @@
                 </section>
             </div>
         @endif
+
+        <!-- MODAL DE NOMBRE DEL CLIENTE (OPCIONAL) - TECLADO FÍSICO Y TÁCTIL -->
+        @include('filament.admin.components.pos-customer-modal', [
+            'open' => 'customerModalOpen',
+            'model' => 'customerName',
+            'title' => 'Cliente del pedido',
+            'subtitle' => 'Opcional. Escribe con el teclado o usa el táctil.',
+            'confirmLabel' => 'Guardar cliente',
+            'confirm' => 'saveCustomer()',
+        ])
 
         <!-- MODAL DE TECLADO NUMÉRICO TÁCTIL PARA RECALL (#TICKET) - ALPINE 0ms -->
         <div x-show="recallOpen" x-cloak x-trap.noscroll="recallOpen" class="bw-pos-combo-modal" role="dialog" aria-modal="true" aria-labelledby="recall-modal-title">

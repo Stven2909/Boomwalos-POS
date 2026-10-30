@@ -46,7 +46,7 @@
                 <input
                     type="search"
                     wire:model.live.debounce.250ms="search"
-                    placeholder="Buscar por #código, mesa, seguimiento u origen"
+                    placeholder="Buscar por #código, cliente, mesa, seguimiento u origen"
                     aria-label="Buscar pedidos"
                 >
             </label>
@@ -73,6 +73,12 @@
                             <small>{{ $this->orderContextLabel($order) }} · {{ $this->timeLabel($order) }}</small>
                         </span>
                         <span class="bw-pos-order-meta">
+                            @if (filled($order->nombre_cliente))
+                                <span class="bw-pos-order-customer">
+                                    <x-heroicon-o-user class="h-4 w-4" aria-hidden="true" />
+                                    {{ $order->nombre_cliente }}
+                                </span>
+                            @endif
                             <span>{{ $order->origen_pedido?->label() }}</span>
                             <span>{{ $this->orderItemCount($order) }} ítems</span>
                             <span class="bw-pos-order-state {{ $orderStateClass }}">

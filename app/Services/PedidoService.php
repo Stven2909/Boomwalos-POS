@@ -16,6 +16,7 @@ use App\Jobs\ProcessPrintJob;
 use App\Models\Combo;
 use App\Models\DetallePedido;
 use App\Models\Establecimiento;
+use App\Models\EventoAuditoria;
 use App\Models\Mesa;
 use App\Models\Pedido;
 use App\Models\Producto;
@@ -42,9 +43,14 @@ class PedidoService
         private readonly PoliticaFlujosPos $flowPolicy,
     ) {}
 
-    public function startOrder(TipoPedido $tipo, User $actor, ?int $mesaId = null, OrigenPedido $origen = OrigenPedido::CAJA): Pedido
-    {
-        return DB::transaction(function () use ($tipo, $actor, $mesaId, $origen): Pedido {
+    public function startOrder(
+        TipoPedido $tipo,
+        User $actor,
+        ?int $mesaId = null,
+        OrigenPedido $origen = OrigenPedido::CAJA,
+        ?string $nombreCliente = null,
+    ): Pedido {
+        return DB::transaction(function () use ($tipo, $actor, $mesaId, $origen, $nombreCliente): Pedido {
             $establecimientoId = $this->establishmentId();
 
             Establecimiento::query()->lockForUpdate()->findOrFail($establecimientoId);
@@ -101,6 +107,7 @@ class PedidoService
                 'numero_seguimiento' => $this->pedidoNumberService->nextTracking(),
                 'tipo_pedido' => $tipo,
                 'mesa_id' => $mesa?->id,
+                'nombre_cliente' => $this->normalizarNombreCliente($nombreCliente),
                 'establecimiento_id' => $establecimientoId,
                 'usuario_id' => $actor->getKey(),
                 'origen_pedido' => $origen,
@@ -124,35 +131,39 @@ class PedidoService
         });
     }
 
+    public function setCustomerName(Pedido $pedido, ?string $nombreCliente, User $actor): Pedido
+    {
+        return DB::transaction(function () use ($pedido, $nombreCliente, $actor): Pedido {
+            $pedido = $this->lockPedido($pedido);
+
+            if (! $pedido->estado_comercial->isPayable()) {
+                throw ValidationException::withMessages([
+                    'nombre_cliente' => 'Solo puedes editar el cliente de un pedido abierto o pendiente de cobro.',
+                ]);
+            }
+
+            $nombre = $this->normalizarNombreCliente($nombreCliente);
+
+            $pedido->update(['nombre_cliente' => $nombre]);
+
+            $this->audit($pedido, $actor, 'nombre_cliente_actualizado', [
+                'tiene_nombre' => $nombre !== null,
+            ]);
+
+            return $pedido->fresh();
+        });
+    }
+
     public function discardEmptyDraft(Pedido $pedido, User $actor, string $motivo = 'Borrador vacío abandonado'): bool
     {
-        return DB::transaction(function () use ($pedido, $actor, $motivo): bool {
+        return DB::transaction(function () use ($pedido): bool {
             $pedido = $this->lockPedido($pedido);
 
             if ($pedido->estado_comercial !== EstadoComercialPedido::ABIERTO) {
                 return false;
             }
 
-            $hasActiveLines = $pedido->detalles()
-                ->where('estado_linea', EstadoLineaPedido::ACTIVA->value)
-                ->exists();
-
-            if ($hasActiveLines || $pedido->pago()->exists()) {
-                return false;
-            }
-
-            $pedido->update(['estado_comercial' => EstadoComercialPedido::CANCELADO]);
-
-            if ($pedido->mesa_id) {
-                $pedido->mesa()->update(['estado' => EstadoMesa::LIBRE]);
-            }
-
-            $this->audit($pedido, $actor, 'borrador_vacio_cancelado', [
-                'motivo' => $motivo,
-                'codigo_corto' => $pedido->codigo_corto,
-            ]);
-
-            return true;
+            return $this->eliminarBorrador($pedido);
         });
     }
 
@@ -168,7 +179,7 @@ class PedidoService
 
     private function discardEmptyDrafts(User $actor, ?int $userId = null): int
     {
-        return DB::transaction(function () use ($actor, $userId): int {
+        return DB::transaction(function () use ($userId): int {
             $drafts = Pedido::query()
                 ->where('establecimiento_id', $this->establishmentId())
                 ->where('estado_comercial', EstadoComercialPedido::ABIERTO->value)
@@ -178,21 +189,65 @@ class PedidoService
                 ->lockForUpdate()
                 ->get();
 
+            $eliminados = 0;
+
             foreach ($drafts as $draft) {
-                $draft->update(['estado_comercial' => EstadoComercialPedido::CANCELADO]);
-
-                if ($draft->mesa_id) {
-                    $draft->mesa()->update(['estado' => EstadoMesa::LIBRE]);
+                if ($this->eliminarBorrador($draft)) {
+                    $eliminados++;
                 }
-
-                $this->audit($draft, $actor, 'borrador_vacio_cancelado', [
-                    'motivo' => 'Borrador vacío limpiado al regresar al POS.',
-                    'codigo_corto' => $draft->codigo_corto,
-                ]);
             }
 
-            return $drafts->count();
+            return $eliminados;
         });
+    }
+
+    /**
+     * Elimina físicamente un borrador sin actividad. Si ya tiene líneas activas,
+     * comandas, pagos, tandas o documentos fiscales, no se toca.
+     */
+    private function eliminarBorrador(Pedido $pedido): bool
+    {
+        if (! $this->puedeEliminarBorrador($pedido)) {
+            return false;
+        }
+
+        $codigo = $pedido->codigo_corto;
+        $fecha = $pedido->fecha_codigo?->toDateString();
+        $establecimientoId = (int) $pedido->establecimiento_id;
+        $mesaId = $pedido->mesa_id;
+
+        EventoAuditoria::query()
+            ->where('entidad_tipo', Pedido::class)
+            ->where('entidad_id', $pedido->getKey())
+            ->delete();
+
+        $pedido->delete();
+
+        if ($mesaId) {
+            Mesa::query()->whereKey($mesaId)->update(['estado' => EstadoMesa::LIBRE]);
+        }
+
+        $this->pedidoNumberService->releaseLastCode($establecimientoId, $codigo, $fecha);
+
+        return true;
+    }
+
+    private function puedeEliminarBorrador(Pedido $pedido): bool
+    {
+        if ($pedido->pago()->exists()
+            || $pedido->trabajosImpresion()->exists()
+            || $pedido->documentosFiscales()->exists()
+            || $pedido->tandas()->exists()) {
+            return false;
+        }
+
+        return ! $pedido->detalles()
+            ->where(function ($query): void {
+                $query
+                    ->where('estado_linea', EstadoLineaPedido::ACTIVA->value)
+                    ->orWhereNotNull('tanda_id');
+            })
+            ->exists();
     }
 
     public function addProduct(Pedido $pedido, Producto $producto, User $actor, ?string $masa = null): DetallePedido
@@ -822,6 +877,29 @@ class PedidoService
     private function sameConfiguration(?array $left, ?array $right): bool
     {
         return json_encode($left ?? [], JSON_UNESCAPED_UNICODE) === json_encode($right ?? [], JSON_UNESCAPED_UNICODE);
+    }
+
+    private function normalizarNombreCliente(?string $nombre): ?string
+    {
+        if ($nombre === null) {
+            return null;
+        }
+
+        $nombre = preg_replace('/[\x00-\x1F\x7F]/u', '', $nombre) ?? '';
+        $nombre = preg_replace('/\s+/u', ' ', $nombre) ?? '';
+        $nombre = trim($nombre);
+
+        if ($nombre === '') {
+            return null;
+        }
+
+        if (mb_strlen($nombre) > 60) {
+            throw ValidationException::withMessages([
+                'nombre_cliente' => 'El nombre del cliente no puede superar los 60 caracteres.',
+            ]);
+        }
+
+        return $nombre;
     }
 
     private function lockPedido(Pedido $pedido): Pedido

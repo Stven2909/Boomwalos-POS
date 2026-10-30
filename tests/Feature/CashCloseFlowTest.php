@@ -229,7 +229,7 @@ class CashCloseFlowTest extends TestCase
         ]);
     }
 
-    public function test_close_cancels_empty_drafts_without_blocking_the_turn(): void
+    public function test_close_deletes_empty_drafts_without_blocking_the_turn(): void
     {
         $sesion = $this->openSession('100.00');
 
@@ -238,7 +238,7 @@ class CashCloseFlowTest extends TestCase
 
         $closed = app(CierreCajaService::class)->cerrar($sesion, '100.00', $this->cashier);
 
-        $this->assertSame('CANCELADO', $emptyDraft->fresh()->estado_comercial->value);
+        $this->assertDatabaseMissing('pedidos', ['id' => $emptyDraft->getKey()]);
         $this->assertSame(EstadoMesa::LIBRE, $this->table->fresh()->estado);
         $this->assertNotNull($closed->fecha_cierre);
     }

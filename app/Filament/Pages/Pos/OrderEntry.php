@@ -43,6 +43,8 @@ class OrderEntry extends PosPage
 
     public ?string $feedback = null;
 
+    public string $nombreCliente = '';
+
     public string $recallCode = '';
 
     public bool $recallModalOpen = false;
@@ -101,6 +103,7 @@ class OrderEntry extends PosPage
         abort_unless($pedido->isOpen(), 404);
 
         $this->pedido = $pedido;
+        $this->nombreCliente = (string) ($pedido->nombre_cliente ?? '');
         $this->refreshPedido();
 
         $feedback = session('pos_feedback');
@@ -151,6 +154,27 @@ class OrderEntry extends PosPage
             $this->redirect(self::getUrl(['pedido' => $pedido->getKey()]));
         } catch (ValidationException $exception) {
             $this->feedback = collect($exception->errors())->flatten()->first() ?? 'No se pudo iniciar el pedido.';
+        } catch (\Throwable $exception) {
+            $this->feedback = $exception->getMessage();
+        }
+    }
+
+    public function saveCustomerName(?string $nombreCliente = null): void
+    {
+        try {
+            $this->pedido = app(PedidoService::class)->setCustomerName(
+                $this->pedido,
+                $nombreCliente ?? $this->nombreCliente,
+                auth()->user(),
+            );
+
+            $this->nombreCliente = (string) ($this->pedido->nombre_cliente ?? '');
+            $this->refreshPedido();
+            $this->feedback = $this->nombreCliente !== ''
+                ? 'Cliente actualizado.'
+                : 'Se quitó el nombre del cliente.';
+        } catch (ValidationException $exception) {
+            $this->feedback = collect($exception->errors())->flatten()->first() ?? 'No se pudo guardar el cliente.';
         } catch (\Throwable $exception) {
             $this->feedback = $exception->getMessage();
         }

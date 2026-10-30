@@ -61,6 +61,12 @@
                         </span>
                         <strong class="bw-pos-table-number">MESA {{ str_pad($mesa->numero, 2, '0', STR_PAD_LEFT) }}</strong>
                         <span class="bw-pos-table-state">{{ $isPaid ? 'Cobrado · pendiente de entrega' : ($isOccupied ? 'Cuenta abierta' : 'Libre') }}</span>
+                        @if ($isOccupied && filled($activeOrder?->nombre_cliente))
+                            <span class="bw-pos-table-customer">
+                                <x-heroicon-o-user class="h-3.5 w-3.5" aria-hidden="true" />
+                                {{ $activeOrder->nombre_cliente }}
+                            </span>
+                        @endif
                         @if ($isSelected)
                             <span class="bw-pos-selected-mark" aria-hidden="true">
                                 <x-heroicon-o-check class="h-4 w-4" />

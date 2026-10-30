@@ -155,7 +155,7 @@ class PosFlowConfigurationTest extends TestCase
         ], $this->admin);
     }
 
-    public function test_empty_table_draft_is_cancelled_and_does_not_block_disable(): void
+    public function test_empty_table_draft_is_deleted_and_does_not_block_disable(): void
     {
         $this->actingAs($this->admin);
         $mesa = Mesa::create([
@@ -169,7 +169,7 @@ class PosFlowConfigurationTest extends TestCase
 
         app(ConfiguracionFlujosPosService::class)->actualizar($this->counterOnly(), $this->admin);
 
-        $this->assertSame(EstadoComercialPedido::CANCELADO, $pedido->fresh()->estado_comercial);
+        $this->assertDatabaseMissing('pedidos', ['id' => $pedido->getKey()]);
         $this->assertSame(EstadoMesa::LIBRE, $mesa->fresh()->estado);
     }
 

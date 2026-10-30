@@ -6052,3 +6052,206 @@ body:has(.bw-pos-order-page) {
         overflow-y: auto;
     }
 }
+
+/* -- Cliente del pedido (opcional) --------------------------- */
+.bw-pos-customer-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 34px;
+    max-width: 220px;
+    padding: 6px 12px;
+    border: 1.5px dashed #c9c2cd;
+    border-radius: 999px;
+    background: #fff;
+    color: #6b6470;
+    font-size: 12px;
+    font-weight: 750;
+    cursor: pointer;
+    transition: all 140ms ease;
+}
+
+.bw-pos-customer-pill span {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.bw-pos-customer-pill:hover,
+.bw-pos-customer-pill:focus-visible {
+    border-color: var(--bw-primary);
+    color: var(--bw-primary);
+    background: #faf7fb;
+    box-shadow: 0 0 0 3px rgba(117, 85, 109, 0.1);
+}
+
+.bw-pos-customer-pill.has-name {
+    border-style: solid;
+    border-color: #c9b7d6;
+    background: #f6f0fa;
+    color: #5b3d6b;
+}
+
+.bw-pos-customer-dialog {
+    width: min(100% - 24px, 660px);
+    max-width: 660px;
+    padding: 18px 20px 20px;
+}
+
+.bw-pos-customer-input-wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    border: 2px solid #ded9e1;
+    border-radius: 14px;
+    background: #f8f6f9;
+    color: #8a8390;
+}
+
+.bw-pos-customer-input-wrap:focus-within {
+    border-color: var(--bw-primary);
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(117, 85, 109, 0.1);
+}
+
+.bw-pos-customer-input {
+    flex: 1;
+    min-width: 0;
+    border: 0;
+    background: transparent;
+    outline: none;
+    color: #202027;
+    font: inherit;
+    font-size: 18px;
+    font-weight: 750;
+    letter-spacing: 0.01em;
+}
+
+.bw-pos-customer-input::placeholder {
+    color: #a49daa;
+    font-weight: 600;
+}
+
+.bw-pos-keyboard {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 14px;
+    user-select: none;
+}
+
+.bw-pos-keyboard-row {
+    display: flex;
+    gap: 6px;
+}
+
+.bw-pos-keyboard-key {
+    flex: 1 1 0;
+    min-width: 0;
+    min-height: 44px;
+    padding: 0 4px;
+    border: 1.5px solid #ded9e1;
+    border-radius: 10px;
+    background: #fff;
+    color: #202027;
+    font: inherit;
+    font-size: 15px;
+    font-weight: 800;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03);
+    transition: transform 80ms ease, background 80ms ease;
+}
+
+.bw-pos-keyboard-key:active {
+    transform: scale(0.94);
+    background: var(--bw-secondary);
+    border-color: var(--bw-primary);
+    color: var(--bw-primary);
+}
+
+.bw-pos-keyboard-key.is-accent {
+    background: #f7f3fb;
+    border-color: #e3d6ec;
+    color: #6b4b7c;
+}
+
+.bw-pos-keyboard-key.is-space {
+    flex: 4 1 0;
+    font-size: 13px;
+    font-weight: 750;
+}
+
+.bw-pos-keyboard-key.is-backspace {
+    flex: 1.4 1 0;
+    background: #fdf9ec;
+    border-color: #fce8a6;
+    color: #b45309;
+}
+
+.bw-pos-keyboard-key.is-clear {
+    flex: 1.6 1 0;
+    background: #fdf2f3;
+    border-color: #f8c2c7;
+    color: #a63b4a;
+    font-size: 13px;
+    font-weight: 750;
+}
+
+.bw-pos-customer-footer {
+    margin-top: 16px;
+}
+
+.bw-pos-order-customer,
+.bw-pos-charge-customer,
+.bw-pos-table-customer {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    color: #5b3d6b;
+    font-weight: 750;
+}
+
+.bw-pos-order-customer {
+    max-width: 180px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.bw-pos-order-meta .bw-pos-order-customer {
+    color: #5b3d6b;
+    font-weight: 750;
+}
+
+.bw-pos-charge-customer {
+    margin-top: 4px;
+    font-size: 13px;
+}
+
+.bw-pos-table-customer {
+    max-width: 100%;
+    margin-top: 2px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.75);
+    font-size: 11px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+@media (max-width: 640px) {
+    .bw-pos-customer-dialog {
+        width: calc(100% - 16px);
+        padding: 14px;
+    }
+
+    .bw-pos-keyboard-key {
+        min-height: 40px;
+        font-size: 13px;
+    }
+}

@@ -21,6 +21,12 @@
                                 · {{ $pedido->codigoCortoLabel() }}
                             @endif
                         </p>
+                        @if (filled($pedido->nombre_cliente))
+                            <p class="bw-pos-charge-customer">
+                                <x-heroicon-o-user class="h-4 w-4" aria-hidden="true" />
+                                Cliente: {{ $pedido->nombre_cliente }}
+                            </p>
+                        @endif
                     </div>
                     <span class="bw-pos-order-tracking">{{ $pedido->numero_seguimiento }}</span>
                 </div>

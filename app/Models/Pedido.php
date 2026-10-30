@@ -17,6 +17,7 @@ class Pedido extends Model
         'numero_seguimiento',
         'tipo_pedido',
         'mesa_id',
+        'nombre_cliente',
         'establecimiento_id',
         'usuario_id',
         'origen_pedido',
@@ -96,6 +97,13 @@ class Pedido extends Model
     public function codigoCortoLabel(): string
     {
         return $this->codigo_corto !== null ? '#'.$this->codigo_corto : '';
+    }
+
+    public function nombreClienteLabel(): string
+    {
+        $nombre = trim((string) $this->nombre_cliente);
+
+        return $nombre !== '' ? $nombre : 'Sin nombre';
     }
 
     public function total(): float

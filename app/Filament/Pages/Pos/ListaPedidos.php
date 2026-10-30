@@ -135,12 +135,18 @@ class ListaPedidos extends PosPage
                     ->orWhereHas('detalles', fn ($details) => $details->where('estado_linea', EstadoLineaPedido::ACTIVA->value))
                     ->orWhereHas('pago');
             })
-            ->when($code !== '', fn ($query) => $query->where('codigo_corto', (int) $code))
-            ->when($code === '' && $search !== '', fn ($query) => $query->where(function ($inner) use ($search) {
-                $inner->where('numero_seguimiento', 'like', '%'.$search.'%')
-                    ->orWhere('origen_pedido', 'like', '%'.$search.'%')
-                    ->orWhereHas('mesa', fn ($mesaQuery) => $mesaQuery->where('numero', 'like', '%'.$search.'%'));
-            }))
+            ->when($search !== '', function ($query) use ($search, $code): void {
+                $query->where(function ($inner) use ($search, $code): void {
+                    $inner->where('numero_seguimiento', 'like', '%'.$search.'%')
+                        ->orWhere('nombre_cliente', 'like', '%'.$search.'%')
+                        ->orWhere('origen_pedido', 'like', '%'.$search.'%')
+                        ->orWhereHas('mesa', fn ($mesaQuery) => $mesaQuery->where('numero', 'like', '%'.$search.'%'));
+
+                    if ($code !== '') {
+                        $inner->orWhere('codigo_corto', (int) $code);
+                    }
+                });
+            })
             ->with(['mesa', 'usuario', 'detalles'])
             ->orderByDesc('id')
             ->paginate(50);
