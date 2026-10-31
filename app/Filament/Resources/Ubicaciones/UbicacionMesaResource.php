@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Ubicaciones;
 
 use App\Contracts\EstablishmentContextInterface;
+use App\Enums\FlujoUbicacionMesa;
 use App\Filament\Resources\Ubicaciones\Pages\ManageUbicaciones;
 use App\Models\Mesa;
 use App\Models\UbicacionMesa;
@@ -10,8 +11,10 @@ use BackedEnum;
 use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
@@ -20,8 +23,6 @@ use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
-use Filament\Notifications\Notification;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use UnitEnum;
 
@@ -46,6 +47,8 @@ class UbicacionMesaResource extends Resource
 
     public static function form(Schema $schema): Schema
     {
+        $estId = app(EstablishmentContextInterface::class)->idOrNull();
+
         return $schema
             ->components([
                 Section::make('Datos de la ubicación')
@@ -59,12 +62,22 @@ class UbicacionMesaResource extends Resource
                                     ->unique(
                                         table: 'ubicaciones_mesa',
                                         column: 'nombre',
-                                        modifyRuleUsing: function ($rule) {
-                                            $estId = app(EstablishmentContextInterface::class)->id();
-                                            return $rule->where('establecimiento_id', $estId);
+                                        modifyRuleUsing: function ($rule) use ($estId) {
+                                            return $estId === null
+                                                ? $rule->where('establecimiento_id', 0)
+                                                : $rule->where('establecimiento_id', $estId);
                                         },
                                         ignoreRecord: true,
                                     ),
+                                Select::make('flujo')
+                                    ->label('Tipo de ubicación')
+                                    ->options(collect(FlujoUbicacionMesa::cases())->mapWithKeys(
+                                        fn (FlujoUbicacionMesa $flujo): array => [$flujo->value => $flujo->label()],
+                                    )->all())
+                                    ->default(FlujoUbicacionMesa::MESAS->value)
+                                    ->required()
+                                    ->native(false)
+                                    ->helperText('Mesas: plano de mesas. Para llevar: tablero de pedidos para llevar, sin mesas.'),
                                 TextInput::make('orden')
                                     ->label('Orden')
                                     ->numeric()
@@ -82,50 +95,47 @@ class UbicacionMesaResource extends Resource
 
     public static function table(Table $table): Table
     {
+        $estId = app(EstablishmentContextInterface::class)->idOrNull();
+
+        $query = UbicacionMesa::query()->orderBy('orden');
+
+        if ($estId === null) {
+            $query->whereRaw('1 = 0');
+        } else {
+            $query->where('establecimiento_id', $estId);
+        }
+
         return $table
-            ->query(
-                UbicacionMesa::query()
-                    ->where('establecimiento_id', app(EstablishmentContextInterface::class)->id())
-                    ->orderBy('orden')
-            )
+            ->query($query)
             ->defaultSort('orden')
             ->reorderable('orden')
             ->columns([
                 TextColumn::make('orden')->label('#')->sortable(),
                 TextColumn::make('nombre')->label('Nombre')->sortable()->searchable(),
+                TextColumn::make('flujo')
+                    ->label('Tipo')
+                    ->badge()
+                    ->formatStateUsing(fn (?FlujoUbicacionMesa $state): string => $state?->label() ?? 'Mesas'),
                 TextColumn::make('mesas_count')
-                    ->label('Mesas activas')
-                    ->counts('mesas')
+                    ->label('Mesas')
+                    ->state(fn (UbicacionMesa $record): int => $record->mesas()->count())
                     ->badge(),
                 IconColumn::make('activa')->label('Activa')->boolean(),
             ])
             ->recordActions([
-                EditAction::make()
-                    ->label('Editar')
-                    ->after(function (UbicacionMesa $record, array $data) use (&$table): void {
-                        // Si cambió el nombre, actualizar mesas.zona en cascada dentro de una transacción.
-                        $oldNombre = $record->getOriginal('nombre');
-                        if (isset($data['nombre']) && $data['nombre'] !== $oldNombre) {
-                            DB::transaction(function () use ($record, $oldNombre, $data): void {
-                                Mesa::withTrashed()
-                                    ->where('establecimiento_id', $record->establecimiento_id)
-                                    ->where('zona', $oldNombre)
-                                    ->update(['zona' => $data['nombre']]);
-                            });
-                        }
-                    }),
+                EditAction::make()->label('Editar'),
                 DeleteAction::make()
                     ->label('Eliminar')
                     ->before(function (DeleteAction $action, UbicacionMesa $record): void {
-                        $tieneActivas = Mesa::query()
+                        $tieneMesas = Mesa::query()
                             ->where('establecimiento_id', $record->establecimiento_id)
                             ->where('zona', $record->nombre)
                             ->exists();
 
-                        if ($tieneActivas) {
+                        if ($tieneMesas) {
                             Notification::make()
                                 ->title('No se puede eliminar')
-                                ->body('La ubicación tiene mesas activas. Elimínalas o muévelas antes de borrar la ubicación.')
+                                ->body('La ubicación tiene mesas asignadas (activas o inactivas). Elimínalas o muévelas antes de borrar la ubicación.')
                                 ->danger()
                                 ->send();
                             $action->halt();
@@ -143,6 +153,8 @@ class UbicacionMesaResource extends Resource
                     })
                     ->mutateFormDataUsing(function (array $data): array {
                         $data['establecimiento_id'] = app(EstablishmentContextInterface::class)->id();
+                        $data['flujo'] ??= FlujoUbicacionMesa::MESAS->value;
+
                         return $data;
                     }),
             ]);

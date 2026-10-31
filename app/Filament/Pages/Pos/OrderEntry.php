@@ -6,6 +6,7 @@ use App\Enums\DisponibilidadProducto;
 use App\Enums\EstadoComercialPedido;
 use App\Enums\EstadoImpresion;
 use App\Enums\EstadoLineaPedido;
+use App\Enums\FlujoUbicacionMesa;
 use App\Enums\MasaPupusa;
 use App\Enums\MetodoPago;
 use App\Enums\OrigenPedido;
@@ -736,7 +737,7 @@ class OrderEntry extends PosPage
 
     public function openMesaPicker(): void
     {
-        $this->mesaZona = $this->pedido->mesa?->zona ?? '';
+        $this->mesaZona = $this->pedido->mesa?->zona ?? ($this->availableZonesForMesaModal[0] ?? '');
         $this->mesaModalOpen = true;
     }
 
@@ -1072,6 +1073,7 @@ class OrderEntry extends PosPage
         return UbicacionMesa::query()
             ->where('establecimiento_id', $estId)
             ->where('activa', true)
+            ->where('flujo', FlujoUbicacionMesa::MESAS->value)
             ->whereIn('nombre', $conMesas)
             ->orderBy('orden')
             ->pluck('nombre')

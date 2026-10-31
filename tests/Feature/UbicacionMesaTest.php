@@ -8,7 +8,9 @@ use App\Models\Pedido;
 use App\Models\UbicacionMesa;
 use App\Models\User;
 use App\Enums\EstadoMesa;
+use App\Enums\FlujoUbicacionMesa;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Validation\ValidationException;
 use Tests\TestCase;
 
 class UbicacionMesaTest extends TestCase
@@ -177,5 +179,84 @@ class UbicacionMesaTest extends TestCase
 
         Mesa::withTrashed()->find($mesa->getKey())->restore();
         $this->assertSame(1, Mesa::where('establecimiento_id', $est->getKey())->count());
+    }
+
+    // ------------------------------------------------------------------
+    // Flujo de la ubicación: mesas vs. para llevar
+    // ------------------------------------------------------------------
+
+    public function test_ubicacion_para_llevar_se_marca_con_su_flujo(): void
+    {
+        $est = $this->establecimiento();
+
+        $llevar = UbicacionMesa::create([
+            'establecimiento_id' => $est->getKey(),
+            'nombre'             => 'Llevar',
+            'flujo'              => FlujoUbicacionMesa::LLEVAR,
+            'orden'              => 5,
+        ]);
+
+        $this->assertTrue($llevar->esParaLlevar());
+        $this->assertSame(FlujoUbicacionMesa::LLEVAR, $llevar->fresh()->flujo);
+    }
+
+    public function test_renombrar_ubicacion_actualiza_la_zona_de_sus_mesas(): void
+    {
+        $est = $this->establecimiento();
+
+        $ubicacion = UbicacionMesa::create([
+            'establecimiento_id' => $est->getKey(),
+            'nombre'             => 'Salón',
+            'orden'              => 1,
+        ]);
+
+        $mesa = Mesa::create([
+            'establecimiento_id' => $est->getKey(),
+            'numero'             => '1',
+            'zona'               => 'Salón',
+            'estado'             => EstadoMesa::LIBRE,
+        ]);
+
+        $ubicacion->update(['nombre' => 'Área Blanca']);
+
+        $this->assertSame('Área Blanca', $mesa->fresh()->zona);
+        $this->assertSame(1, $ubicacion->fresh()->mesas()->count());
+    }
+
+    public function test_no_permite_convertir_a_llevar_una_ubicacion_con_mesas(): void
+    {
+        $est = $this->establecimiento();
+
+        $ubicacion = UbicacionMesa::create([
+            'establecimiento_id' => $est->getKey(),
+            'nombre'             => 'Área Roja',
+            'orden'              => 1,
+        ]);
+
+        Mesa::create([
+            'establecimiento_id' => $est->getKey(),
+            'numero'             => '1',
+            'zona'               => 'Área Roja',
+            'estado'             => EstadoMesa::LIBRE,
+        ]);
+
+        $this->expectException(ValidationException::class);
+
+        $ubicacion->update(['flujo' => FlujoUbicacionMesa::LLEVAR]);
+    }
+
+    public function test_permite_convertir_a_llevar_una_ubicacion_sin_mesas(): void
+    {
+        $est = $this->establecimiento();
+
+        $ubicacion = UbicacionMesa::create([
+            'establecimiento_id' => $est->getKey(),
+            'nombre'             => 'Llevar',
+            'orden'              => 1,
+        ]);
+
+        $ubicacion->update(['flujo' => FlujoUbicacionMesa::LLEVAR]);
+
+        $this->assertTrue($ubicacion->fresh()->esParaLlevar());
     }
 }

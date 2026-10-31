@@ -34,12 +34,12 @@ class CatalogoPlanesDeRenderosTest extends TestCase
             ->whereNull('parent_id')
             ->count());
 
-        $this->assertSame(4, Categoria::query()
+        $this->assertSame(23, Categoria::query()
             ->where('establecimiento_id', $branch->getKey())
             ->whereNotNull('parent_id')
             ->count());
 
-        $this->assertSame(176, Producto::query()
+        $this->assertSame(190, Producto::query()
             ->where('establecimiento_id', $branch->getKey())
             ->count());
 
@@ -80,5 +80,18 @@ class CatalogoPlanesDeRenderosTest extends TestCase
         $this->assertSame(AreaPreparacion::PUPUSAS, $pupusas->area);
         $this->assertSame(AreaPreparacion::PUPUSAS, $tradicionales->areaResuelta());
         $this->assertSame(AreaPreparacion::BAR, $bebidas->area);
+
+        $alitasTime = Categoria::query()
+            ->where('establecimiento_id', $branch->getKey())
+            ->where('nombre', 'Alitas Time')
+            ->firstOrFail();
+
+        $this->assertSame(
+            $alitasTime->getKey(),
+            Producto::query()
+                ->where('establecimiento_id', $branch->getKey())
+                ->where('nombre', 'Alitas (con salsa de la casa)')
+                ->value('categoria_id'),
+        );
     }
 }

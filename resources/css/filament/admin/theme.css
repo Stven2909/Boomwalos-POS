@@ -6255,3 +6255,123 @@ body:has(.bw-pos-order-page) {
         font-size: 13px;
     }
 }
+
+/* ------------------------------------------------------------------
+   Tablero "Llevar" (flujo mostrador / para llevar)
+   ------------------------------------------------------------------ */
+
+.bw-pos-takeaway-board {
+    margin-top: 26px;
+}
+
+.bw-pos-takeaway-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 18px;
+    border: 1px solid #e7e1e9;
+    border-radius: 18px;
+    background: #fff;
+    padding: 22px 24px;
+}
+
+.bw-pos-takeaway-head h2 {
+    margin: 4px 0 0;
+    font-size: 24px;
+    font-weight: 800;
+    color: #1d1b1e;
+}
+
+.bw-pos-takeaway-head p {
+    margin: 6px 0 0;
+    color: #6b6570;
+    font-size: 14px;
+}
+
+.bw-pos-takeaway-new {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.bw-pos-takeaway-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+    margin-top: 18px;
+}
+
+.bw-pos-takeaway-card {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    grid-template-areas:
+        "code total"
+        "customer customer"
+        "meta meta";
+    gap: 8px 12px;
+    border: 1px solid #e7e1e9;
+    border-radius: 16px;
+    background: #fff;
+    padding: 16px 18px;
+    text-align: left;
+    cursor: pointer;
+    transition: border-color 150ms ease, box-shadow 150ms ease, transform 150ms ease;
+}
+
+.bw-pos-takeaway-card:hover,
+.bw-pos-takeaway-card:focus-visible {
+    border-color: #bba8b8;
+    box-shadow: 0 10px 22px rgba(29, 27, 30, 0.08);
+    transform: translateY(-2px);
+}
+
+.bw-pos-takeaway-card.is-pendiente_cobro {
+    border-color: #d97745;
+    background: #fff7f2;
+}
+
+.bw-pos-takeaway-code {
+    grid-area: code;
+    color: var(--bw-primary);
+    font-size: 15px;
+    font-weight: 800;
+}
+
+.bw-pos-takeaway-total {
+    grid-area: total;
+    text-align: right;
+    font-size: 18px;
+    font-weight: 800;
+}
+
+.bw-pos-takeaway-customer {
+    grid-area: customer;
+    font-size: 16px;
+    color: #1d1b1e;
+}
+
+.bw-pos-takeaway-meta {
+    grid-area: meta;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: #6b6570;
+    font-size: 12px;
+}
+
+.bw-pos-takeaway-state {
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.bw-pos-takeaway-time {
+    font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 900px) {
+    .bw-pos-takeaway-grid {
+        grid-template-columns: 1fr;
+    }
+}

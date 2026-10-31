@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Mesas;
 
 use App\Contracts\EstablishmentContextInterface;
 use App\Enums\EstadoMesa;
+use App\Enums\FlujoUbicacionMesa;
 use App\Filament\Resources\Mesas\Pages\ManageMesas;
 use App\Models\Mesa;
 use App\Models\UbicacionMesa;
@@ -52,6 +53,7 @@ class MesaResource extends Resource
         $ubicaciones = $estId
             ? UbicacionMesa::where('establecimiento_id', $estId)
                 ->where('activa', true)
+                ->where('flujo', FlujoUbicacionMesa::MESAS->value)
                 ->orderBy('orden')
                 ->pluck('nombre', 'nombre')
                 ->all()
@@ -76,7 +78,8 @@ class MesaResource extends Resource
                                                         ->whereNull('deleted_at');
                                         },
                                         ignoreRecord: true,
-                                    ),
+                                    )
+                                    ->helperText('Si el número pertenece a una mesa eliminada, se restaurará automáticamente al guardar.'),
                                 Select::make('zona')
                                     ->label('Ubicación')
                                     ->options($ubicaciones)
