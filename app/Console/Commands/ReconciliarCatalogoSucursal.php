@@ -226,6 +226,22 @@ class ReconciliarCatalogoSucursal extends Command
             if (count($plan) > 60) {
                 $this->line('… y '.(count($plan) - 60).' producto(s) más.');
             }
+
+            $porEliminar = collect($plan)->where('accion', 'eliminar');
+
+            if ($porEliminar->isNotEmpty()) {
+                $this->newLine();
+                $this->line('Productos que se eliminarán (no están en el catálogo y no tienen pedidos):');
+
+                $this->table(
+                    ['Producto', 'Categoría actual', 'Precio'],
+                    $porEliminar->map(fn (array $fila): array => [
+                        $fila['producto']->nombre,
+                        $fila['producto']->categoria?->nombre ?? '—',
+                        number_format((float) $fila['producto']->precio, 2),
+                    ])->values()->all(),
+                );
+            }
         }
 
         if ($categoriasSobrantes->isNotEmpty()) {
