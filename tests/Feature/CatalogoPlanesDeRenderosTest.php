@@ -94,4 +94,78 @@ class CatalogoPlanesDeRenderosTest extends TestCase
                 ->value('categoria_id'),
         );
     }
+
+    public function test_reconcilia_productos_y_categorias_sobrantes(): void
+    {
+        $branch = Establecimiento::create([
+            'nombre' => 'Los Boomwalos Planes de Renderos',
+            'direccion' => 'Carretera a Panchimalco',
+        ]);
+
+        $data = 'database/seeders/data/catalogo-planes-de-renderos.php';
+
+        $this->artisan('pos:catalogo:sembrar', [
+            'establecimiento' => (string) $branch->getKey(),
+            '--data' => $data,
+        ])->assertSuccessful();
+
+        $entradas = Categoria::query()
+            ->where('establecimiento_id', $branch->getKey())
+            ->where('nombre', 'Entradas')
+            ->firstOrFail();
+
+        // Sobrante con el mismo nombre que un producto del catálogo, pero en
+        // otra categoría: debe fusionarse con el producto vigente.
+        Producto::create([
+            'establecimiento_id' => $branch->getKey(),
+            'categoria_id' => $entradas->getKey(),
+            'nombre' => 'Corona (Individual)',
+            'precio' => 3,
+        ]);
+
+        // Sobrante que ya no existe en el catálogo: debe eliminarse.
+        Producto::create([
+            'establecimiento_id' => $branch->getKey(),
+            'categoria_id' => $entradas->getKey(),
+            'nombre' => 'Producto Viejo XYZ',
+            'precio' => 1,
+        ]);
+
+        // Categoría vieja vacía: debe eliminarse.
+        Categoria::create([
+            'establecimiento_id' => $branch->getKey(),
+            'nombre' => 'Categoría Vieja',
+            'parent_id' => null,
+            'activa' => true,
+        ]);
+
+        $this->assertSame(192, Producto::query()
+            ->where('establecimiento_id', $branch->getKey())
+            ->count());
+
+        $this->artisan('pos:catalogo:reconciliar', [
+            'establecimiento' => (string) $branch->getKey(),
+            '--data' => $data,
+            '--apply' => true,
+        ])->assertSuccessful();
+
+        $this->assertSame(190, Producto::query()
+            ->where('establecimiento_id', $branch->getKey())
+            ->count());
+
+        $this->assertFalse(Producto::query()
+            ->where('establecimiento_id', $branch->getKey())
+            ->where('nombre', 'Producto Viejo XYZ')
+            ->exists());
+
+        $this->assertFalse(Producto::query()
+            ->where('categoria_id', $entradas->getKey())
+            ->where('nombre', 'Corona (Individual)')
+            ->exists());
+
+        $this->assertFalse(Categoria::query()
+            ->where('establecimiento_id', $branch->getKey())
+            ->where('nombre', 'Categoría Vieja')
+            ->exists());
+    }
 }

@@ -67,6 +67,23 @@ class SembrarCatalogoSucursal extends Command
 
         $this->info("Catálogo sembrado para {$establecimiento->nombre} (#{$establecimiento->getKey()}).");
 
+        $sobrantes = Producto::query()
+            ->where('establecimiento_id', $establecimiento->getKey())
+            ->whereNotIn('id', array_unique($seeder->productosSembrados))
+            ->count();
+
+        if ($sobrantes > 0) {
+            $sugerencia = "php artisan pos:catalogo:reconciliar {$establecimiento->getKey()}";
+
+            if (is_string($data) && $data !== '') {
+                $sugerencia .= " --data={$data}";
+            }
+
+            $this->newLine();
+            $this->warn("Hay {$sobrantes} producto(s) de versiones anteriores del catálogo que ya no están en el archivo.");
+            $this->line("Ejecuta: {$sugerencia} --apply");
+        }
+
         return self::SUCCESS;
     }
 

@@ -22,6 +22,19 @@ class CatalogoRealSeeder extends Seeder
 
     public ?string $dataFile = null;
 
+    /**
+     * IDs de los registros que forman parte del catálogo sembrado.
+     *
+     * Los usa el comando de reconciliación para detectar productos y
+     * categorías que quedaron de versiones anteriores del catálogo.
+     *
+     * @var array<int, int>
+     */
+    public array $productosSembrados = [];
+
+    /** @var array<int, int> */
+    public array $categoriasSembradas = [];
+
     private int $branchId = 0;
 
     public function run(): void
@@ -75,6 +88,8 @@ class CatalogoRealSeeder extends Seeder
                 ],
             );
 
+            $this->categoriasSembradas[] = (int) $grupoModel->getKey();
+
             foreach ($grupo['productos'] ?? [] as $producto) {
                 $this->crearProducto($grupoModel, $producto);
             }
@@ -92,6 +107,8 @@ class CatalogoRealSeeder extends Seeder
                         'area' => $categoria['area'] ?? null,
                     ],
                 );
+
+                $this->categoriasSembradas[] = (int) $categoriaModel->getKey();
 
                 foreach ($categoria['productos'] ?? [] as $producto) {
                     $this->crearProducto($categoriaModel, $producto);
@@ -120,6 +137,8 @@ class CatalogoRealSeeder extends Seeder
         if ($imagenUrl !== null) {
             $producto->update(['imagen_url' => $imagenUrl]);
         }
+
+        $this->productosSembrados[] = (int) $producto->getKey();
     }
 
     private function sembrarCombos(array $combos): void
