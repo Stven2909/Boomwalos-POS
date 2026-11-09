@@ -121,7 +121,7 @@ class ImpresoraResource extends Resource
                         ->options(TipoSonidoImpresora::class)
                         ->default(TipoSonidoImpresora::BEL->value)
                         ->native(false)
-                        ->helperText('Un solo pitido al terminar el trabajo. Si la impresora no responde a BEL, prueba con ESC B.'),
+                        ->helperText('Comando de sonido o buzzer al terminar de imprimir. Si no suena con BEL, prueba ESC B, RJ11 o Melodía Epson.'),
                 ])
                 ->visible(fn ($get) => ($get('conexion') instanceof TipoConexionImpresora ? $get('conexion')->value : $get('conexion')) !== TipoConexionImpresora::PDF->value),
         ]);
@@ -186,8 +186,8 @@ class ImpresoraResource extends Resource
                             app(PrinterTestService::class)->probarSonido($record);
 
                             Notification::make()
-                                ->title('Pitido enviado')
-                                ->body('Si no suena, cambia el tipo de sonido a ESC B o revisa el buzzer en la impresora.')
+                                ->title('Comando de sonido enviado')
+                                ->body('Si la impresora no emite sonido, edita la impresora y prueba con otro preset (ESC B, Buzzer RJ11 Pin 2 o Melodía Epson).')
                                 ->success()
                                 ->send();
                         } catch (\Throwable $e) {
