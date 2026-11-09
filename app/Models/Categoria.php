@@ -104,7 +104,30 @@ class Categoria extends Model
             return $this->icono;
         }
 
-        return asset('storage/' . ltrim($this->icono, '/'));
+        return asset('storage/'.ltrim($this->icono, '/'));
+    }
+
+    /**
+     * Color de acento del catálogo táctil. Sustituye a la fotografía como
+     * referencia visual de la categoría; no se persiste.
+     */
+    public function colorAcento(): string
+    {
+        $nombre = mb_strtolower(trim((string) $this->nombre));
+
+        return match (true) {
+            str_contains($nombre, 'pupusa') => '#c2410c',
+            str_contains($nombre, 'caliente'),
+            str_contains($nombre, 'cafe'),
+            str_contains($nombre, 'café'),
+            str_contains($nombre, 'chocolate') => '#92400e',
+            str_contains($nombre, 'bebida'),
+            str_contains($nombre, 'soda'),
+            str_contains($nombre, 'refresco'),
+            str_contains($nombre, 'fria'),
+            str_contains($nombre, 'fría') => '#0e7490',
+            default => '#75556d',
+        };
     }
 
     protected function casts(): array

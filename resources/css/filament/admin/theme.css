@@ -6375,3 +6375,142 @@ body:has(.bw-pos-order-page) {
         grid-template-columns: 1fr;
     }
 }
+
+/* ==========================================================================
+   POS · catálogo sin fotografías
+   --------------------------------------------------------------------------
+   La foto deja de ocupar espacio en la captura de pedidos. Los archivos y el
+   campo imagen_url se conservan para el panel de administración; aquí solo
+   cambia la presentación. La jerarquía tipográfica y el color de la categoría
+   sustituyen la imagen como referencia visual.
+
+   Medidas pensadas para 1024x768: dos columnas de ~260 px, tarjeta de 112 px
+   sin masa y 150 px con masa (antes ~350 px con foto).
+   ========================================================================== */
+
+.bw-pos-order-page .bw-pos-product-card,
+.bw-pos-order-page .bw-pos-combo-card {
+    position: relative;
+    overflow: hidden;
+}
+
+.bw-pos-order-page .bw-pos-product-card::before,
+.bw-pos-order-page .bw-pos-combo-card::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto;
+    height: 4px;
+    background: var(--bw-cat-color, #75556d);
+}
+
+.bw-pos-order-page .bw-pos-product-card {
+    min-height: 112px;
+    gap: 8px;
+    padding: 12px 14px;
+}
+
+.bw-pos-order-page .bw-pos-product-card.is-mass-choice {
+    min-height: 150px;
+}
+
+.bw-pos-order-page .bw-pos-product-card .bw-pos-product-copy {
+    flex: 1 1 auto;
+    min-height: 0;
+    justify-content: flex-start;
+    gap: 6px;
+    padding-right: 0;
+}
+
+.bw-pos-order-page .bw-pos-product-card .bw-pos-product-copy strong {
+    display: block;
+    min-height: 0;
+    color: #202027;
+    font-size: 16px;
+    font-weight: 800;
+    line-height: 1.2;
+    overflow: visible;
+    overflow-wrap: anywhere;
+}
+
+.bw-pos-order-page .bw-pos-product-meta {
+    display: flex;
+    min-width: 0;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.bw-pos-order-page .bw-pos-product-meta span {
+    min-width: 0;
+    overflow: hidden;
+    color: #756d77;
+    font-size: 10px;
+    font-weight: 750;
+    letter-spacing: 0.07em;
+    line-height: 1.2;
+    text-overflow: ellipsis;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.bw-pos-order-page .bw-pos-product-meta b {
+    flex: 0 0 auto;
+    margin: 0;
+    color: #e9632f;
+    font-size: 19px;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+}
+
+.bw-pos-order-page .bw-pos-product-card .bw-pos-product-mass-actions {
+    margin-top: auto;
+    padding-top: 6px;
+    gap: 6px;
+}
+
+.bw-pos-order-page .bw-pos-product-card .bw-pos-product-mass-button {
+    min-height: 44px;
+    font-size: 14px;
+}
+
+.bw-pos-order-page .bw-pos-product-card:not(.is-mass-choice) .bw-pos-product-add-indicator {
+    position: static;
+    display: inline-flex;
+    width: 100%;
+    height: 40px;
+    gap: 6px;
+    border-radius: 10px;
+    background: #fff1ea;
+    color: #c2410c;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    box-shadow: none;
+}
+
+.bw-pos-order-page .bw-pos-product-card:not(.is-mass-choice):hover .bw-pos-product-add-indicator {
+    background: #ffe3d6;
+}
+
+.bw-pos-add-label {
+    line-height: 1;
+}
+
+/* Combos: una columna, sin miniatura, con la acción al pie. */
+.bw-pos-order-page .bw-pos-combo-card {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+        "copy"
+        "action";
+    align-items: stretch;
+    min-height: 0;
+    gap: 10px;
+    padding: 14px 16px;
+}
+
+.bw-pos-order-page .bw-pos-combo-card .bw-pos-combo-copy {
+    align-self: stretch;
+    gap: 6px;
+}
+
