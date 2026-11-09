@@ -15,9 +15,9 @@ use App\Models\Categoria;
 use App\Models\Combo;
 use App\Models\DetallePedido;
 use App\Models\Mesa;
-use App\Models\UbicacionMesa;
 use App\Models\Pedido;
 use App\Models\Producto;
+use App\Models\UbicacionMesa;
 use App\Services\CobroService;
 use App\Services\ConfiguracionService;
 use App\Services\Orders\OrderLinePresenter;
@@ -115,7 +115,9 @@ class OrderEntry extends PosPage
 
     public function selectCategory(string $category): void
     {
-        $this->category = $category;
+        // No hay pestaña "Todo": al tocar de nuevo la categoría activa se
+        // vuelve al catálogo completo sin dejar ninguna pestaña marcada.
+        $this->category = $this->category === $category ? 'all' : $category;
     }
 
     public function selectGroup(?string $groupId): void

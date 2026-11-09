@@ -4613,7 +4613,7 @@ body:has(.bw-pos-order-page) {
 
 .bw-pos-order-page .bw-pos-order-content {
     display: grid;
-    grid-template-columns: 168px minmax(0, 1fr);
+    grid-template-columns: 208px minmax(0, 1fr);
     grid-template-rows: minmax(0, 1fr);
     gap: 16px;
 }
@@ -4677,10 +4677,11 @@ body:has(.bw-pos-order-page) {
 .bw-pos-order-page .bw-pos-cat-pill span {
     min-width: 0;
     flex: 1 1 auto;
-    overflow: hidden;
-    text-overflow: ellipsis;
     white-space: normal;
-    overflow-wrap: anywhere;
+    overflow-wrap: break-word;
+    word-break: normal;
+    hyphens: none;
+    text-wrap: balance;
 }
 
 .bw-pos-order-page .bw-pos-product-grid,
@@ -4896,7 +4897,7 @@ body:has(.bw-pos-order-page) {
 
     .bw-pos-order-page .bw-pos-cat-pill {
         width: auto;
-        max-width: 220px;
+        max-width: 240px;
     }
 
     .bw-pos-order-page .bw-pos-product-grid,

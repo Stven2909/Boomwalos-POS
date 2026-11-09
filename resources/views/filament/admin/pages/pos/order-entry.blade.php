@@ -147,9 +147,6 @@
             <section class="bw-pos-order-content" aria-labelledby="catalog-heading">
                 <div class="bw-pos-catalog-nav-bar">
                     <nav class="bw-pos-category-pills" aria-label="Categorías">
-                        <button type="button" wire:key="cat-all" wire:click="selectCategory('all')" class="bw-pos-cat-pill {{ $category === 'all' ? 'is-active' : '' }}">
-                            <x-heroicon-o-fire class="h-4 w-4" aria-hidden="true" /> <span>Todo</span>
-                        </button>
                         @foreach ($this->rootCategories as $cat)
                             <button type="button" wire:key="cat-{{ $cat->getKey() }}" wire:click="selectCategory('{{ $cat->getKey() }}')" class="bw-pos-cat-pill {{ (string) $category === (string) $cat->getKey() ? 'is-active' : '' }}">
                                 <x-heroicon-o-squares-2x2 class="h-4 w-4" aria-hidden="true" /> <span>{{ $cat->nombre }}</span>
