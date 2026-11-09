@@ -13,6 +13,7 @@ class EscPosPrintService
     public function __construct(
         private readonly PrinterConnectorFactory $connectorFactory,
         private readonly PdfTicketService $pdfTicketService,
+        private readonly PrinterBeeper $beeper,
     ) {}
 
     public function print(int $trabajoId): void
@@ -34,6 +35,7 @@ class EscPosPrintService
             $printer = new Printer($this->connectorFactory->create($job->impresora));
             $this->renderContent($printer, $job->contenido);
             $printer->cut();
+            $this->beeper->sonar($printer, $job->impresora);
             $printer->close();
 
             $job->update([

@@ -3,6 +3,7 @@
 namespace App\Services\Printing;
 
 use App\Enums\TipoConexionImpresora;
+use App\Enums\TipoSonidoImpresora;
 use App\Models\Impresora;
 use Illuminate\Support\Facades\Storage;
 use Mike42\Escpos\Printer;
@@ -12,6 +13,7 @@ class PrinterTestService
     public function __construct(
         private readonly PrinterConnectorFactory $connectorFactory,
         private readonly PdfTicketService $pdfTicketService,
+        private readonly PrinterBeeper $beeper,
     ) {}
 
     public function probar(Impresora $impresora): ?string
@@ -42,10 +44,32 @@ class PrinterTestService
         $printer->text("Conexion OK\n");
         $printer->feed();
         $printer->cut();
+        $this->beeper->sonar($printer, $impresora);
         $printer->close();
 
         $impresora->update(['ultima_conexion_exitosa_at' => now()]);
 
         return null;
+    }
+
+    /**
+     * Envía únicamente el pitido, sin imprimir papel. Sirve para identificar
+     * qué comando responde cada marca de impresora.
+     */
+    public function probarSonido(Impresora $impresora): void
+    {
+        if ($impresora->conexion === TipoConexionImpresora::PDF) {
+            throw new \RuntimeException('La impresora virtual no emite sonido.');
+        }
+
+        if ($impresora->sonidoEfectivo() === TipoSonidoImpresora::NINGUNO) {
+            throw new \RuntimeException('Esta impresora está configurada en "Sin sonido".');
+        }
+
+        $printer = new Printer($this->connectorFactory->create($impresora));
+        $this->beeper->sonar($printer, $impresora);
+        $printer->close();
+
+        $impresora->update(['ultima_conexion_exitosa_at' => now()]);
     }
 }

@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Impresoras;
 use App\Enums\AreaPreparacion;
 use App\Enums\TipoConexionImpresora;
 use App\Enums\TipoImpresora;
+use App\Enums\TipoSonidoImpresora;
 use App\Filament\Resources\Impresoras\Pages\CreateImpresora;
 use App\Filament\Resources\Impresoras\Pages\EditImpresora;
 use App\Filament\Resources\Impresoras\Pages\ListImpresoras;
@@ -112,6 +113,17 @@ class ImpresoraResource extends Resource
                         ->label('Activa')
                         ->default(true),
                 ]),
+
+            Section::make('Sonido')
+                ->schema([
+                    Select::make('sonido')
+                        ->label('Sonido al imprimir')
+                        ->options(TipoSonidoImpresora::class)
+                        ->default(TipoSonidoImpresora::BEL->value)
+                        ->native(false)
+                        ->helperText('Un solo pitido al terminar el trabajo. Si la impresora no responde a BEL, prueba con ESC B.'),
+                ])
+                ->visible(fn ($get) => ($get('conexion') instanceof TipoConexionImpresora ? $get('conexion')->value : $get('conexion')) !== TipoConexionImpresora::PDF->value),
         ]);
     }
 
@@ -144,6 +156,11 @@ class ImpresoraResource extends Resource
                 TextColumn::make('direccion')
                     ->label('Dirección')
                     ->getStateUsing(fn ($record): string => $record->direccionConexion()),
+                TextColumn::make('sonido')
+                    ->label('Sonido')
+                    ->badge()
+                    ->formatStateUsing(fn ($state): string => TipoSonidoImpresora::tryFrom((string) $state)?->label() ?? '—')
+                    ->color(fn ($state): string => $state === TipoSonidoImpresora::NINGUNO->value ? 'gray' : 'success'),
                 TextColumn::make('establecimiento.nombre')
                     ->label('Sucursal')
                     ->default('Global'),
@@ -159,6 +176,28 @@ class ImpresoraResource extends Resource
                 //
             ])
             ->actions([
+                Action::make('probarSonido')
+                    ->label('Probar sonido')
+                    ->icon('heroicon-o-speaker-wave')
+                    ->color('gray')
+                    ->visible(fn ($record): bool => $record->conexion !== TipoConexionImpresora::PDF)
+                    ->action(function ($record): void {
+                        try {
+                            app(PrinterTestService::class)->probarSonido($record);
+
+                            Notification::make()
+                                ->title('Pitido enviado')
+                                ->body('Si no suena, cambia el tipo de sonido a ESC B o revisa el buzzer en la impresora.')
+                                ->success()
+                                ->send();
+                        } catch (\Throwable $e) {
+                            Notification::make()
+                                ->title('No se pudo enviar el pitido')
+                                ->body($e->getMessage())
+                                ->danger()
+                                ->send();
+                        }
+                    }),
                 Action::make('probar')
                     ->label('Probar')
                     ->icon('heroicon-o-signal')

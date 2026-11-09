@@ -6,6 +6,7 @@ use App\Contracts\EstablishmentContextInterface;
 use App\Enums\AreaPreparacion;
 use App\Enums\TipoConexionImpresora;
 use App\Enums\TipoImpresora;
+use App\Enums\TipoSonidoImpresora;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -24,6 +25,7 @@ class Impresora extends Model
         'dispositivo_usb',
         'ruta_windows',
         'activa',
+        'sonido',
         'configuracion',
         'ultima_conexion_exitosa_at',
     ];
@@ -44,6 +46,32 @@ class Impresora extends Model
     public function setPuertoAttribute(mixed $value): void
     {
         $this->attributes['puerto'] = filled($value) ? (int) $value : 9100;
+    }
+
+    /**
+     * Preferencia de sonido guardada en configuracion['sonido']. Las
+     * impresoras existentes sin configuración quedan con el pitido estándar.
+     */
+    public function getSonidoAttribute(): string
+    {
+        return (string) (data_get($this->configuracion, 'sonido') ?? TipoSonidoImpresora::BEL->value);
+    }
+
+    public function setSonidoAttribute(?string $value): void
+    {
+        $configuracion = $this->configuracion ?? [];
+        $configuracion['sonido'] = $value ?: TipoSonidoImpresora::BEL->value;
+        $this->configuracion = $configuracion;
+    }
+
+    public function sonidoEfectivo(): TipoSonidoImpresora
+    {
+        return TipoSonidoImpresora::tryFrom($this->sonido) ?? TipoSonidoImpresora::BEL;
+    }
+
+    public function comandoSonido(): string
+    {
+        return $this->sonidoEfectivo()->comando();
     }
 
     public function establecimiento(): BelongsTo
