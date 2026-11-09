@@ -57,10 +57,12 @@ class Impresora extends Model
         return (string) (data_get($this->configuracion, 'sonido') ?? TipoSonidoImpresora::BEL->value);
     }
 
-    public function setSonidoAttribute(?string $value): void
+    public function setSonidoAttribute(TipoSonidoImpresora|string|null $value): void
     {
         $configuracion = $this->configuracion ?? [];
-        $configuracion['sonido'] = $value ?: TipoSonidoImpresora::BEL->value;
+        $configuracion['sonido'] = $value instanceof TipoSonidoImpresora
+            ? $value->value
+            : ($value ?: TipoSonidoImpresora::BEL->value);
         $this->configuracion = $configuracion;
     }
 
