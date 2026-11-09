@@ -43,8 +43,8 @@ class PrinterTestService
         $printer->feed();
         $printer->text("Conexion OK\n");
         $printer->feed();
-        $printer->cut();
         $this->beeper->sonar($printer, $impresora);
+        $printer->cut();
         $printer->close();
 
         $impresora->update(['ultima_conexion_exitosa_at' => now()]);

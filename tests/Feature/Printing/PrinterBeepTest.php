@@ -35,7 +35,7 @@ class PrinterBeepTest extends TestCase
         $impresora->sonido = 'esc_b';
 
         $this->assertSame('esc_b', data_get($impresora->configuracion, 'sonido'));
-        $this->assertSame("\x1B\x42\x03\x02", $impresora->comandoSonido());
+        $this->assertSame("\x1B\x42\x03\x05", $impresora->comandoSonido());
     }
 
     public function test_el_trabajo_impreso_envia_un_pitido_bel_por_defecto(): void

@@ -34,8 +34,8 @@ class EscPosPrintService
 
             $printer = new Printer($this->connectorFactory->create($job->impresora));
             $this->renderContent($printer, $job->contenido);
-            $printer->cut();
             $this->beeper->sonar($printer, $job->impresora);
+            $printer->cut();
             $printer->close();
 
             $job->update([

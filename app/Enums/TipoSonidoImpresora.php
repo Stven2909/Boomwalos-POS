@@ -37,14 +37,14 @@ enum TipoSonidoImpresora: string implements HasLabel
     {
         return match ($this) {
             self::BEL => "\x07",
-            // ESC B n t (n=3 pitidos, t=2x100ms)
-            self::ESC_B => "\x1B\x42\x03\x02",
+            // ESC B n t (n=3 pitidos, t=5x100ms - estándar POS-80 / J-Speed / Sewoo)
+            self::ESC_B => "\x1B\x42\x03\x05",
             // ESC p m t1 t2 (m=0 Pin 2, t1=50ms on, t2=50ms off)
             self::RJ11_PIN2 => "\x1B\x70\x00\x19\x19",
             // ESC p m t1 t2 (m=1 Pin 5, t1=50ms on, t2=50ms off)
             self::RJ11_PIN5 => "\x1B\x70\x01\x19\x19",
-            // GS ( A pL pH fn a (Epson buzzer: fn=97 a=1 sound pattern)
-            self::EPSON_MELODY => "\x1D\x28\x41\x02\x00\x61\x01",
+            // ESC ( A pL pH fn n c (Buzzer integrado Epson nativo)
+            self::EPSON_MELODY => "\x1B\x28\x41\x03\x00\x61\x01\x01",
             self::NINGUNO => '',
         };
     }
