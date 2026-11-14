@@ -213,7 +213,7 @@ Pedidos y pagos pertenecen a una sucursal</pre></article>
         <h2>2. Qué entra y qué no entra</h2>
         <table><thead><tr><th>Área</th><th>Base del ERP</th><th>Opcional habilitable</th><th>Fuera de esta línea</th></tr></thead><tbody>
           <tr><td>Sucursales</td><td>Varias sucursales de una empresa, con datos aislados.</td><td>Reportes consolidados del mismo negocio.</td><td>Administrar empresas independientes desde la misma operación.</td></tr>
-          <tr><td>Servicio</td><td>Mostrador / para llevar y comer aquí / mesa.</td><td>Asignación avanzada a meseros.</td><td>Delivery, QR o kiosco hasta definirlos.</td></tr>
+          <tr><td>Servicio</td><td>Mostrador / para llevar y comer aquí / mesa.</td><td>Asignación avanzada a meseros.</td><td>Delivery, pedidos por QR o kiosco hasta definirlos. El QR del ticket se usa para consultar o solicitar factura.</td></tr>
           <tr><td>Catálogo</td><td>Productos, categorías, imágenes, masa maíz/arroz, combos.</td><td>Precios y disponibilidad diferenciados por sucursal.</td><td>Inventario real sin módulo de existencias y recetas aprobado.</td></tr>
           <tr><td>Cocina</td><td>Comanda por impresora.</td><td>KDS por sucursal y modo mixto.</td><td>Suponer que existe una pantalla de cocina si no fue instalada.</td></tr>
           <tr><td>Cobro</td><td>Efectivo, tarjeta registrada, cambio, sesión de caja.</td><td>Terminal bancaria, pagos divididos, reembolsos avanzados.</td><td>Crédito o cobro duplicado.</td></tr>
@@ -307,6 +307,13 @@ diferencia = efectivo contado - esperado</pre><p class="small muted">La fórmula
       <section id="fiscal">
         <h2>8. Facturación y registro fiscal</h2>
         <p class="section-note">La venta, el ticket operativo y el documento fiscal son conceptos relacionados, pero no son el mismo documento.</p>
+        <h3>Recorrido de factura para el cliente</h3>
+        <p>El ticket incluye un QR que abre el portal con los datos de la compra. El camino depende de cómo pagaste:</p>
+        <div class="grid">
+          <article class="panel green span-6"><h3>Pago con tarjeta: la factura empieza al pagar</h3><ol class="checklist"><li>Pagas con tarjeta y recibes tu ticket con QR.</li><li>La factura se procesa automáticamente.</li><li>Si quieres, escaneas el QR para consultar el avance.</li><li>Cuando esté lista, el portal muestra el resultado y el comprobante disponible.</li></ol></article>
+          <article class="panel plum span-6"><h3>Pago en efectivo: tú decides si solicitas factura</h3><ol class="checklist"><li>Pagas en efectivo y recibes tu ticket con QR.</li><li>Si necesitas factura, escaneas el QR y abres tu compra.</li><li>Completas tus datos y envías la solicitud.</li><li>El portal muestra el avance y el resultado. Si no necesitas factura, conservas tu ticket.</li></ol></article>
+        </div>
+        <div class="callout"><strong>El QR abre el portal asociado a tu compra.</strong> En efectivo, solicitas la factura solo si la necesitas; con tarjeta, el proceso comienza al completar el pago.</div>
         <div class="flow"><div class="flow-step actual"><strong>Pedido</strong><span>Detalle y total persistidos.</span></div><div class="flow-step actual"><strong>Pago</strong><span>Pago asociado a sesión.</span></div><div class="flow-step actual"><strong>Venta fiscal</strong><span>Se evita duplicar por pago.</span></div><div class="flow-step actual"><strong>Outbox</strong><span>Cola para emisión/reintento.</span></div><div class="flow-step target"><strong>Proveedor fiscal</strong><span>Respuesta externa.</span></div><div class="flow-step target"><strong>Resultado</strong><span>Aceptado, rechazado o pendiente.</span></div><div class="flow-step target"><strong>Comprobante</strong><span>Ticket y documento según regla.</span></div></div>
         <table><thead><tr><th>Momento</th><th>Qué debe ocurrir</th><th>Qué no debe ocurrir</th></tr></thead><tbody>
           <tr><td>Antes del pago</td><td>Se prepara el pedido y se calcula el total.</td><td>Emitir factura definitiva con una orden que aún no tiene pago aprobado.</td></tr>

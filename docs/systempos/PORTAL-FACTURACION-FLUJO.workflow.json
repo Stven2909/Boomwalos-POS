@@ -1,0 +1,269 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Facturación WebFact · flujo final",
+    "quality_profile": "showcase",
+    "output": "docs/PORTAL-FACTURACION-FLUJO.html",
+    "legend": {
+      "mode": "auto",
+      "entries": {
+        "frontend": {
+          "label": "Portal / UI"
+        },
+        "backend": {
+          "label": "Servicio"
+        },
+        "database": {
+          "label": "Datos"
+        },
+        "messagebus": {
+          "label": "Cola"
+        },
+        "security": {
+          "label": "Recuperación"
+        },
+        "external": {
+          "label": "Sistema externo"
+        }
+      }
+    }
+  },
+  "lanes": [
+    {
+      "id": "portal",
+      "label": "Portal · cliente"
+    },
+    {
+      "id": "pos",
+      "label": "POS · terminal local"
+    },
+    {
+      "id": "api",
+      "label": "ApiFact · fuente de verdad"
+    },
+    {
+      "id": "fiscal",
+      "label": "Hacienda y recuperación",
+      "variant": "exception"
+    }
+  ],
+  "phases": [
+    {
+      "id": "cobro",
+      "label": "Cobro y snapshot",
+      "fromCol": 0,
+      "toCol": 1
+    },
+    {
+      "id": "solicitud",
+      "label": "Solicitud del cliente",
+      "fromCol": 2,
+      "toCol": 3,
+      "variant": "emphasis"
+    },
+    {
+      "id": "emision",
+      "label": "Emisión y estado",
+      "fromCol": 4,
+      "toCol": 5
+    }
+  ],
+  "mainPath": [
+    "cobro",
+    "snapshot",
+    "pedido",
+    "emitir",
+    "transmision",
+    "hacienda",
+    "estado"
+  ],
+  "nodes": [
+    {
+      "id": "cobro",
+      "lane": "pos",
+      "col": 0,
+      "type": "backend",
+      "label": "Cobro en POS",
+      "sublabel": "efectivo · tarjeta",
+      "width": 150
+    },
+    {
+      "id": "snapshot",
+      "lane": "pos",
+      "col": 1,
+      "type": "database",
+      "label": "Snapshot + outbox",
+      "sublabel": "tracking · total · ítems",
+      "width": 150
+    },
+    {
+      "id": "pedido",
+      "lane": "api",
+      "col": 2,
+      "type": "database",
+      "label": "portal_pedidos",
+      "sublabel": "orden consultable",
+      "width": 150
+    },
+    {
+      "id": "qr",
+      "lane": "portal",
+      "col": 2,
+      "type": "external",
+      "label": "Cliente escanea QR",
+      "sublabel": "ticket impreso",
+      "width": 150
+    },
+    {
+      "id": "formulario",
+      "lane": "portal",
+      "col": 3,
+      "type": "frontend",
+      "label": "Formulario portal",
+      "sublabel": "tipo 01 o 03",
+      "width": 150
+    },
+    {
+      "id": "emitir",
+      "lane": "api",
+      "col": 3,
+      "type": "backend",
+      "label": "Emitir DTE",
+      "sublabel": "Art. 119 · idempotencia",
+      "width": 150
+    },
+    {
+      "id": "transmision",
+      "lane": "api",
+      "col": 4,
+      "type": "messagebus",
+      "label": "ProcessDteJob",
+      "sublabel": "cola dte",
+      "width": 150
+    },
+    {
+      "id": "hacienda",
+      "lane": "fiscal",
+      "col": 5,
+      "type": "external",
+      "label": "Hacienda",
+      "sublabel": "sello o rechazo",
+      "width": 150
+    },
+    {
+      "id": "estado",
+      "lane": "portal",
+      "col": 5,
+      "type": "frontend",
+      "label": "Estado visible",
+      "sublabel": "el portal solo pinta",
+      "width": 150
+    },
+    {
+      "id": "fallo",
+      "lane": "fiscal",
+      "col": 4,
+      "type": "security",
+      "label": "NO_SEAL + FAILED",
+      "sublabel": "error recuperable",
+      "width": 150
+    }
+  ],
+  "edges": [
+    {
+      "id": "cobro-snapshot",
+      "from": "cobro",
+      "to": "snapshot",
+      "variant": "default",
+      "role": "main"
+    },
+    {
+      "id": "snapshot-pedido",
+      "from": "snapshot",
+      "to": "pedido",
+      "label": "HMAC POST /portal/pedidos",
+      "variant": "emphasis",
+      "role": "main"
+    },
+    {
+      "id": "qr-formulario",
+      "from": "qr",
+      "to": "formulario",
+      "variant": "default",
+      "role": "main"
+    },
+    {
+      "id": "snapshot-qr",
+      "from": "snapshot",
+      "to": "qr",
+      "label": "ticket con QR",
+      "variant": "default",
+      "role": "branch"
+    },
+    {
+      "id": "formulario-emitir",
+      "from": "formulario",
+      "to": "emitir",
+      "label": "POST /portal-qr/solicitar",
+      "variant": "emphasis",
+      "role": "main"
+    },
+    {
+      "id": "pedido-emitir",
+      "from": "pedido",
+      "to": "emitir",
+      "label": "lee la orden",
+      "variant": "dashed",
+      "role": "branch"
+    },
+    {
+      "id": "emitir-transmision",
+      "from": "emitir",
+      "to": "transmision",
+      "label": "encola",
+      "variant": "default",
+      "role": "main"
+    },
+    {
+      "id": "transmision-hacienda",
+      "from": "transmision",
+      "to": "hacienda",
+      "label": "POST DTE",
+      "variant": "default",
+      "role": "main"
+    },
+    {
+      "id": "hacienda-estado",
+      "from": "hacienda",
+      "to": "estado",
+      "label": "estado visible",
+      "variant": "emphasis",
+      "role": "return"
+    },
+    {
+      "id": "transmision-fallo",
+      "from": "transmision",
+      "to": "fallo",
+      "label": "falla",
+      "variant": "security",
+      "role": "error"
+    },
+    {
+      "id": "fallo-transmision",
+      "from": "fallo",
+      "to": "transmision",
+      "label": "reintenta el mismo DTE",
+      "variant": "dashed",
+      "role": "return"
+    },
+    {
+      "id": "hacienda-emitir",
+      "from": "hacienda",
+      "to": "emitir",
+      "label": "REJECTED · corrige -r2",
+      "variant": "dashed",
+      "role": "return"
+    }
+  ]
+}

@@ -1,0 +1,193 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Tu compra y tu factura · guía sencilla",
+    "quality_profile": "showcase",
+    "output": "PORTAL-WEBFACT-FLUJO-USUARIO.html",
+    "legend": {
+      "mode": "auto",
+      "entries": {
+        "backend": {
+          "label": "Restaurante"
+        },
+        "frontend": {
+          "label": "Cliente / portal"
+        },
+        "external": {
+          "label": "Hacienda"
+        }
+      }
+    }
+  },
+  "lanes": [
+    {
+      "id": "restaurante",
+      "label": "Restaurante"
+    },
+    {
+      "id": "cliente",
+      "label": "Tú"
+    },
+    {
+      "id": "portal",
+      "label": "Portal y Hacienda"
+    }
+  ],
+  "phases": [
+    {
+      "id": "compra",
+      "label": "Tu compra",
+      "fromCol": 0,
+      "toCol": 2,
+      "variant": "emphasis"
+    },
+    {
+      "id": "portal",
+      "label": "Consulta y solicitud",
+      "fromCol": 3,
+      "toCol": 4
+    },
+    {
+      "id": "factura",
+      "label": "Factura y resultado",
+      "fromCol": 5,
+      "toCol": 5,
+      "variant": "emphasis"
+    }
+  ],
+  "mainPath": [
+    "pago",
+    "ticket",
+    "qr",
+    "compra_portal",
+    "solicitar",
+    "hacienda_revisa",
+    "resultado"
+  ],
+  "nodes": [
+    {
+      "id": "pago",
+      "lane": "restaurante",
+      "col": 0,
+      "width": 128,
+      "type": "backend",
+      "label": "Pagas tu compra",
+      "sublabel": "efectivo o tarjeta"
+    },
+    {
+      "id": "tarjeta",
+      "lane": "portal",
+      "col": 1,
+      "width": 148,
+      "type": "backend",
+      "label": "Con tarjeta",
+      "sublabel": "la factura se inicia al pagar"
+    },
+    {
+      "id": "ticket",
+      "lane": "restaurante",
+      "col": 2,
+      "width": 132,
+      "type": "backend",
+      "label": "Recibes tu ticket",
+      "sublabel": "incluye un código QR"
+    },
+    {
+      "id": "qr",
+      "lane": "cliente",
+      "col": 3,
+      "width": 136,
+      "type": "frontend",
+      "label": "Escaneas el QR",
+      "sublabel": "cuando quieras consultar"
+    },
+    {
+      "id": "compra_portal",
+      "lane": "portal",
+      "col": 4,
+      "width": 150,
+      "type": "frontend",
+      "label": "Ves tu compra",
+      "sublabel": "y el avance de la factura"
+    },
+    {
+      "id": "solicitar",
+      "lane": "cliente",
+      "col": 4,
+      "width": 148,
+      "type": "frontend",
+      "label": "Pides la factura",
+      "sublabel": "opcional si pagaste en efectivo"
+    },
+    {
+      "id": "hacienda_revisa",
+      "lane": "portal",
+      "col": 5,
+      "width": 142,
+      "type": "external",
+      "label": "Hacienda revisa",
+      "sublabel": "confirma o devuelve"
+    },
+    {
+      "id": "resultado",
+      "lane": "cliente",
+      "col": 5,
+      "width": 144,
+      "type": "frontend",
+      "label": "Ves el resultado",
+      "sublabel": "proceso, lista o atención"
+    }
+  ],
+  "edges": [
+    {
+      "from": "pago",
+      "to": "ticket",
+      "label": "efectivo",
+      "role": "main"
+    },
+    {
+      "from": "pago",
+      "to": "tarjeta",
+      "label": "tarjeta",
+      "role": "branch",
+      "variant": "emphasis"
+    },
+    {
+      "from": "tarjeta",
+      "to": "ticket",
+      "label": "recibes el mismo ticket",
+      "role": "main"
+    },
+    {
+      "from": "ticket",
+      "to": "qr",
+      "label": "si quieres consultarla",
+      "role": "main"
+    },
+    {
+      "from": "qr",
+      "to": "compra_portal",
+      "label": "se abre tu compra",
+      "role": "main"
+    },
+    {
+      "from": "compra_portal",
+      "to": "solicitar",
+      "label": "si pagaste en efectivo",
+      "role": "branch"
+    },
+    {
+      "from": "solicitar",
+      "to": "hacienda_revisa",
+      "label": "completas tus datos y se envía",
+      "role": "main"
+    },
+    {
+      "from": "hacienda_revisa",
+      "to": "resultado",
+      "label": "recibes una respuesta",
+      "role": "return"
+    }
+  ]
+}
