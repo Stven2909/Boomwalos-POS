@@ -143,9 +143,11 @@ class QueueCustomerTicket implements CustomerTicketDispatcherInterface
         return implode(PHP_EOL, [
             str_repeat('-', 32),
             $pago->metodo_pago === MetodoPago::TARJETA
-                ? 'PUEDES VER TU FACTURA O CCF'
-                : '¿DESEA FACTURA O CCF?',
-            'Escanea el QR o ingresa a:',
+                ? 'FACTURA ELECTRONICA EN PROCESO'
+                : 'SOLICITA TU FACTURA EN EL PORTAL',
+            $pago->metodo_pago === MetodoPago::TARJETA
+                ? 'Consulta el estado con este QR:'
+                : 'Escanea el QR si deseas solicitarla:',
             rtrim((string) $portalUrl, '/'),
             'Tracking: ' . $tracking,
             'QR_URL: ' . $urlFactura,

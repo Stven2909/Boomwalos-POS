@@ -124,8 +124,8 @@ class ChargeTicketFlowTest extends TestCase
             ->where('tipo_trabajo', 'TICKET')
             ->value('contenido');
 
-        $this->assertStringContainsString('PUEDES VER TU FACTURA O CCF', $contenido);
-        $this->assertStringNotContainsString('¿DESEA FACTURA O CCF?', $contenido);
+        $this->assertStringContainsString('FACTURA ELECTRONICA EN PROCESO', $contenido);
+        $this->assertStringNotContainsString('SOLICITA TU FACTURA EN EL PORTAL', $contenido);
     }
 
     public function test_charge_without_ticket_printer_creates_error_job(): void

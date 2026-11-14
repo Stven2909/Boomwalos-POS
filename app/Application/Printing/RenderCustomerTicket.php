@@ -104,9 +104,11 @@ class RenderCustomerTicket
 
         $lineas[] = str_repeat('-', 32);
         $lineas[] = $pago->metodo_pago === MetodoPago::TARJETA
-            ? 'PUEDES VER TU FACTURA O CCF'
-            : '¿DESEA FACTURA O CCF?';
-        $lineas[] = 'Escanea el QR o ingresa a:';
+            ? 'FACTURA ELECTRONICA EN PROCESO'
+            : 'SOLICITA TU FACTURA EN EL PORTAL';
+        $lineas[] = $pago->metodo_pago === MetodoPago::TARJETA
+            ? 'Consulta el estado con este QR:'
+            : 'Escanea el QR si deseas solicitarla:';
         $lineas[] = rtrim((string) $portalUrl, '/');
         $lineas[] = 'Tracking: ' . $tracking;
         $lineas[] = 'QR_URL: ' . $urlFactura;

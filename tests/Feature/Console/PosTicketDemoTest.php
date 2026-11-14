@@ -125,7 +125,7 @@ class PosTicketDemoTest extends TestCase
         $this->assertStringContainsString('RECIBIDO $20.00', $contenido);
         $this->assertStringContainsString('CAMBIO  $4.85', $contenido);
         $this->assertStringContainsString('ATENDIDO POR: Administrador General', $contenido);
-        $this->assertStringContainsString('¿DESEA FACTURA O CCF?', $contenido);
+        $this->assertStringContainsString('SOLICITA TU FACTURA EN EL PORTAL', $contenido);
     }
 
     public function test_solo_texto_prints_content_without_creating_jobs(): void

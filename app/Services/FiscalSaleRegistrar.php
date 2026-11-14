@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Application\Fiscal\FiscalOutboxService;
+use App\Enums\MetodoPago;
 use App\Models\ConfiguracionFiscal;
 use App\Models\Pago;
 use App\Models\Pedido;
@@ -38,6 +39,10 @@ class FiscalSaleRegistrar
 
     public function register(Pago $pago, array $identidad = []): void
     {
+        if ($pago->metodo_pago !== MetodoPago::TARJETA) {
+            return;
+        }
+
         $configuracion = $this->configuracionPara($pago->pedido->establecimiento_id);
 
         if (! $configuracion || VentaFiscalPos::query()->where('pago_id', $pago->getKey())->exists()) {

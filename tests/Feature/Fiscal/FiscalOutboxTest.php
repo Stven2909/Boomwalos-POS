@@ -102,7 +102,7 @@ class FiscalOutboxTest extends TestCase
         ]);
     }
 
-    private function chargedPedido(): array
+    private function chargedPedido(MetodoPago $metodo = MetodoPago::TARJETA): array
     {
         $service = app(PedidoService::class);
         $pedido = $service->startOrder(TipoPedido::MESA, $this->cashier, $this->table->getKey());
@@ -112,9 +112,10 @@ class FiscalOutboxTest extends TestCase
 
         $pago = app(CobroService::class)->charge(
             $pedido,
-            MetodoPago::EFECTIVO,
-            '10.00',
+            $metodo,
+            $metodo === MetodoPago::TARJETA ? null : '10.00',
             $this->cashier,
+            $metodo === MetodoPago::TARJETA ? ['aprobada' => true, 'referencia' => 'TEST-REF'] : null,
         );
 
         return [$pedido, $pago];
@@ -171,7 +172,7 @@ class FiscalOutboxTest extends TestCase
         $this->assertNotNull($venta);
         $this->assertSame(EstadoVentaFiscal::NO->value, $venta->estado->value);
         $this->assertSame('4.00', (string) $venta->monto_total);
-        $this->assertSame(MetodoPago::EFECTIVO->value, $venta->metodo_pago);
+        $this->assertSame(MetodoPago::TARJETA->value, $venta->metodo_pago);
         $this->assertNull($venta->fiscal_sale_id);
 
         $cola = $venta->cola;
@@ -182,7 +183,7 @@ class FiscalOutboxTest extends TestCase
             $cola->clave_reintento,
         );
         $this->assertSame('4.00', $cola->payload_envio['monto_total']);
-        $this->assertSame('EFECTIVO', $cola->payload_envio['metodo_pago']);
+        $this->assertSame('TARJETA', $cola->payload_envio['metodo_pago']);
     }
 
     public function test_job_sincroniza_venta_al_recibir_202(): void
@@ -238,9 +239,10 @@ class FiscalOutboxTest extends TestCase
 
         $pago = app(CobroService::class)->charge(
             $pedido,
-            MetodoPago::EFECTIVO,
-            '10.00',
+            MetodoPago::TARJETA,
+            null,
             $this->cashier,
+            ['aprobada' => true, 'referencia' => 'TEST-REF'],
         );
 
         $venta = VentaFiscalPos::where('pago_id', $pago->getKey())->first();

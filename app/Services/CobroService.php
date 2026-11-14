@@ -21,6 +21,7 @@ use App\Models\Pedido;
 use App\Models\SesionCaja;
 use App\Models\TrabajoImpresion;
 use App\Models\User;
+use App\Services\Portal\PortalSnapshotRegistrar;
 use App\Services\Printing\ComandaDispatcher;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\DB;
@@ -32,6 +33,7 @@ class CobroService
         private readonly EstablishmentContextInterface $establishmentContext,
         private readonly AuditLoggerInterface $auditLogger,
         private readonly FiscalSaleRegistrar $fiscalSaleRegistrar,
+        private readonly PortalSnapshotRegistrar $portalSnapshotRegistrar,
         private readonly ComandaDispatcher $comandaDispatcher,
         private readonly RenderCustomerTicket $ticketRenderer,
     ) {}
@@ -47,7 +49,9 @@ class CobroService
             throw new AuthorizationException('No tienes permiso para cobrar pedidos.');
         }
 
-        $identidad = $this->fiscalSaleRegistrar->preparar($pedido);
+        $identidad = $metodo === MetodoPago::TARJETA
+            ? $this->fiscalSaleRegistrar->preparar($pedido)
+            : ['activa' => false, 'contingencia' => false];
 
         [$pago, $comandaJobs, $ticketJob] = DB::transaction(function () use ($pedido, $metodo, $montoRecibido, $actor, $tarjeta, $identidad): array {
             return $this->applyCharge($pedido, $metodo, $montoRecibido, $actor, tarjeta: $tarjeta, identidad: $identidad);
@@ -85,7 +89,9 @@ class CobroService
             throw new AuthorizationException('No tienes permiso para cobrar pedidos.');
         }
 
-        $identidad = $this->fiscalSaleRegistrar->preparar($pedido);
+        $identidad = $metodo === MetodoPago::TARJETA
+            ? $this->fiscalSaleRegistrar->preparar($pedido)
+            : ['activa' => false, 'contingencia' => false];
 
         [$pago] = DB::transaction(function () use ($pedido, $metodo, $montoRecibido, $actor, $tarjeta, $identidad): array {
             return $this->applyCharge($pedido, $metodo, $montoRecibido, $actor, tarjeta: $tarjeta, identidad: $identidad);
@@ -193,6 +199,10 @@ class CobroService
             'trabajo_impresion_id' => $ticketJob?->getKey(),
         ]);
 
+        // El snapshot se persiste en el outbox dentro de la transacción del
+        // cobro y se transmite después del commit para ambos métodos de pago.
+        $this->portalSnapshotRegistrar->encolar($pedido, $pago);
+
         $pedido->update(['estado_comercial' => EstadoComercialPedido::CERRADO]);
 
         if ($pedido->mesa_id) {
@@ -227,7 +237,9 @@ class CobroService
 
     private function registrarVentaFiscal(Pago $pago, array $identidad = []): void
     {
-        $this->fiscalSaleRegistrar->register($pago, $identidad);
+        if ($pago->metodo_pago === MetodoPago::TARJETA) {
+            $this->fiscalSaleRegistrar->register($pago, $identidad);
+        }
     }
 
     private function validateCard(?array $tarjeta): void

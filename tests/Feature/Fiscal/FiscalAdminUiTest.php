@@ -122,9 +122,10 @@ class FiscalAdminUiTest extends TestCase
 
         $pago = app(CobroService::class)->charge(
             $pedido,
-            MetodoPago::EFECTIVO,
-            '10.00',
+            MetodoPago::TARJETA,
+            null,
             $this->cashier,
+            ['aprobada' => true, 'referencia' => 'TEST-REF'],
         );
 
         $venta = VentaFiscalPos::where('pago_id', $pago->getKey())->firstOrFail();

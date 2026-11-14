@@ -108,7 +108,13 @@ class FiscalContingenciaTest extends TestCase
 
         $pedido = $this->pedidoListoParaCobro();
 
-        app(CobroService::class)->chargeAndSend($pedido, MetodoPago::EFECTIVO, '10.00', $this->cashier);
+        app(CobroService::class)->chargeAndSend(
+            $pedido,
+            MetodoPago::TARJETA,
+            null,
+            $this->cashier,
+            ['aprobada' => true, 'referencia' => 'TEST-REF'],
+        );
 
         $venta = VentaFiscalPos::query()->where('pedido_id', $pedido->getKey())->firstOrFail();
         $cola = $venta->cola;
@@ -144,7 +150,13 @@ class FiscalContingenciaTest extends TestCase
         config(['fiscal.url' => 'http://127.0.0.1:1']);
 
         $pedido = $this->pedidoListoParaCobro();
-        app(CobroService::class)->charge($pedido, MetodoPago::EFECTIVO, '10.00', $this->cashier);
+        app(CobroService::class)->charge(
+            $pedido,
+            MetodoPago::TARJETA,
+            null,
+            $this->cashier,
+            ['aprobada' => true, 'referencia' => 'TEST-REF'],
+        );
 
         $venta = VentaFiscalPos::query()->where('pedido_id', $pedido->getKey())->firstOrFail();
 

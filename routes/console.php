@@ -1,7 +1,9 @@
 <?php
 
 use App\Console\Commands\EnviarVentasFiscalesPendientes;
+use App\Console\Commands\PortalReconciliar;
 use App\Console\Commands\ReconciliarFiscales;
+use App\Console\Commands\SyncPortalPendientes;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
@@ -21,5 +23,18 @@ Schedule::command(EnviarVentasFiscalesPendientes::class)
 // consulta el estado fiscal de las ventas diferidas por su Código de
 // Generación y, al sellarse, reimprime el DTE final.
 Schedule::command(ReconciliarFiscales::class)
+    ->everyFiveMinutes()
+    ->withoutOverlapping();
+
+// Reintenta snapshots del portal que no llegaron a ApiFact, incluso si el
+// worker se detuvo después de registrar el cobro.
+Schedule::command(SyncPortalPendientes::class)
+    ->everyMinute()
+    ->withoutOverlapping();
+
+// Reconciliación del portal: copia estado e identificadores del DTE desde
+// ApiFact. No emite ni reimprime; la reimpresión sigue siendo solo para
+// contingencia o recuperación.
+Schedule::command(PortalReconciliar::class)
     ->everyFiveMinutes()
     ->withoutOverlapping();
